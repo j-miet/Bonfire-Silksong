@@ -9,10 +9,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  <!-- Required dlls: DLL files from game's own Managed directory + ones from BepInEx 
-    This path assumes you have already installed BepInEx in game path e.g.
-    C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight Silksong\BepInEx
-  -->
   <PropertyGroup>
     <SilksongPath>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight Silksong</SilksongPath>
     <ManagedRefs>$(SilksongPath)\Hollow Knight Silksong_Data\Managed</ManagedRefs>
@@ -24,6 +20,7 @@
           DestinationFolder="$(SilksongPath)\BepInEx\plugins\Bonfire" />
   </Target>
 
+  <!-- Required DLLs from both BepInEx and base game's Managed directory -->
   <ItemGroup>
     <!-- BepInEx -->
     <Reference Include="BepInEx">
@@ -62,6 +59,10 @@
     </Reference>
     <Reference Include="UnityEngine.TextRenderingModule">
       <HintPath>$(ManagedRefs)\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.Physics2DModule">
+      <HintPath>$(ManagedRefs)\UnityEngine.Physics2DModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

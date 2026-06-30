@@ -1,6 +1,6 @@
 using System;
 
-namespace Bonfire
+namespace BonfireSilksong
 {
     [Serializable]
     public class PlayerStatus
