@@ -18,9 +18,8 @@ namespace Bonfire
         public int PendingRosaries = 0;
 
         public int RespecRelicLevels = 0; // available free levels earned back from respecs
+        public int ConsumedRelicLevels = 0; // relics already absorbed into RespecRelicLevels or spent
         public int PendingRelicLevels = 0;
-        public int AvailableRuneHarps = 0;
-        public int AvailableArcaneEggs = 0;
         public int RespecCost = 1;
 
         public bool InfiniteShellShardsEnabled = false; // obtaining/using shards replenishes them to full
