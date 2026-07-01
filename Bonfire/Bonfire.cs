@@ -302,6 +302,35 @@ namespace BonfireSilksong
             }
         }
 
+        // needle attack speed
+        [HarmonyPatch(typeof(HeroController), "DidAttack")]
+        class HeroController_DidAttack
+        {
+            static void Postfix(HeroController __instance)
+            {
+                var config = __instance.Config;
+                if (config == null) return;
+                float attackSpeed = LevelingSystem.Instance.AttackSpeed(Instance.Status.DexterityStat);
+                typeof(HeroController)
+                    .GetField("attack_cooldown", BindingFlags.Instance | BindingFlags.NonPublic)
+                    ?.SetValue(__instance, config.AttackCooldownTime / attackSpeed);
+            }
+        }
+
+        [HarmonyPatch(typeof(HeroController), "Attack")]
+        class HeroController_Attack
+        {
+            static void Postfix(HeroController __instance)
+            {
+                var config = __instance.Config;
+                if (config == null) return;
+                float attackSpeed = LevelingSystem.Instance.AttackSpeed(Instance.Status.DexterityStat);
+                typeof(HeroController)
+                    .GetField("attackDuration", BindingFlags.Instance | BindingFlags.NonPublic)
+                    ?.SetValue(__instance, config.AttackDuration / attackSpeed);
+            }
+        }
+
         // extra silk gain when hitting enemies with needle
         [HarmonyPatch(typeof(HeroController), "SilkGain", new[] { typeof(HitInstance) })]
         class HeroController_SilkGain
