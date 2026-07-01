@@ -210,6 +210,22 @@ namespace BonfireSilksong
             }
         }
 
+        // crit visuals
+        // the visual effect in HealthManager_Hit (FlashGrimmflame) only applies to player. To also display effect 
+        // on the hit enemy, DamageEnemies_DoDamage requires access to following internal fields via reflection
+        private static readonly FieldInfo IsHeroDamageField = typeof(DamageEnemies)
+            .GetField("isHeroDamage", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        private static readonly FieldInfo SourceIsHeroField = typeof(DamageEnemies)
+            .GetField("sourceIsHero", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        private static bool IsHeroDamage(DamageEnemies instance)
+        {
+            bool a = (bool)(IsHeroDamageField?.GetValue(instance) ?? false);
+            bool b = (bool)(SourceIsHeroField?.GetValue(instance) ?? false);
+            return a || b;
+        }
+
         /* -- Harmony patches -- */
 
         // shell shards replenishment
@@ -510,6 +526,43 @@ namespace BonfireSilksong
             }
         }
 
+        // handle crit roll (prefix) and crit effect when enemy gets hit (postfix)
+        // DamageEnemies_DoDamage calls patched HealthManager_Hit internally so logic goes:
+        // - Prefix rolls crit chance
+        // - DoDamage calls Hit at some point
+        // - Hit checks and handles player's perspective by adding damage and displaying visual effect on player
+        // - Postfix adds the effect on enemy that got hit
+        [HarmonyPatch(typeof(DamageEnemies), "DoDamage", new[] { typeof(GameObject), typeof(bool) })]
+        internal static class DamageEnemies_DoDamage
+        {
+            static void Prefix(DamageEnemies __instance, GameObject target)
+            {
+                if (target == null || target.layer != 11) return;
+                if (!IsHeroDamage(__instance)) return;
+
+                var s = Instance.Status;
+                var ls = LevelingSystem.Instance;
+                Instance.Crit = Instance._critRoll <= ls.CritChance(s.LuckStat);
+            }
+
+            static void Postfix(DamageEnemies __instance, GameObject target, bool __result)
+            {
+                if (!__result || target == null || target.layer != 11) return;
+                if (!IsHeroDamage(__instance)) return;
+
+                if (Instance.Crit)
+                {
+                    // effect comes from prefab value, these can have both visual and sound included. 
+                    // Prefer one with no audio + only mild visuals; you will be hearing/seeing this effect a lot if
+                    // you level up luck stat
+                    var prefab = HeroController.instance.takeHitBlackHealthNullifyPrefab;
+                    prefab.transform.SetScaleX(0.5f);
+                    prefab.transform.SetScaleY(0.5f);
+                    Instantiate(prefab, target.transform.position, target.transform.rotation);
+                }
+            }
+        }
+
         // silk skill, needle and needle strike damage
         [HarmonyPatch(typeof(HealthManager), "Hit")]
         class HealthManager_Hit
@@ -567,7 +620,6 @@ namespace BonfireSilksong
                     Log.LogDebug($"[Bonfire] Damage for {hitInstance.Source.name} = {hitInstance.DamageDealt}");
                     Log.LogDebug($"Crit chance: {ls.CritChance(s.LuckStat)}. Rolled {Instance._critRoll}.");
 
-                    Instance.Crit = Instance._critRoll <= ls.CritChance(s.LuckStat);
                     if (Instance.Crit)
                     {
                         hitInstance.DamageDealt = ls.CritDamage(s.DexterityStat, hitInstance.DamageDealt);
