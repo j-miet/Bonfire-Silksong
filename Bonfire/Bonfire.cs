@@ -43,6 +43,7 @@ namespace BonfireSilksong
 
         private int _critRoll;
         private float silkRegenTime;
+        private bool _blockNextHit = false;
 
         private string SavePath => Path.Combine(Paths.ConfigPath, "BonfireSilksong.json");
 
@@ -193,6 +194,22 @@ namespace BonfireSilksong
             return shards == null ? 0 : (int)shards;
         }
 
+        // lucky dice visual effect trigger when the player blocks a hit (HealthManager_TakeDamage)
+        private void LuckyShieldSetActive()
+        {
+            var hc = HeroController.instance;
+
+            var effect = (GameObject)typeof(HeroController)
+                .GetField("spawnedLuckyDiceShieldEffect", BindingFlags.Instance | BindingFlags.NonPublic)
+                ?.GetValue(hc);
+
+            if (effect != null)
+            {
+                effect.SetActive(false);
+                effect.SetActive(true); // toggle off/on to retrigger the effect, matching vanilla LuckyDice behavior
+            }
+        }
+
         /* -- Harmony patches -- */
 
         // shell shards replenishment
@@ -269,6 +286,35 @@ namespace BonfireSilksong
             }
         }
 
+        // update lifeblood masks
+        // == CURRENT ISSUE ==
+        // lifeblood/plasmium masks work internally just fine, but the visual is weird: it always displays one extra
+        // mask worth of damage on first hit only, then works normally. For example:
+        // - player has 6 blue masks from resiliency stat
+        // - player takes a hit dealing 2 masks of damage
+        // - visual goes from 6 -> 2 - 1 = 3, but internally blue masks go from 6 -> 4 as expected
+        // - afterwards everything works as expected, only just visual displays {current_blue_hp - 1}
+        // - so taking any damage will subtract the same amount, but of course visual will always display that one
+        // extra offset of damage. So eventually if you reach 1 blue mask, the hp bar displays none but you can still
+        // absorb a single damage hit before actual masks are removed
+        // => no idea how to fix this for now. I've tried lots of different things, but result is always the same:
+        // - either visual offset by 1, or 
+        // - no blue masks are displayed at all,
+        //   but in both cases, internal hp tracking works just fine so it's just a visual mismatch, nothing else
+        [HarmonyPatch(typeof(HeroController), "UpdateBlueHealth")]
+        class HeroController_UpdateBlueHealth
+        {
+            static void Postfix(HeroController __instance)
+            {
+                var ls = LevelingSystem.Instance;
+                var s = Instance.Status;
+                var pd = PlayerData.instance;
+
+                pd.healthBlue = ls.ExtraMasks(s.ResilienceStat);
+                EventRegister.SendEvent(EventRegisterEvents.UpdateBlueHealth);
+            }
+        }
+
         // binding cost reduction
         [HarmonyPatch(typeof(SilkSpool), "BindCost", MethodType.Getter)]
         class SilkSpool_BindCost_Getter
@@ -328,6 +374,74 @@ namespace BonfireSilksong
                 typeof(HeroController)
                     .GetField("attackDuration", BindingFlags.Instance | BindingFlags.NonPublic)
                     ?.SetValue(__instance, config.AttackDuration / attackSpeed);
+            }
+        }
+
+        // damage blocking based on resiliency stat
+        [HarmonyPatch(typeof(HeroController), "TakeDamage")]
+        class HealthManager_TakeDamage
+        {
+            static void Prefix(ref int damageAmount, HazardType hazardType)
+            {
+                Log.LogDebug("Took damage from hazard type: " + hazardType);
+
+                if (hazardType != HazardType.ENEMY) return; // only block enemy attacks
+
+                var s = Instance.Status;
+                if (s.ResilienceStat <= 1) return;
+
+                int hitsSinceShielded = Instance.HitsSinceShielded;
+                if (hitsSinceShielded > 7)
+                    hitsSinceShielded = 7;
+
+                float num = Random.Range(1, 100);
+                float iframes = LevelingSystem.Instance.BlockChance(s.ResilienceStat);
+                float multiplier = 0f;
+
+                switch (hitsSinceShielded)
+                {
+                    case 1: multiplier = 10f; break;
+                    case 2: multiplier = 20f; break;
+                    case 3: multiplier = 30f; break;
+                    case 4: multiplier = 50f; break;
+                    case 5: multiplier = 70f; break;
+                    case 6: multiplier = 80f; break;
+                    case 7: multiplier = 90f; break;
+                }
+
+                Log.LogDebug($"Range value {num} <= {multiplier} * {iframes}");
+                if (multiplier > 0 && num <= multiplier * iframes)
+                {
+                    Instance.HitsSinceShielded = 0;
+                    Instance.LuckyShieldSetActive();
+                    Instance._blockNextHit = true;
+                    Log.LogDebug("Blocked a hit!");
+                }
+                else
+                {
+                    Instance.HitsSinceShielded++;
+                }
+            }
+
+            static void Postfix()
+            {
+                // safety feature to ensure that block flag is set to 'false' after TakeDamage and its internal 
+                // TakeHealth call. Otherwise flag could get stuck on 'true', making player invulnerable
+                Instance._blockNextHit = false;
+            }
+        }
+
+        [HarmonyPatch(typeof(PlayerData), "TakeHealth")]
+        class PlayerData_TakeHealth
+        {
+            static void Prefix(ref int amount)
+            {
+                if (Instance.Status.ResilienceStat <= 1) return;
+                if (Instance._blockNextHit)
+                {
+                    amount = 0;
+                    Instance._blockNextHit = false;
+                }
             }
         }
 
