@@ -51,11 +51,11 @@ namespace BonfireSilksong
 
         private void Awake()
         {
+            Logger.LogInfo("Initializing BonfireSilksong...");
+
             Instance = this;
             Log = Logger;
             LoadSettings();
-
-            Logger.LogInfo("Initializing Bonfire");
 
             Harmony.CreateAndPatchAll(typeof(Bonfire).Assembly);
 
@@ -69,12 +69,12 @@ namespace BonfireSilksong
             SceneManager.sceneLoaded -= OnSceneLoaded;
         }
 
-        // TODO not working 100% as intended; see README "Known issues" section for bind cost reduction
+        // TODO **Fix this** when modding API gets added or if another solution is found
         //
         // this + SilkSpool_BindCost patcher handle the silk cost reduction
-        // BindCost will set the reduced value, but there's some kind of internal flag which still checks if player has
-        // at least 9 silk (or something other blocker with similar idea). This update loop will override that: it
-        // keeps forcing player's silk to value 9 in order to cheat this flag check
+        // BindCost will set the reduced value, but there's some kind of internal flag which still checks if player 
+        // has at least 9 silk (or something other blocker with similar idea). This update loop will override that: 
+        // it keeps forcing player's silk to value 9 in order to cheat this flag check
         private void Update()
         {
             if (GameManager.instance?.hero_ctrl == null)
@@ -303,14 +303,16 @@ namespace BonfireSilksong
         }
 
         // update lifeblood masks
-        // == CURRENT ISSUE ==
+        //
+        // TODO **Fix this** when modding API gets added or if another solution is found
+        //
         // lifeblood/plasmium masks work internally just fine, but the visual is weird: it always displays one extra
         // mask worth of damage on first hit only, then works normally. For example:
         // - player has 6 blue masks from resiliency stat
         // - player takes a hit dealing 2 masks of damage
         // - visual goes from 6 -> 2 - 1 = 3, but internally blue masks go from 6 -> 4 as expected
         // - afterwards everything works as expected, only just visual displays {current_blue_hp - 1}
-        // - so taking any damage will subtract the same amount, but of course visual will always display that one
+        // So taking any damage will subtract the same amount, but of course visual will always display that one
         // extra offset of damage. So eventually if you reach 1 blue mask, the hp bar displays none but you can still
         // absorb a single damage hit before actual masks are removed
         // => no idea how to fix this for now. I've tried lots of different things, but result is always the same:
@@ -509,7 +511,6 @@ namespace BonfireSilksong
                     var i = Instance;
                     var ls = LevelingSystem.Instance;
                     float dt = Time.deltaTime;
-                    int wisInterval = ls.SilkRegenInterval(Instance.Status.WisdomStat);
 
                     if (i.silkRegenTime > 0)
                     {
@@ -517,9 +518,18 @@ namespace BonfireSilksong
                     }
                     else
                     {
-                        Log.LogDebug("Recovering Silk!");
-                        i.silkRegenTime = ls.SilkRegenInterval(Instance.Status.WisdomStat);
+                        Log.LogDebug("Checking silk regen cooldown");
+                        int regenInterval = ls.SilkRegenInterval(Instance.Status.WisdomStat);
+                        if (regenInterval <= 0)
+                        {
+                            i.silkRegenTime = 1f;
+                            return;
+                        }
+
+                        i.silkRegenTime = regenInterval;
                         HeroController.instance.AddSilk(1, heroEffect: false);
+
+                        Log.LogDebug("Regenerated 1 silk");
                     }
                 }
                 catch { }
