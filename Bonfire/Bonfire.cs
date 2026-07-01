@@ -509,5 +509,75 @@ namespace BonfireSilksong
                 catch { }
             }
         }
+
+        // silk skill, needle and needle strike damage
+        [HarmonyPatch(typeof(HealthManager), "Hit")]
+        class HealthManager_Hit
+        {
+            static void Prefix(ref HitInstance hitInstance)
+            {
+                var s = Instance.Status;
+                var ls = LevelingSystem.Instance;
+
+                if (hitInstance.Source == null) return;
+
+                Log.LogDebug("Recorded a hit => Hit source: " + hitInstance.Source.name);
+
+                string sourceName = hitInstance.Source.name;
+
+                Log.LogDebug("Tool instance: " + hitInstance.RepresentingTool?.name ?? "null");
+
+                // -- silk skills --
+                // the "Type == ToolItemType.Skill" should already target only the silk skills, but in case exact names 
+                // are needed for hitInstance.RepresentingTool.name, these are:
+                //   Silk Spear, Thread Sphere, Parry, Silk Charge, Silk Bomb, Silk Boss Needle
+                if (hitInstance.RepresentingTool != null && hitInstance.RepresentingTool.Type == ToolItemType.Skill)
+                {
+                    Log.LogDebug(
+                        $"[Vanilla] Silk Skill: {hitInstance.RepresentingTool}. Damage: {hitInstance.DamageDealt}");
+
+                    hitInstance.DamageDealt =
+                        LevelingSystem.Instance.SpellDamage(hitInstance.DamageDealt, s.IntelligenceStat);
+
+                    Log.LogDebug(
+                        $"[Bonfire] Silk Skill: {hitInstance.RepresentingTool}. Damage: {hitInstance.DamageDealt}");
+                }
+
+                // for possible red and blue tool scaling in the future (a new 7th stat for tool-focused builds)
+                /*
+                if (hitInstance.RepresentingTool != null
+                    && (hitInstance.RepresentingTool.Type == ToolItemType.Red
+                        || hitInstance.RepresentingTool.Type == ToolItemType.Blue))
+                {
+                }
+                */
+
+                // -- basic needle hits + needle strike --
+                // 1. "Slash" can be used here, it includes Slash, UpSlash, DownSlash, AltSlash and Charge Slash 
+                // variants for different crests (these are simply "Charge Slash <crest_name>") which should be enough. 
+                // 2. Hollow Knight's mod used "lash", but this would also include something like "Splash Surface" 
+                // which gets recorded if player hits water surface
+                // 3. Finally, the "Needle Damage" check is probably not needed, but there's no harm in including it
+                else if (sourceName.Contains("Slash") || sourceName == "Needle Damage")
+                {
+                    Log.LogDebug($"[Vanilla] Damage for {hitInstance.Source.name} = {hitInstance.DamageDealt}");
+
+                    hitInstance.DamageDealt = ls.NeedleDamage(s.StrengthStat);
+
+                    Log.LogDebug($"[Bonfire] Damage for {hitInstance.Source.name} = {hitInstance.DamageDealt}");
+                    Log.LogDebug($"Crit chance: {ls.CritChance(s.LuckStat)}. Rolled {Instance._critRoll}.");
+
+                    Instance.Crit = Instance._critRoll <= ls.CritChance(s.LuckStat);
+                    if (Instance.Crit)
+                    {
+                        hitInstance.DamageDealt = ls.CritDamage(s.DexterityStat, hitInstance.DamageDealt);
+                        Log.LogDebug($"[Crit] Damage for {hitInstance.Source.name} = {hitInstance.DamageDealt}");
+
+                        HeroController.instance.GetComponent<SpriteFlash>().FlashGrimmflame();
+                        Instance.Crit = false;
+                    }
+                }
+            }
+        }
     }
 }
