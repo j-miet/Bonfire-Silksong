@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 
+using BepInEx.Configuration;
 using GlobalEnums;
 using HutongGames.PlayMaker;
 using UnityEngine;
@@ -37,12 +38,15 @@ namespace BonfireSilksong
                 DrawBenchUI();
             }
 
-            DrawEnemyHealthBars();  // shown outside the bench check
+            DrawEnemyHealthBars();  // hp bar display must not be tied to bench check
 
             if (!PlayerData.instance.atBench)
                 ResetPendingLevelUp();
         }
 
+
+        private ConfigEntry<KeyboardShortcut> EnemyHpBarToggleKey;
+        private bool enemyHPBarsEnabled = false;
 
         private Font _trajanBold;
         private Font _trajanNormal;
@@ -54,6 +58,22 @@ namespace BonfireSilksong
         private void Awake()
         {
             Instance = this;
+            EnemyHpBarToggleKey = Bonfire.Instance.Config.Bind(
+                "Hotkeys",
+                "Enemy HP bar Toggle",
+                new KeyboardShortcut(KeyCode.H, KeyCode.LeftControl),
+                "Toggle enemy HP bars on/off"
+                );
+        }
+
+        private void Update()
+        {
+            // enemy hp bar toggle via hotkey
+            if (EnemyHpBarToggleKey.Value.IsDown())
+            {
+                enemyHPBarsEnabled = !enemyHPBarsEnabled;
+                Bonfire.Instance.Status.EnemyHealthBarsEnabled = enemyHPBarsEnabled;
+            }
         }
 
         private static Texture2D SolidTex()
@@ -257,9 +277,6 @@ namespace BonfireSilksong
             GUI.backgroundColor = Color.white;
             s.EnemyHealthBarsEnabled = GUILayout.Toggle(s.EnemyHealthBarsEnabled, "Enemy Health Bars");
 
-            if (!s.EnemyHealthBarsEnabled)
-                s.EnemyHpBarColorProgression = false;
-
             GUI.enabled = s.EnemyHealthBarsEnabled;
             s.EnemyHpBarColorProgression = GUILayout.Toggle(s.EnemyHpBarColorProgression,
                 "Toggle HP progression (green -> yellow -> red)");
@@ -268,7 +285,7 @@ namespace BonfireSilksong
             GUILayout.EndVertical();
         }
 
-        /// draws floating health bars above tracked enemies
+        // draws floating health bars above tracked enemies
         private void DrawEnemyHealthBars()
         {
             var s = Bonfire.Instance.Status;
