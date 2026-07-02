@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 
 using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using GlobalEnums;
 using GlobalSettings;
@@ -12,7 +13,7 @@ using UnityEngine.SceneManagement;
 
 namespace BonfireSilksong
 {
-    [BepInPlugin("hksilksong.mod.bonfiresilksong", "Bonfire Silksong", "0.2.0")]
+    [BepInPlugin("hksilksong.mod.bonfiresilksong", "Bonfire Silksong", "0.3.0")]
     public class Bonfire : BaseUnityPlugin
     {
         public PlayerStatus Status;
@@ -42,8 +43,11 @@ namespace BonfireSilksong
 
 
         private int _critRoll;
-        private float silkRegenTime;
+        private float _silkRegenTime;
         private bool _blockNextHit = false;
+
+        private ConfigEntry<KeyboardShortcut> _enemyHpBarToggleKey;
+        private bool _enemyHPBarsEnabled = false;
 
         private string SavePath => Path.Combine(Paths.ConfigPath, "BonfireSilksong.json");
 
@@ -55,6 +59,13 @@ namespace BonfireSilksong
 
             Instance = this;
             Log = Logger;
+
+            _enemyHpBarToggleKey = Instance.Config.Bind(
+                "Hotkeys",
+                "Enemy HP bar Toggle",
+                new KeyboardShortcut(KeyCode.H, KeyCode.LeftControl),
+                "Toggle enemy HP bars on/off");
+
             LoadSettings();
 
             Harmony.CreateAndPatchAll(typeof(Bonfire).Assembly);
@@ -69,14 +80,14 @@ namespace BonfireSilksong
             SceneManager.sceneLoaded -= OnSceneLoaded;
         }
 
-        // TODO **Fix this** when modding API gets added or if another solution is found
-        //
-        // this + SilkSpool_BindCost patcher handle the silk cost reduction
-        // BindCost will set the reduced value, but there's some kind of internal flag which still checks if player 
-        // has at least 9 silk (or something other blocker with similar idea). This update loop will override that: 
-        // it keeps forcing player's silk to value 9 in order to cheat this flag check
         private void Update()
         {
+            // TODO **Fix this** when modding API gets added or if another solution is found
+            //
+            // this + SilkSpool_BindCost patcher handle the silk cost reduction
+            // BindCost will set the reduced value, but there's some kind of internal flag which still checks if player 
+            // has at least 9 silk (or something other blocker with similar idea). This update loop will override that: 
+            // it keeps forcing player's silk to value 9 in order to cheat this flag check
             if (GameManager.instance?.hero_ctrl == null)
                 return;
 
@@ -92,6 +103,15 @@ namespace BonfireSilksong
             {
                 hero.playerData.silk = 9;
                 hero.RefreshSilk();
+            }
+
+            // hotkeys
+
+            // enemy hp bar toggle
+            if (_enemyHpBarToggleKey.Value.IsDown())
+            {
+                _enemyHPBarsEnabled = !_enemyHPBarsEnabled;
+                Instance.Status.EnemyHealthBarsEnabled = _enemyHPBarsEnabled;
             }
         }
 
@@ -512,9 +532,9 @@ namespace BonfireSilksong
                     var ls = LevelingSystem.Instance;
                     float dt = Time.deltaTime;
 
-                    if (i.silkRegenTime > 0)
+                    if (i._silkRegenTime > 0)
                     {
-                        i.silkRegenTime -= dt;
+                        i._silkRegenTime -= dt;
                     }
                     else
                     {
@@ -522,11 +542,11 @@ namespace BonfireSilksong
                         int regenInterval = ls.SilkRegenInterval(Instance.Status.WisdomStat);
                         if (regenInterval <= 0)
                         {
-                            i.silkRegenTime = 1f;
+                            i._silkRegenTime = 1f;
                             return;
                         }
 
-                        i.silkRegenTime = regenInterval;
+                        i._silkRegenTime = regenInterval;
                         HeroController.instance.AddSilk(1, heroEffect: false);
 
                         Log.LogDebug("Regenerated 1 silk");
