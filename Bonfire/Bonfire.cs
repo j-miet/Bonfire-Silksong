@@ -42,8 +42,9 @@ namespace BonfireSilksong
         }
 
 
-        private int _critRoll;
-        private float _silkRegenTime;
+        private int _critRoll = 0;
+        private float _silkRegenTime = 0f;
+        private float _toolRegenTime = 0f;
         private bool _blockNextHit = false;
 
         private ConfigEntry<KeyboardShortcut> _enemyHpBarToggleKey;
@@ -394,7 +395,9 @@ namespace BonfireSilksong
             {
                 var config = __instance.Config;
                 if (config == null) return;
+
                 float attackSpeed = LevelingSystem.Instance.AttackSpeed(Instance.Status.DexterityStat);
+
                 typeof(HeroController)
                     .GetField("attack_cooldown", BindingFlags.Instance | BindingFlags.NonPublic)
                     ?.SetValue(__instance, config.AttackCooldownTime / attackSpeed);
@@ -408,7 +411,9 @@ namespace BonfireSilksong
             {
                 var config = __instance.Config;
                 if (config == null) return;
+
                 float attackSpeed = LevelingSystem.Instance.AttackSpeed(Instance.Status.DexterityStat);
+
                 typeof(HeroController)
                     .GetField("attackDuration", BindingFlags.Instance | BindingFlags.NonPublic)
                     ?.SetValue(__instance, config.AttackDuration / attackSpeed);
@@ -500,7 +505,7 @@ namespace BonfireSilksong
             }
         }
 
-        // clean enemy hp bars, handle crit roll and passive silk regen from wisdom stat
+        // clean enemy hp bars, handle crit roll and passive silk/tool regen from wisdom/artifice stat respectively
         [HarmonyPatch(typeof(HeroController), "Update")]
         class HeroController_Update
         {
@@ -532,21 +537,22 @@ namespace BonfireSilksong
                     var ls = LevelingSystem.Instance;
                     float dt = Time.deltaTime;
 
+                    // passive silk regen
                     if (i._silkRegenTime > 0)
                     {
                         i._silkRegenTime -= dt;
                     }
                     else
                     {
-                        Log.LogDebug("Checking silk regen cooldown");
-                        int regenInterval = ls.SilkRegenInterval(Instance.Status.WisdomStat);
-                        if (regenInterval <= 0)
+                        Log.LogDebug("Checking silk regen conditions");
+                        int silkRegenInterval = ls.SilkRegenInterval(Instance.Status.WisdomStat);
+                        if (silkRegenInterval <= 0)
                         {
                             i._silkRegenTime = 1f;
                             return;
                         }
 
-                        i._silkRegenTime = regenInterval;
+                        i._silkRegenTime = silkRegenInterval;
                         HeroController.instance.AddSilk(1, heroEffect: false);
 
                         Log.LogDebug("Regenerated 1 silk");
@@ -572,7 +578,19 @@ namespace BonfireSilksong
 
                 var s = Instance.Status;
                 var ls = LevelingSystem.Instance;
-                Instance.Crit = Instance._critRoll <= ls.CritChance(s.LuckStat);
+
+                int critChance = ls.CritChance(s.LuckStat);
+                if (critChance < 1) // must have at least 1% crit chance
+                {
+                    Instance.Crit = false;
+                    return;
+                }
+
+                int critRoll = Instance._critRoll;
+
+                Log.LogDebug($"Crit chance: {critChance}. Rolled {critRoll}.");
+
+                Instance.Crit = critRoll <= critChance;
             }
 
             static void Postfix(DamageEnemies __instance, GameObject target, bool __result)
@@ -604,56 +622,45 @@ namespace BonfireSilksong
 
                 if (hitInstance.Source == null) return;
 
-                Log.LogDebug("Recorded a hit => Hit source: " + hitInstance.Source.name);
-
                 string sourceName = hitInstance.Source.name;
+                var tool = hitInstance.RepresentingTool;
 
-                Log.LogDebug("Tool instance: " + hitInstance.RepresentingTool?.name ?? "null");
+                Log.LogDebug("Recorded a hit => Hit source: " + sourceName);
+                Log.LogDebug("Tool instance: " + tool?.name ?? "null");
 
-                // -- silk skills --
-                // the "Type == ToolItemType.Skill" should already target only the silk skills, but in case exact names 
-                // are needed for hitInstance.RepresentingTool.name, these are:
-                //   Silk Spear, Thread Sphere, Parry, Silk Charge, Silk Bomb, Silk Boss Needle
-                if (hitInstance.RepresentingTool != null && hitInstance.RepresentingTool.Type == ToolItemType.Skill)
+                if (tool != null && tool.Type == ToolItemType.Skill)
                 {
-                    Log.LogDebug(
-                        $"[Vanilla] Silk Skill: {hitInstance.RepresentingTool}. Damage: {hitInstance.DamageDealt}");
+                    // -- silk skills --
+                    // the "Type == ToolItemType.Skill" should already target only the silk skills, but in case exact 
+                    // names are needed for hitInstance.RepresentingTool.name, these are:
+                    //   Silk Spear, Thread Sphere, Parry, Silk Charge, Silk Bomb, Silk Boss Needle
+                    Log.LogDebug($"[Vanilla] Silk Skill: {tool}. Damage: {hitInstance.DamageDealt}");
 
                     hitInstance.DamageDealt =
                         LevelingSystem.Instance.SpellDamage(hitInstance.DamageDealt, s.IntelligenceStat);
 
-                    Log.LogDebug(
-                        $"[Bonfire] Silk Skill: {hitInstance.RepresentingTool}. Damage: {hitInstance.DamageDealt}");
+                    Log.LogDebug($"[Bonfire] Silk Skill: {tool}. Damage: {hitInstance.DamageDealt}");
                 }
-
-                // for possible red and blue tool scaling in the future (a new 7th stat for tool-focused builds)
-                /*
-                if (hitInstance.RepresentingTool != null
-                    && (hitInstance.RepresentingTool.Type == ToolItemType.Red
-                        || hitInstance.RepresentingTool.Type == ToolItemType.Blue))
-                {
-                }
-                */
-
-                // -- basic needle hits + needle strike --
-                // 1. "Slash" can be used here, it includes Slash, UpSlash, DownSlash, AltSlash and Charge Slash 
-                // variants for different crests (these are simply "Charge Slash <crest_name>") which should be enough. 
-                // 2. Hollow Knight's mod used "lash", but this would also include something like "Splash Surface" 
-                // which gets recorded if player hits water surface
-                // 3. Finally, the "Needle Damage" check is probably not needed, but there's no harm in including it
                 else if (sourceName.Contains("Slash") || sourceName == "Needle Damage")
                 {
-                    Log.LogDebug($"[Vanilla] Damage for {hitInstance.Source.name} = {hitInstance.DamageDealt}");
+                    // -- basic needle hits + needle strike --
+                    // 1. "Slash" can be used here, it includes Slash, UpSlash, DownSlash, and AltSlash + Charge Slash 
+                    // variants for different crests (these are simply "Charge Slash <crest_name>") which should 
+                    // be enough. 
+                    // 2. Hollow Knight's mod used "lash", but this would also include something like "Splash Surface" 
+                    // which gets recorded if player hits water surface
+                    // 3. Finally, the "Needle Damage" check is probably not needed, but there's no harm in including it
+                    Log.LogDebug($"[Vanilla] Damage for {sourceName} = {hitInstance.DamageDealt}");
 
                     hitInstance.DamageDealt = ls.NeedleDamage(s.StrengthStat);
 
-                    Log.LogDebug($"[Bonfire] Damage for {hitInstance.Source.name} = {hitInstance.DamageDealt}");
-                    Log.LogDebug($"Crit chance: {ls.CritChance(s.LuckStat)}. Rolled {Instance._critRoll}.");
+                    Log.LogDebug($"[Bonfire] Damage for {sourceName} = {hitInstance.DamageDealt}");
 
                     if (Instance.Crit)
                     {
                         hitInstance.DamageDealt = ls.CritDamage(s.DexterityStat, hitInstance.DamageDealt);
-                        Log.LogDebug($"[Crit] Damage for {hitInstance.Source.name} = {hitInstance.DamageDealt}");
+
+                        Log.LogDebug($"[Crit] Damage for {sourceName} = {hitInstance.DamageDealt}");
 
                         HeroController.instance.GetComponent<SpriteFlash>().FlashGrimmflame();
                         Instance.Crit = false;
