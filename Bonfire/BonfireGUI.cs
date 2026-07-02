@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 
-using BepInEx.Configuration;
 using GlobalEnums;
 using HutongGames.PlayMaker;
 using UnityEngine;
@@ -44,47 +43,20 @@ namespace BonfireSilksong
                 ResetPendingLevelUp();
         }
 
-
-        private ConfigEntry<KeyboardShortcut> EnemyHpBarToggleKey;
-        private bool enemyHPBarsEnabled = false;
+        private bool _pendingCrestUnlock = false;
 
         private Font _trajanBold;
         private Font _trajanNormal;
         private GUIStyle _labelStyle;
         private GUIStyle _buttonStyle;
+        private GUIStyle _crestUnlockLabelStyle;
+        private GUIStyle _crestUnlockButtonStyle;
 
         private static Texture2D _tex;
 
         private void Awake()
         {
             Instance = this;
-            EnemyHpBarToggleKey = Bonfire.Instance.Config.Bind(
-                "Hotkeys",
-                "Enemy HP bar Toggle",
-                new KeyboardShortcut(KeyCode.H, KeyCode.LeftControl),
-                "Toggle enemy HP bars on/off"
-                );
-        }
-
-        private void Update()
-        {
-            // enemy hp bar toggle via hotkey
-            if (EnemyHpBarToggleKey.Value.IsDown())
-            {
-                enemyHPBarsEnabled = !enemyHPBarsEnabled;
-                Bonfire.Instance.Status.EnemyHealthBarsEnabled = enemyHPBarsEnabled;
-            }
-        }
-
-        private static Texture2D SolidTex()
-        {
-            if (_tex == null)
-            {
-                _tex = new Texture2D(1, 1);
-                _tex.SetPixel(0, 0, Color.white);
-                _tex.Apply();
-            }
-            return _tex;
         }
 
         private void DrawRect(Rect rect, Color color)
@@ -198,14 +170,14 @@ namespace BonfireSilksong
 
             GUILayout.EndHorizontal();
 
-            GUILayout.Label(new GUIContent("Current Level: " + currentLvl), _labelStyle);
-            GUILayout.Label(new GUIContent("Rosaries to Level Up: " + rosariesToLvlUp), _labelStyle);
+            GUILayout.Label("Current Level: " + currentLvl, _labelStyle);
+            GUILayout.Label("Rosaries to Level Up: " + rosariesToLvlUp, _labelStyle);
 
             // apply and cancel
             GUILayout.BeginHorizontal("box");
 
             GUI.backgroundColor = Color.green;
-            if (GUILayout.Button(new GUIContent(applyText), _buttonStyle, GUILayout.Height(40f), GUILayout.Width(258f))
+            if (GUILayout.Button(applyText, _buttonStyle, GUILayout.Height(40f), GUILayout.Width(258f))
                 && PlayerData.instance.atBench)
             {
                 LevelingSystem.Instance.ApplyLevel();
@@ -214,8 +186,7 @@ namespace BonfireSilksong
             GUILayout.FlexibleSpace();
 
             GUI.backgroundColor = Color.white;
-            if (GUILayout.Button(new GUIContent("Cancel"), _buttonStyle,
-                    GUILayout.Height(40f), GUILayout.Width(258f))
+            if (GUILayout.Button("Cancel", _buttonStyle, GUILayout.Height(40f), GUILayout.Width(258f))
                 && PlayerData.instance.atBench)
             {
                 ResetPendingLevelUp();
@@ -229,9 +200,10 @@ namespace BonfireSilksong
 
             GUI.backgroundColor = Color.red;
             if (GUILayout.Button(
-                    new GUIContent($"Respec ({s.RespecCost}  Silkeater)"),
+                    $"Respec ({s.RespecCost}  Silkeater)",
                     _buttonStyle,
-                    GUILayout.Height(40f), GUILayout.Width(522f))
+                    GUILayout.Height(40f),
+                    GUILayout.Width(522f))
                 && PlayerData.instance.atBench)
             {
                 LevelingSystem.Instance.Respec();
@@ -242,6 +214,7 @@ namespace BonfireSilksong
 
             DrawShellShardSettingsUI();
             DrawEnemyHPToggleUI();
+            DrawCrestUnlockUI();
 
             GUILayout.EndArea();
         }
@@ -252,7 +225,7 @@ namespace BonfireSilksong
             var s = Bonfire.Instance.Status;
 
             GUILayout.BeginVertical("box");
-            GUILayout.Label("Shell shard settings");
+            GUILayout.Label("Shell shards replenishment");
 
             GUI.backgroundColor = Color.white;
             s.InfiniteShellShardsEnabled = GUILayout.Toggle(s.InfiniteShellShardsEnabled, "Infinite shards");
@@ -261,7 +234,9 @@ namespace BonfireSilksong
                 s.InfiniteShardsBenchOnly = false;
 
             GUI.enabled = s.InfiniteShellShardsEnabled;
-            s.InfiniteShardsBenchOnly = GUILayout.Toggle(s.InfiniteShardsBenchOnly, "Replenish shards only at bench");
+            s.InfiniteShardsBenchOnly = GUILayout.Toggle(
+                s.InfiniteShardsBenchOnly,
+                "Shard refill to full only at benches");
             GUI.enabled = true;
 
             GUILayout.EndVertical();
@@ -273,16 +248,103 @@ namespace BonfireSilksong
             var s = Bonfire.Instance.Status;
 
             GUILayout.BeginVertical("box");
+            GUILayout.Label("Enemy HP bars");
 
             GUI.backgroundColor = Color.white;
-            s.EnemyHealthBarsEnabled = GUILayout.Toggle(s.EnemyHealthBarsEnabled, "Enemy Health Bars");
+            s.EnemyHealthBarsEnabled = GUILayout.Toggle(
+                s.EnemyHealthBarsEnabled,
+                "Display enemy health bars (global hotkey is LeftControl + H)");
 
             GUI.enabled = s.EnemyHealthBarsEnabled;
-            s.EnemyHpBarColorProgression = GUILayout.Toggle(s.EnemyHpBarColorProgression,
-                "Toggle HP progression (green -> yellow -> red)");
+            s.EnemyHpBarColorProgression = GUILayout.Toggle(
+                s.EnemyHpBarColorProgression,
+                "Progressive HP bar values (green → yellow → red)");
             GUI.enabled = true;
 
             GUILayout.EndVertical();
+        }
+
+        private void DrawCrestUnlockUI()
+        {
+            if (Bonfire.Instance.Status.UnlockAllCrests) return;
+
+            GUILayout.Space(10);
+            if (GUILayout.Button("Unlock All Crests (asks for confirmation)"))
+                _pendingCrestUnlock = true;
+
+            if (_pendingCrestUnlock)
+            {
+                // dim background
+                GUI.color = new Color(0, 0, 0, 0.8f);
+                GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+                GUI.color = Color.white;
+
+                // modal box
+                float w = 550f, h = 275f;
+                Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
+                GUI.ModalWindow(9999, modalRect, DrawConfirmModal, "Warning");
+            }
+        }
+
+        private void DrawConfirmModal(int windowId)
+        {
+            GUILayout.Space(10);
+            GUILayout.Label(
+                "Unlocking all crests is permanent and cannot be undone\n",
+                _crestUnlockLabelStyle
+            );
+            GUILayout.Label("Are you sure?", _crestUnlockLabelStyle);
+
+            GUILayout.Space(15);
+            GUILayout.BeginHorizontal();
+
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button(
+                    "Yes\nUnlock all crests",
+                    _crestUnlockButtonStyle,
+                    GUILayout.Width(200f),
+                    GUILayout.Height(50f)))
+            {
+                _pendingCrestUnlock = false;
+                Bonfire.Instance.Status.UnlockAllCrests = true;
+
+                foreach (var crest in Resources.FindObjectsOfTypeAll<ToolCrest>())
+                    crest.Unlock();
+
+                Bonfire.Instance.SaveSettings();
+            }
+
+            GUILayout.Space(10);
+            if (GUILayout.Button(
+                    "No\nLeave my crests alone",
+                    _crestUnlockButtonStyle,
+                    GUILayout.Width(200f),
+                    GUILayout.Height(50f)))
+            {
+                _pendingCrestUnlock = false;
+            }
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(25);
+            GUILayout.BeginHorizontal();
+
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button(
+                    "Remove crest unlocking\n" + "(This will permanently hide the \"Unlock All Crests\" button)",
+                    _crestUnlockButtonStyle,
+                    GUILayout.Width(520f),
+                    GUILayout.Height(55f)))
+            {
+                _pendingCrestUnlock = false;
+                Bonfire.Instance.Status.UnlockAllCrests = true;
+
+                Bonfire.Instance.SaveSettings();
+            }
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
         }
 
         // draws floating health bars above tracked enemies
@@ -330,10 +392,12 @@ namespace BonfireSilksong
                                     int rosariesToLvlUp)
         {
             if (GUILayout.Button(
-                    new GUIContent($"{statName}: {displayValue}"),
+                    $"{statName}: {displayValue}",
                     _buttonStyle,
-                    GUILayout.Height(40f), GUILayout.Width(160f))
-                && CanLevelUp(gotFreeLevel, rosariesToLvlUp) && PlayerData.instance.atBench)
+                    GUILayout.Height(40f),
+                    GUILayout.Width(160f))
+                && CanLevelUp(gotFreeLevel, rosariesToLvlUp)
+                && PlayerData.instance.atBench)
             {
                 LevelingSystem.Instance.IncreaseStat(statName, s, rosariesToLvlUp);
             }
@@ -341,8 +405,7 @@ namespace BonfireSilksong
 
         private void DrawStatLabel(string text)
         {
-            GUILayout.Label(new GUIContent(text), _labelStyle,
-                GUILayout.Height(40f), GUILayout.Width(160f));
+            GUILayout.Label(text, _labelStyle, GUILayout.Height(40f), GUILayout.Width(160f));
         }
 
         private bool CanLevelUp(bool gotFreeLevel, int rosariesToLvlUp)
@@ -390,8 +453,8 @@ namespace BonfireSilksong
                 {
                     font = _trajanNormal,
                     fontStyle = FontStyle.Bold,
+                    fontSize = 15,
                     alignment = TextAnchor.MiddleCenter,
-                    fontSize = 15
                 };
             }
 
@@ -405,6 +468,24 @@ namespace BonfireSilksong
                     alignment = TextAnchor.MiddleCenter
                 };
             }
+
+            if (_crestUnlockLabelStyle == null)
+                _crestUnlockLabelStyle = new GUIStyle(GUI.skin.label)
+                {
+                    font = _trajanBold,
+                    fontSize = 14,
+                    alignment = TextAnchor.MiddleCenter,
+                    wordWrap = true
+                };
+
+            if (_crestUnlockButtonStyle == null)
+                _crestUnlockButtonStyle = new GUIStyle(GUI.skin.button)
+                {
+                    font = _trajanBold,
+                    fontStyle = FontStyle.Normal,
+                    fontSize = 14,
+                    alignment = TextAnchor.MiddleCenter
+                };
         }
 
         private static bool InInventory()
@@ -417,6 +498,17 @@ namespace BonfireSilksong
 
             FsmBool open = fsm.FsmVariables.GetFsmBool("Open");
             return open != null && open.Value;
+        }
+
+        private static Texture2D SolidTex()
+        {
+            if (_tex == null)
+            {
+                _tex = new Texture2D(1, 1);
+                _tex.SetPixel(0, 0, Color.white);
+                _tex.Apply();
+            }
+            return _tex;
         }
     }
 }
