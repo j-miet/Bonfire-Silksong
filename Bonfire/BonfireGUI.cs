@@ -77,16 +77,17 @@ namespace BonfireSilksong
             int rosaryLevels = s.TotalRosaryLevels + s.PendingRosaryLevels;
             int rosariesToLvlUp = (int)(Math.Pow(rosaryLevels, 2.0) + (10 * rosaryLevels) + 50.0);
 
-            int currentLvl = s.StrengthStat + s.DexterityStat + s.LuckStat
+            int currentLvl = s.StrengthStat + s.DexterityStat + s.LuckStat + s.ArtificeStat
                           + s.ResilienceStat + s.WisdomStat + s.IntelligenceStat
                           + s.PendingRelicLevels
                           + s.PendingRosaryLevels
-                          - 5;
+                          - 6; // keep this always stat_types - 1 to ensure lowest level value is always 1
 
             // preview strings
             string totalStr = (s.StrengthStat + ls.StrengthIncrease).ToString();
             string totalDex = (s.DexterityStat + ls.DexterityIncrease).ToString();
             string totalInt = (s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
+            string totalArt = (s.ArtificeStat + ls.ArtificeIncrease).ToString();
             string totalRes = (s.ResilienceStat + ls.ResilienceIncrease).ToString();
             string totalWsdm = (s.WisdomStat + ls.WisdomIncrease).ToString();
             string totalLck = (s.LuckStat + ls.LuckIncrease).ToString();
@@ -99,6 +100,14 @@ namespace BonfireSilksong
             string spellDamage = ls.SpellDamage(100, s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
             string bindCost = ls.BindCost(s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
 
+            string toolDamage = ls.ToolDamage(100, s.ArtificeStat + ls.ArtificeIncrease).ToString();
+            string toolRegenInterval = "-";
+            if (s.ArtificeStat + ls.ArtificeIncrease > 1)
+            {
+                int toolRegen = ls.ToolRegenInterval(s.ArtificeStat + ls.ArtificeIncrease);
+                toolRegenInterval = toolRegen > 0 ? toolRegen.ToString() + " s" : "-";
+            }
+
             string extraMasks = ls.ExtraMasks(s.ResilienceStat + ls.ResilienceIncrease).ToString();
             string blockChance = s.ResilienceStat + ls.ResilienceIncrease > 1
                 ? ls.AverageBlockChance(s.ResilienceStat + ls.ResilienceIncrease).ToString("F0")
@@ -108,8 +117,8 @@ namespace BonfireSilksong
             string silkRegenInterval = "-";
             if (s.WisdomStat + ls.WisdomIncrease > 1)
             {
-                int regen = ls.SilkRegenInterval(s.WisdomStat + ls.WisdomIncrease);
-                silkRegenInterval = regen > 0 ? regen.ToString() + " s" : "-";
+                int silkRegen = ls.SilkRegenInterval(s.WisdomStat + ls.WisdomIncrease);
+                silkRegenInterval = silkRegen > 0 ? silkRegen.ToString() + " s" : "-";
             }
 
             string critChance = ls.CritChance(s.LuckStat + ls.LuckIncrease).ToString();
@@ -145,6 +154,7 @@ namespace BonfireSilksong
             DrawStatButton("Strength", totalStr, gotFreeLevel, s, rosariesToLvlUp);
             DrawStatButton("Dexterity", totalDex, gotFreeLevel, s, rosariesToLvlUp);
             DrawStatButton("Intelligence", totalInt, gotFreeLevel, s, rosariesToLvlUp);
+            DrawStatButton("Artifice", totalArt, gotFreeLevel, s, rosariesToLvlUp);
             DrawStatButton("Resilience", totalRes, gotFreeLevel, s, rosariesToLvlUp);
             DrawStatButton("Wisdom", totalWsdm, gotFreeLevel, s, rosariesToLvlUp);
             DrawStatButton("Luck", totalLck, gotFreeLevel, s, rosariesToLvlUp);
@@ -154,6 +164,7 @@ namespace BonfireSilksong
             DrawStatLabel("Needle Damage: " + needleDamage);
             DrawStatLabel("Slash Speed: " + attackSpeed);
             DrawStatLabel("Silk Skill Damage: " + spellDamage + "%");
+            DrawStatLabel("Tool Damage: " + toolDamage + "%");
             DrawStatLabel("Extra Lifeblood Masks: " + extraMasks);
             DrawStatLabel("Silk Gained On Hit: " + extraSilk);
             DrawStatLabel("Crit Chance: " + critChance + "%");
@@ -163,6 +174,7 @@ namespace BonfireSilksong
             DrawStatLabel("");   // spacer to align with column 1
             DrawStatLabel("Crit Damage: " + critDamage + "%");
             DrawStatLabel("Binding Cost: " + bindCost);
+            DrawStatLabel("Tool Regen interval: " + toolRegenInterval);
             DrawStatLabel("Block Chance: " + blockChance + "%");
             DrawStatLabel("Silk Regen interval: " + silkRegenInterval);
             DrawStatLabel("Rosary + Shard Increase: " + rosaryIncrease + "%");
@@ -423,9 +435,10 @@ namespace BonfireSilksong
 
             ls.StrengthIncrease = 0;
             ls.DexterityIncrease = 0;
+            ls.IntelligenceIncrease = 0;
+            ls.ArtificeIncrease = 0;
             ls.WisdomIncrease = 0;
             ls.ResilienceIncrease = 0;
-            ls.IntelligenceIncrease = 0;
             ls.LuckIncrease = 0;
 
             s.PendingRosaries = 0;

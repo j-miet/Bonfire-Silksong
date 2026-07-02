@@ -557,6 +557,32 @@ namespace BonfireSilksong
 
                         Log.LogDebug("Regenerated 1 silk");
                     }
+
+                    // passive tool regen: this will replenish charges for ALL red tools currently equipped
+                    if (i._toolRegenTime > 0)
+                    {
+                        i._toolRegenTime -= dt;
+                    }
+                    else
+                    {
+                        Log.LogDebug("Checking tool regen conditions");
+                        int toolRegenInterval = ls.ToolRegenInterval(Instance.Status.ArtificeStat);
+                        if (toolRegenInterval <= 0)
+                        {
+                            i._toolRegenTime = 1f;
+                            return;
+                        }
+
+                        i._toolRegenTime = toolRegenInterval;
+                        foreach (var tool in Resources.FindObjectsOfTypeAll<ToolItem>())
+                        {
+                            if (tool.IsEquipped && tool.IsAutoReplenished() && tool.CanReload())
+                                tool.CollectFree(1);
+                            // tool.ReloadSingle() would do the same, but costs shards
+                        }
+
+                        Log.LogDebug("Replenished 1 charge for all red tools");
+                    }
                 }
                 catch { }
             }
@@ -640,6 +666,16 @@ namespace BonfireSilksong
                         LevelingSystem.Instance.SpellDamage(hitInstance.DamageDealt, s.IntelligenceStat);
 
                     Log.LogDebug($"[Bonfire] Silk Skill: {tool}. Damage: {hitInstance.DamageDealt}");
+                }
+                else if (tool != null && (tool.Type == ToolItemType.Red || tool.Type == ToolItemType.Blue))
+                {
+                    // -- red and blue tools --
+                    Log.LogDebug($"[Vanilla] Tool: {tool}. Damage: {hitInstance.DamageDealt}");
+
+                    hitInstance.DamageDealt =
+                        LevelingSystem.Instance.ToolDamage(hitInstance.DamageDealt, s.ArtificeStat);
+
+                    Log.LogDebug($"[Bonfire] Tool: {tool}. Damage: {hitInstance.DamageDealt}");
                 }
                 else if (sourceName.Contains("Slash") || sourceName == "Needle Damage")
                 {

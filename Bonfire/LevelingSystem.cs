@@ -10,6 +10,7 @@ namespace BonfireSilksong
         public int StrengthIncrease = 0;
         public int DexterityIncrease = 0;
         public int IntelligenceIncrease = 0;
+        public int ArtificeIncrease = 0;
         public int ResilienceIncrease = 0;
         public int WisdomIncrease = 0;
         public int LuckIncrease = 0;
@@ -25,7 +26,7 @@ namespace BonfireSilksong
             _instance = this;
         }
 
-        // -- stat formulas --
+        /* -- stat formulas -- */
 
         // strength: needle damage
         public int NeedleDamage(int totalStr) =>
@@ -45,6 +46,24 @@ namespace BonfireSilksong
         // intelligence: binding (healing) cost
         public int BindCost(int totalInt) => (int)Math.Round(9.1 * Math.Exp(-0.01 * (totalInt + 1.0)));
 
+        // artifice: red/blue tool damage
+        public int ToolDamage(int baseDamage, int totalArt)
+        {
+            if (totalArt <= 1) return baseDamage;
+
+            return (int)Math.Round(baseDamage * (1.0 + 2.0 / (1.0 + 15.0 * Math.Exp(-0.1 * (totalArt - 1)))));
+        }
+
+        // artifice: amount of time it takes to passively replenish a single tool charge (without costing any shards)
+        // starts from 60 seconds timer at lvl 5: this prevents player from putting just a single point for such an 
+        // impactful upgrade
+        public int ToolRegenInterval(int totalArt)
+        {
+            if (totalArt < 5) return -1;
+
+            return (int)(4.0 + 56.0 * Math.Exp(-0.06 * (totalArt - 5)));
+        }
+
         // resilience: extra lifeblood masks
         public int ExtraMasks(int totalRes) => (int)Math.Round(-0.4 + 2.6 * Math.Log(totalRes));
 
@@ -55,8 +74,8 @@ namespace BonfireSilksong
         public int ExtraSilk(int totalWsdm, int baseSilk) => (int)(baseSilk + Math.Floor(totalWsdm / 20f));
 
         // wisdom: amount of time it takes to passively produce a single silk
-        // starts from 40 seconds timer at lvl 5: this prevents player from putting just a single point for such an 
-        // impactful upgrade
+        // starts from 40 seconds timer at lvl 5 to prevents players from putting just a single point and
+        // reaping the benefits
         public int SilkRegenInterval(int totalWsdm)
         {
             if (totalWsdm < 5) return -1;
@@ -65,13 +84,14 @@ namespace BonfireSilksong
         }
 
         // luck: crit chance
-        public int CritChance(int totalLck) => (int)Math.Round(60.0 / (1.0 + 15.0 * Math.Exp(-0.08 * (totalLck - 1))));
+        public int CritChance(int totalLck) =>
+            (int)Math.Round(60.0 / (1.0 + 15.0 * Math.Exp(-0.08 * (totalLck - 1))) - 60.0 / 16.0);
 
         // luck: rosary drop multiplier from enemies (5% per stat level)
         public int IncreaseRosaries(int droppedRosaries, int totalLck) =>
             (int)(droppedRosaries * (1f + (totalLck - 1) / 20f));
 
-        // -- stat formulas end here --
+        /* -- stat formulas end here */
 
         /// <summary>
         /// Increments the pending allocation for a single stat.
@@ -81,6 +101,7 @@ namespace BonfireSilksong
             if (stat == "Strength") StrengthIncrease++;
             else if (stat == "Dexterity") DexterityIncrease++;
             else if (stat == "Intelligence") IntelligenceIncrease++;
+            else if (stat == "Artifice") ArtificeIncrease++;
             else if (stat == "Resilience") ResilienceIncrease++;
             else if (stat == "Wisdom") WisdomIncrease++;
             else LuckIncrease++;
@@ -130,9 +151,10 @@ namespace BonfireSilksong
 
             s.StrengthStat += StrengthIncrease;
             s.DexterityStat += DexterityIncrease;
+            s.IntelligenceStat += IntelligenceIncrease;
+            s.ArtificeStat += ArtificeIncrease;
             s.ResilienceStat += ResilienceIncrease;
             s.WisdomStat += WisdomIncrease;
-            s.IntelligenceStat += IntelligenceIncrease;
             s.LuckStat += LuckIncrease;
 
             Bonfire.Log.LogDebug(
@@ -140,6 +162,7 @@ namespace BonfireSilksong
                 + StrengthIncrease + " Strength, "
                 + DexterityIncrease + " Dexterity, "
                 + IntelligenceIncrease + " Intelligence, "
+                + ArtificeIncrease + " Artifice, "
                 + ResilienceIncrease + " Resilience, "
                 + WisdomIncrease + " Wisdom and "
                 + LuckIncrease + " Luck."
@@ -147,9 +170,10 @@ namespace BonfireSilksong
 
             StrengthIncrease = 0;
             DexterityIncrease = 0;
+            IntelligenceIncrease = 0;
+            ArtificeIncrease = 0;
             ResilienceIncrease = 0;
             WisdomIncrease = 0;
-            IntelligenceIncrease = 0;
             LuckIncrease = 0;
 
             // CharmUpdate calls RefreshRelicsObtained() internally due to patching
@@ -168,8 +192,8 @@ namespace BonfireSilksong
 
             if (silkGrubs == null || silkGrubs.CollectedAmount < s.RespecCost) return;
 
-            int relicLevelsSpent = s.StrengthStat + s.DexterityStat + s.IntelligenceStat
-                                 + s.ResilienceStat + s.WisdomStat + s.LuckStat - 6
+            int relicLevelsSpent = s.StrengthStat + s.DexterityStat + s.IntelligenceStat + s.ArtificeStat
+                                 + s.ResilienceStat + s.WisdomStat + s.LuckStat - 7
                                  - (s.TotalRosaryLevels - 1);
 
             if (s.TotalRosaryLevels == 1 && relicLevelsSpent == 0) return;
@@ -184,14 +208,16 @@ namespace BonfireSilksong
 
             s.StrengthStat = 1;
             s.DexterityStat = 1;
+            s.IntelligenceStat = 1;
+            s.ArtificeStat = 1;
             s.ResilienceStat = 1;
             s.WisdomStat = 1;
-            s.IntelligenceStat = 1;
             s.LuckStat = 1;
 
             StrengthIncrease = 0;
             DexterityIncrease = 0;
             IntelligenceIncrease = 0;
+            ArtificeIncrease = 0;
             ResilienceIncrease = 0;
             WisdomIncrease = 0;
             LuckIncrease = 0;

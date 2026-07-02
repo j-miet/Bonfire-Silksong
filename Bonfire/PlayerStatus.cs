@@ -9,6 +9,7 @@ namespace BonfireSilksong
         public int StrengthStat = 1;
         public int DexterityStat = 1;
         public int IntelligenceStat = 1;
+        public int ArtificeStat = 1;
         public int ResilienceStat = 1;
         public int WisdomStat = 1;
         public int LuckStat = 1;
