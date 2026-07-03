@@ -30,28 +30,28 @@ namespace BonfireSilksong
 
         // strength: needle damage
         public int NeedleDamage(int totalStr) =>
-            (int)Math.Round((5 + 4 * PlayerData.instance.nailUpgrades) * Math.Pow(1.25, Math.Log(totalStr, 2.0)));
+            (int)Math.Round((5 + 4 * PlayerData.instance.nailUpgrades) * Math.Pow(1.25, Math.Log(totalStr + 1, 2.0)));
 
         // dexterity: needle attack speed
         public float AttackSpeed(int totalDex) =>
-            (float)Math.Round(2.7 / (1.0 + 1.82 * Math.Exp(-0.08 * totalDex)) - 0.01, 2);
+            (float)Math.Round(2.7 / (1.0 + 1.82 * Math.Exp(-0.08 * (totalDex + 1))) - 0.01, 2);
 
         // dexterity: nail crit damage
-        public int CritDamage(int totalDex, int needleDamage) => (int)(needleDamage * (1.2 + Math.Log(totalDex)));
+        public int CritDamage(int totalDex, int needleDamage) => (int)(needleDamage * (1.2 + Math.Log(totalDex + 1)));
 
         // intelligence: silk skill damage
         public int SpellDamage(int baseDamage, int totalInt) =>
-            (int)Math.Round(baseDamage * Math.Pow(1.25, Math.Log(totalInt, 2.0)));
+            (int)Math.Round(baseDamage * Math.Pow(1.25, Math.Log(totalInt + 1, 2.0)));
 
         // intelligence: binding (healing) cost
-        public int BindCost(int totalInt) => (int)Math.Round(9.1 * Math.Exp(-0.01 * (totalInt + 1.0)));
+        public int BindCost(int totalInt) => (int)Math.Round(9.1 * Math.Exp(-0.01 * (totalInt + 2.0)));
 
         // artifice: red/blue tool damage
         public int ToolDamage(int baseDamage, int totalArt)
         {
-            if (totalArt <= 1) return baseDamage;
+            if (totalArt <= 0) return baseDamage;
 
-            return (int)Math.Round(baseDamage * (1.0 + 2.0 / (1.0 + 15.0 * Math.Exp(-0.1 * (totalArt - 1)))));
+            return (int)Math.Round(baseDamage * (1.0 + 2.0 / (1.0 + 15.0 * Math.Exp(-0.1 * totalArt))));
         }
 
         // artifice: amount of time it takes to passively replenish a single tool charge (without costing any shards)
@@ -65,10 +65,10 @@ namespace BonfireSilksong
         }
 
         // resilience: extra lifeblood masks
-        public int ExtraMasks(int totalRes) => (int)Math.Round(-0.4 + 2.6 * Math.Log(totalRes));
+        public int ExtraMasks(int totalRes) => (int)Math.Round(-0.4 + 2.6 * Math.Log(totalRes + 1));
 
         // resilience: chance to block an enemy hit
-        public float BlockChance(int totalRes) => (float)(0.72 / (1.0 + 12.0 * Math.Exp(-0.09 * (totalRes - 1))));
+        public float BlockChance(int totalRes) => (float)(0.72 / (1.0 + 12.0 * Math.Exp(-0.09 * totalRes)));
 
         // wisdom: extra silk gained when striking an enemy with needle (+1 silk for every 20 levels)
         public int ExtraSilk(int totalWsdm, int baseSilk) => (int)(baseSilk + Math.Floor(totalWsdm / 20f));
@@ -85,11 +85,11 @@ namespace BonfireSilksong
 
         // luck: crit chance
         public int CritChance(int totalLck) =>
-            (int)Math.Round(60.0 / (1.0 + 15.0 * Math.Exp(-0.08 * (totalLck - 1))) - 60.0 / 16.0);
+            (int)Math.Round(60.0 / (1.0 + 15.0 * Math.Exp(-0.08 * totalLck)));
 
         // luck: rosary drop multiplier from enemies (5% per stat level)
         public int IncreaseRosaries(int droppedRosaries, int totalLck) =>
-            (int)(droppedRosaries * (1f + (totalLck - 1) / 20f));
+            (int)(droppedRosaries * (1f + (totalLck / 20f)));
 
         /* -- stat formulas end here */
 
@@ -176,7 +176,6 @@ namespace BonfireSilksong
             WisdomIncrease = 0;
             LuckIncrease = 0;
 
-            // CharmUpdate calls RefreshRelicsObtained() internally due to patching
             HeroController.instance.CharmUpdate();
             EventRegister.SendEvent(EventRegisterEvents.UpdateBlueHealth);
         }
@@ -192,9 +191,9 @@ namespace BonfireSilksong
 
             if (silkGrubs == null || silkGrubs.CollectedAmount < s.RespecCost) return;
 
-            int relicLevelsSpent = s.StrengthStat + s.DexterityStat + s.IntelligenceStat + s.ArtificeStat
-                                 + s.ResilienceStat + s.WisdomStat + s.LuckStat - 7
-                                 - (s.TotalRosaryLevels - 1);
+            int relicLevelsSpent = s.StrengthStat + s.DexterityStat + s.IntelligenceStat
+                                + s.ArtificeStat + s.ResilienceStat + s.WisdomStat + s.LuckStat
+                                - (s.TotalRosaryLevels - 1);
 
             if (s.TotalRosaryLevels == 1 && relicLevelsSpent == 0) return;
 
@@ -206,13 +205,13 @@ namespace BonfireSilksong
             s.TotalSpentRosaries = 0;
             s.TotalRosaryLevels = 1;
 
-            s.StrengthStat = 1;
-            s.DexterityStat = 1;
-            s.IntelligenceStat = 1;
-            s.ArtificeStat = 1;
-            s.ResilienceStat = 1;
-            s.WisdomStat = 1;
-            s.LuckStat = 1;
+            s.StrengthStat = 0;
+            s.DexterityStat = 0;
+            s.IntelligenceStat = 0;
+            s.ArtificeStat = 0;
+            s.ResilienceStat = 0;
+            s.WisdomStat = 0;
+            s.LuckStat = 0;
 
             StrengthIncrease = 0;
             DexterityIncrease = 0;
@@ -238,7 +237,7 @@ namespace BonfireSilksong
         /// </summary>
         public int RelicsObtained()
         {
-            var relicChoralCommandment = Resources.FindObjectsOfTypeAll<CollectableItemRelicType>()
+            var relicChoralCommandments = Resources.FindObjectsOfTypeAll<CollectableItemRelicType>()
                 .FirstOrDefault(r => r.name == "R Seal Chit");
 
             var relicRuneHarps = Resources.FindObjectsOfTypeAll<CollectableItemRelicType>()
@@ -247,15 +246,13 @@ namespace BonfireSilksong
             var relicArcaneEggs = Resources.FindObjectsOfTypeAll<CollectableItemRelicType>()
                 .FirstOrDefault(r => r.name == "R Ancient Egg");
 
-            if (relicChoralCommandment == null || relicRuneHarps == null || relicArcaneEggs == null)
-            {
+            if (relicChoralCommandments == null || relicRuneHarps == null || relicArcaneEggs == null)
                 return -1;
-            }
 
             int total = 0;
-            foreach (var relic in relicChoralCommandment.Relics
-                        .Concat(relicRuneHarps.Relics)
-                        .Concat(relicArcaneEggs.Relics))
+            foreach (var relic in relicChoralCommandments.Relics
+                .Concat(relicRuneHarps.Relics)
+                .Concat(relicArcaneEggs.Relics))
             {
                 var data = relic.SavedData;
                 if (data.IsDeposited) total++;

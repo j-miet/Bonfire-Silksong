@@ -77,11 +77,11 @@ namespace BonfireSilksong
             int rosaryLevels = s.TotalRosaryLevels + s.PendingRosaryLevels;
             int rosariesToLvlUp = (int)(Math.Pow(rosaryLevels, 2.0) + (10 * rosaryLevels) + 50.0);
 
-            int currentLvl = s.StrengthStat + s.DexterityStat + s.LuckStat + s.ArtificeStat
-                          + s.ResilienceStat + s.WisdomStat + s.IntelligenceStat
-                          + s.PendingRelicLevels
-                          + s.PendingRosaryLevels
-                          - 6; // keep this always stat_types - 1 to ensure lowest level value is always 1
+            int currentLvl = s.StrengthStat + s.DexterityStat + s.IntelligenceStat
+                        + s.ArtificeStat + s.ResilienceStat + s.WisdomStat + s.LuckStat
+                        + s.PendingRelicLevels
+                        + s.PendingRosaryLevels
+                        + 1; // base level is 1
 
             // preview strings
             string totalStr = (s.StrengthStat + ls.StrengthIncrease).ToString();
@@ -102,27 +102,27 @@ namespace BonfireSilksong
 
             string toolDamage = ls.ToolDamage(100, s.ArtificeStat + ls.ArtificeIncrease).ToString();
             string toolRegenInterval = "-";
-            if (s.ArtificeStat + ls.ArtificeIncrease > 1)
+            if (s.ArtificeStat + ls.ArtificeIncrease > 0)
             {
                 int toolRegen = ls.ToolRegenInterval(s.ArtificeStat + ls.ArtificeIncrease);
                 toolRegenInterval = toolRegen > 0 ? toolRegen.ToString() + " s" : "-";
             }
 
             string extraMasks = ls.ExtraMasks(s.ResilienceStat + ls.ResilienceIncrease).ToString();
-            string blockChance = s.ResilienceStat + ls.ResilienceIncrease > 1
+            string blockChance = s.ResilienceStat + ls.ResilienceIncrease > 0
                 ? ls.AverageBlockChance(s.ResilienceStat + ls.ResilienceIncrease).ToString("F0")
                 : "0";
 
             string extraSilk = ls.ExtraSilk(s.WisdomStat + ls.WisdomIncrease, 1).ToString();
             string silkRegenInterval = "-";
-            if (s.WisdomStat + ls.WisdomIncrease > 1)
+            if (s.WisdomStat + ls.WisdomIncrease > 0)
             {
                 int silkRegen = ls.SilkRegenInterval(s.WisdomStat + ls.WisdomIncrease);
                 silkRegenInterval = silkRegen > 0 ? silkRegen.ToString() + " s" : "-";
             }
 
             string critChance = ls.CritChance(s.LuckStat + ls.LuckIncrease).ToString();
-            string rosaryIncrease = (5 * (s.LuckStat + ls.LuckIncrease - 1)).ToString();
+            string rosaryIncrease = (5 * (s.LuckStat + ls.LuckIncrease)).ToString();
 
             // apply button label
             string applyText;

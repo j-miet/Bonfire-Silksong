@@ -6,7 +6,7 @@
     <AssemblyName>BonfireSilksong</AssemblyName>
     <RootNamespace>BonfireSilksong</RootNamespace>
     <Nullable>disable</Nullable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup>

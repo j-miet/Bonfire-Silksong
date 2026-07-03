@@ -6,13 +6,13 @@ namespace BonfireSilksong
     public class PlayerStatus
     {
         // leveling system values
-        public int StrengthStat = 1;
-        public int DexterityStat = 1;
-        public int IntelligenceStat = 1;
-        public int ArtificeStat = 1;
-        public int ResilienceStat = 1;
-        public int WisdomStat = 1;
-        public int LuckStat = 1;
+        public int StrengthStat = 0;
+        public int DexterityStat = 0;
+        public int IntelligenceStat = 0;
+        public int ArtificeStat = 0;
+        public int ResilienceStat = 0;
+        public int WisdomStat = 0;
+        public int LuckStat = 0;
 
         public int TotalRosaryLevels = 1; // levelling starts from 1
         public int TotalSpentRosaries = 0;

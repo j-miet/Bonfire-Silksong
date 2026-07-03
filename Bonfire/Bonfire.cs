@@ -431,7 +431,7 @@ namespace BonfireSilksong
                 if (hazardType != HazardType.ENEMY) return; // only block enemy attacks
 
                 var s = Instance.Status;
-                if (s.ResilienceStat <= 1) return;
+                if (s.ResilienceStat <= 0) return;
 
                 int hitsSinceShielded = Instance.HitsSinceShielded;
                 if (hitsSinceShielded > 7)
