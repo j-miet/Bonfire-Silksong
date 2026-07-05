@@ -84,8 +84,12 @@ namespace BonfireSilksong
         }
 
         // luck: crit chance
-        public int CritChance(int totalLck) =>
-            (int)Math.Round(60.0 / (1.0 + 15.0 * Math.Exp(-0.08 * totalLck)));
+        public int CritChance(int totalLck)
+        {
+            if (totalLck <= 0) return 0;
+
+            return (int)Math.Round(60.0 / (1.0 + 15.0 * Math.Exp(-0.08 * totalLck)));
+        }
 
         // luck: rosary drop multiplier from enemies (5% per stat level)
         public int IncreaseRosaries(int droppedRosaries, int totalLck) =>
@@ -109,7 +113,7 @@ namespace BonfireSilksong
             int relicsObtained = RelicsObtained();
             if (relicsObtained < 0)
             {
-                Bonfire.Log.LogDebug("Failed to fetch relic data");
+                Bonfire.Log.LogError("Failed to fetch relic data");
                 return;
             }
 
