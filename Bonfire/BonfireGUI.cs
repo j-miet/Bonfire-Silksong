@@ -51,6 +51,7 @@ namespace BonfireSilksong
         private GUIStyle _buttonStyle;
         private GUIStyle _crestUnlockLabelStyle;
         private GUIStyle _crestUnlockButtonStyle;
+        private GUIStyle _fastTravelUnlockLabelStyle;
 
         private static Texture2D _tex;
 
@@ -228,6 +229,8 @@ namespace BonfireSilksong
             DrawEnemyHPToggleUI();
             DrawCrestUnlockUI();
 
+            FastTravelUnlockNotification();
+
             GUILayout.EndArea();
         }
 
@@ -294,7 +297,7 @@ namespace BonfireSilksong
                 // modal box
                 float w = 550f, h = 275f;
                 Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
-                GUI.ModalWindow(9999, modalRect, DrawConfirmModal, "Warning");
+                GUI.ModalWindow(9999, modalRect, DrawConfirmModal, "Crest unlocking");
             }
         }
 
@@ -400,6 +403,58 @@ namespace BonfireSilksong
             }
         }
 
+        private void FastTravelUnlockNotification()
+        {
+            if (Bonfire.Instance.Status.FastTravelUnlocked) return;
+
+            if (PlayerData.instance.defeatedCogworkDancers)
+            {
+                GUI.color = new Color(0, 0, 0, 0.8f);
+                GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+                GUI.color = Color.yellow;
+
+                float w = 600f, h = 280f;
+                Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
+                GUI.ModalWindow(10000, modalRect, DrawFastTravelUnlockModalPopup, "Bench fast travel unlocked!");
+            }
+        }
+
+        private void DrawFastTravelUnlockModalPopup(int windowId)
+        {
+            GUILayout.Space(10);
+            GUILayout.Label(
+                "You have defeated the Cogwork Dancers boss and " +
+                "therefore have unlocked the bench fast travel feature!",
+                _crestUnlockLabelStyle
+            );
+
+            GUILayout.Space(5);
+            GUILayout.Label(
+                "To fast travel:\n" +
+                "- Open the map while sitting on any bench.\n" +
+                "- Open the pin marker menu\n" +
+                "- Move the marker on top of the bench icon you wish to travel to, then place the pin.\n",
+                _fastTravelUnlockLabelStyle
+            );
+
+            GUILayout.Space(20);
+            GUILayout.BeginHorizontal();
+
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button(
+                    "Close this popup",
+                    _crestUnlockButtonStyle,
+                    GUILayout.Width(150f),
+                    GUILayout.Height(50f)))
+            {
+                Bonfire.Instance.Status.FastTravelUnlocked = true;
+                Bonfire.Instance.SaveSettings();
+            }
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+        }
+
         private void DrawStatButton(string statName, string displayValue, bool gotFreeLevel, PlayerStatus s,
                                     int rosariesToLvlUp)
         {
@@ -483,6 +538,7 @@ namespace BonfireSilksong
             }
 
             if (_crestUnlockLabelStyle == null)
+            {
                 _crestUnlockLabelStyle = new GUIStyle(GUI.skin.label)
                 {
                     font = _trajanBold,
@@ -490,8 +546,10 @@ namespace BonfireSilksong
                     alignment = TextAnchor.MiddleCenter,
                     wordWrap = true
                 };
+            }
 
             if (_crestUnlockButtonStyle == null)
+            {
                 _crestUnlockButtonStyle = new GUIStyle(GUI.skin.button)
                 {
                     font = _trajanBold,
@@ -499,6 +557,17 @@ namespace BonfireSilksong
                     fontSize = 14,
                     alignment = TextAnchor.MiddleCenter
                 };
+            }
+
+            if (_fastTravelUnlockLabelStyle == null)
+            {
+                _fastTravelUnlockLabelStyle = new GUIStyle(GUI.skin.label)
+                {
+                    font = _trajanBold,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 14
+                };
+            }
         }
 
         private static bool InInventory()

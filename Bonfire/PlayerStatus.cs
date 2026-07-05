@@ -32,5 +32,7 @@ namespace BonfireSilksong
         public bool EnemyHpBarColorProgression = false;
 
         public bool UnlockAllCrests = false;
+
+        public bool FastTravelUnlocked = false;
     }
 }
