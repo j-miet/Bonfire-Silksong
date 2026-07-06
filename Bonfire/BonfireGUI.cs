@@ -281,7 +281,7 @@ namespace BonfireSilksong
 
         private void DrawCrestUnlockUI()
         {
-            if (Bonfire.Instance.Status.UnlockAllCrests) return;
+            if (Bonfire.Instance.Status.UnlockedAllCrests) return;
 
             GUILayout.Space(10);
             if (GUILayout.Button("Unlock All Crests (asks for confirmation)"))
@@ -321,7 +321,7 @@ namespace BonfireSilksong
                     GUILayout.Height(50f)))
             {
                 _pendingCrestUnlock = false;
-                Bonfire.Instance.Status.UnlockAllCrests = true;
+                Bonfire.Instance.Status.UnlockedAllCrests = true;
 
                 foreach (var crest in Resources.FindObjectsOfTypeAll<ToolCrest>())
                     crest.Unlock();
@@ -353,7 +353,7 @@ namespace BonfireSilksong
                     GUILayout.Height(55f)))
             {
                 _pendingCrestUnlock = false;
-                Bonfire.Instance.Status.UnlockAllCrests = true;
+                Bonfire.Instance.Status.UnlockedAllCrests = true;
 
                 Bonfire.Instance.SaveSettings();
             }
@@ -405,7 +405,7 @@ namespace BonfireSilksong
 
         private void FastTravelUnlockNotification()
         {
-            if (Bonfire.Instance.Status.FastTravelUnlocked) return;
+            if (Bonfire.Instance.Status.UnlockedFastTravel) return;
 
             if (PlayerData.instance.defeatedCogworkDancers)
             {
@@ -447,7 +447,7 @@ namespace BonfireSilksong
                     GUILayout.Width(150f),
                     GUILayout.Height(50f)))
             {
-                Bonfire.Instance.Status.FastTravelUnlocked = true;
+                Bonfire.Instance.Status.UnlockedFastTravel = true;
                 Bonfire.Instance.SaveSettings();
             }
 
