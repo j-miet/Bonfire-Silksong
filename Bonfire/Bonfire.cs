@@ -470,8 +470,10 @@ namespace BonfireSilksong
         [HarmonyPatch(typeof(HeroController), "TakeDamage")]
         class HealthManager_TakeDamage
         {
-            static void Prefix(ref int damageAmount, HazardType hazardType)
+            static void Prefix(HeroController __instance, GameObject go, ref int damageAmount, HazardType hazardType)
             {
+                if (__instance.cState.evading || __instance.cState.invulnerable) return;
+
                 Log.LogDebug("Took damage from hazard type: " + hazardType);
 
                 if (hazardType != HazardType.ENEMY) return; // only block enemy attacks
@@ -484,7 +486,7 @@ namespace BonfireSilksong
                     hitsSinceShielded = 7;
 
                 float num = Random.Range(1, 100);
-                float iframes = LevelingSystem.Instance.BlockChance(s.ResilienceStat);
+                float blockChange = LevelingSystem.Instance.BlockChance(s.ResilienceStat);
                 float multiplier = 0f;
 
                 switch (hitsSinceShielded)
@@ -498,8 +500,8 @@ namespace BonfireSilksong
                     case 7: multiplier = 90f; break;
                 }
 
-                Log.LogDebug($"Range value {num} <= {multiplier} * {iframes}");
-                if (multiplier > 0 && num <= multiplier * iframes)
+                Log.LogDebug($"Range value {num} <= {multiplier} * {blockChange}");
+                if (multiplier > 0 && num <= multiplier * blockChange)
                 {
                     Instance.HitsSinceShielded = 0;
                     Instance.LuckyShieldSetActive();
