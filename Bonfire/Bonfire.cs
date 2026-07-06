@@ -29,9 +29,20 @@ namespace BonfireSilksong
             if (GameManager.instance == null) return;
 
             int saveProfile = GameManager.instance.profileID;
-            Log.LogDebug("SaveSettings: save slot " + saveProfile);
+            Log.LogInfo("SaveSettings: save slot " + saveProfile);
 
-            if (saveProfile < 1) return;
+            if (saveProfile < 1)
+            {
+                _firstSave = true;
+                return;
+            }
+
+            if (_firstSave)
+            {
+                LoadSettings();
+                _firstSave = false;
+                return;
+            }
 
             var json = JsonUtility.ToJson(Status, prettyPrint: true);
             File.WriteAllText(SavePath(), json);
@@ -46,10 +57,11 @@ namespace BonfireSilksong
             }
 
             int saveProfile = GameManager.instance.profileID;
-            Log.LogDebug("LoadSettings: save slot " + saveProfile);
+            Log.LogInfo("LoadSettings: save slot " + saveProfile);
 
             if (saveProfile < 1)
             {
+                _firstSave = true;
                 Status = new PlayerStatus();
                 return;
             }
@@ -65,6 +77,12 @@ namespace BonfireSilksong
         }
 
 
+        // this a guard flag: it stays true until GameManager.instance != null and it's profileID field has value > 1
+        // which corresponds to a valid save slot (1-4). And every time the user quits to main menu, it flips back 
+        // to true upon detecting invalid profileID. Then, when user continues from another save slot, it prevents 
+        // SaveSettings from using previous save's status config data to override status of current one.
+        private bool _firstSave = true;
+
         private int _critRoll = 0;
         private float _silkRegenTime = 0f;
         private float _toolRegenTime = 0f;
@@ -77,10 +95,10 @@ namespace BonfireSilksong
 
         private void Awake()
         {
-            Logger.LogInfo("Initializing BonfireSilksong...");
-
             Instance = this;
             Log = Logger;
+
+            Log.LogInfo("Initializing BonfireSilksong...");
 
             _enemyHpBarToggleHotkey = Instance.Config.Bind(
                 "Hotkeys",
@@ -89,12 +107,13 @@ namespace BonfireSilksong
                 "Toggle enemy HP bars on/off");
 
             LoadSettings();
+            _firstSave = true;
 
             Harmony.CreateAndPatchAll(typeof(Bonfire).Assembly);
 
             SceneManager.sceneLoaded += OnSceneLoaded;
 
-            Logger.LogInfo("Bonfire initialized");
+            Log.LogInfo("BonfireSilksong initialized");
         }
 
         private void OnDestroy()
