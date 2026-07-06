@@ -26,18 +26,41 @@ namespace BonfireSilksong
 
         public void SaveSettings()
         {
+            if (GameManager.instance == null) return;
+
+            int saveProfile = GameManager.instance.profileID;
+            Log.LogDebug("SaveSettings: save slot " + saveProfile);
+
+            if (saveProfile < 1) return;
+
             var json = JsonUtility.ToJson(Status, prettyPrint: true);
-            File.WriteAllText(SavePath, json);
+            File.WriteAllText(SavePath(), json);
         }
 
         public void LoadSettings()
         {
-            if (!File.Exists(SavePath))
+            if (GameManager.instance == null)
             {
                 Status = new PlayerStatus();
                 return;
             }
-            var json = File.ReadAllText(SavePath);
+
+            int saveProfile = GameManager.instance.profileID;
+            Log.LogDebug("LoadSettings: save slot " + saveProfile);
+
+            if (saveProfile < 1)
+            {
+                Status = new PlayerStatus();
+                return;
+            }
+
+            if (!File.Exists(SavePath()))
+            {
+                Status = new PlayerStatus();
+                return;
+            }
+
+            var json = File.ReadAllText(SavePath());
             Status = JsonUtility.FromJson<PlayerStatus>(json);
         }
 
@@ -47,12 +70,10 @@ namespace BonfireSilksong
         private float _toolRegenTime = 0f;
         private bool _blockNextHit = false;
 
-        private ConfigEntry<KeyboardShortcut> _enemyHpBarToggleKey;
+        private ConfigEntry<KeyboardShortcut> _enemyHpBarToggleHotkey;
         private bool _enemyHPBarsEnabled = false;
 
-        private string SavePath => Path.Combine(Paths.ConfigPath, "BonfireSilksong.json");
-
-        /* Unity's internal method hooks */
+        /* Unity hooks */
 
         private void Awake()
         {
@@ -61,7 +82,7 @@ namespace BonfireSilksong
             Instance = this;
             Log = Logger;
 
-            _enemyHpBarToggleKey = Instance.Config.Bind(
+            _enemyHpBarToggleHotkey = Instance.Config.Bind(
                 "Hotkeys",
                 "Enemy HP bar Toggle",
                 new KeyboardShortcut(KeyCode.H, KeyCode.LeftControl),
@@ -109,7 +130,7 @@ namespace BonfireSilksong
             // hotkeys
 
             // enemy hp bar toggle
-            if (_enemyHpBarToggleKey.Value.IsDown())
+            if (_enemyHpBarToggleHotkey.Value.IsDown())
             {
                 _enemyHPBarsEnabled = !_enemyHPBarsEnabled;
                 Instance.Status.EnemyHealthBarsEnabled = _enemyHPBarsEnabled;
@@ -127,6 +148,12 @@ namespace BonfireSilksong
         }
 
         /* Bonfire's initialization and scene updates */
+
+        private string SavePath()
+        {
+            int saveProfile = GameManager.instance.profileID;
+            return Path.Combine(Paths.ConfigPath, $"BonfireSilksong_Save{saveProfile}.json");
+        }
 
         private void Init()
         {
