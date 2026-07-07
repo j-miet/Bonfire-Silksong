@@ -321,6 +321,17 @@ namespace BonfireSilksong
 
         /* -- Harmony patches -- */
 
+        // force config data saving after sitting on a bench and in more general, when charms are updated
+        // as leveling up and respecing needs these, it's important to call CharmUpdate inside them in LevelingSystem
+        [HarmonyPatch(typeof(HeroController), "CharmUpdate")]
+        class HeroController_CharmUpdate
+        {
+            static void Postfix()
+            {
+                Instance.SaveSettings();
+            }
+        }
+
         // shell shards replenishment
         [HarmonyPatch(typeof(CurrencyManager), "ProcessAddCurrency")]
         class CurrencyManager_ProcessAddCurrency
