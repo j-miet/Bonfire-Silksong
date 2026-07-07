@@ -64,8 +64,14 @@ namespace BonfireSilksong
             return (int)(4.0 + 56.0 * Math.Exp(-0.06 * (totalArt - 5)));
         }
 
-        // resilience: extra lifeblood masks
-        public int ExtraMasks(int totalRes) => (int)Math.Round(-0.4 + 2.6 * Math.Log(totalRes + 1));
+        // resilience: extra lifeblood masks. Caps at 8 on level 40; using a single plasmium from vial will then
+        // activate overdose regen effect
+        public int ExtraMasks(int totalRes)
+        {
+            if (totalRes >= 40) return 8;
+
+            return (int)Math.Round(8.0 * (1.0 - Math.Exp(-0.055 * (totalRes - 1))));
+        }
 
         // resilience: chance to block an enemy hit
         public float BlockChance(int totalRes) => (float)(0.72 / (1.0 + 12.0 * Math.Exp(-0.09 * totalRes)));

@@ -21,9 +21,6 @@ namespace BonfireSilksong
         public static Bonfire Instance;
         internal static ManualLogSource Log;
 
-        public int HitsSinceShielded { get; set; } = 0;
-        public bool Crit { get; set; } = false;
-
         public void SaveSettings()
         {
             if (GameManager.instance == null) return;
@@ -84,8 +81,10 @@ namespace BonfireSilksong
         private bool _firstSave = true;
 
         private int _critRoll = 0;
+        public bool _crit = false;
         private float _silkRegenTime = 0f;
         private float _toolRegenTime = 0f;
+        public int _hitsSinceShielded = 0;
         private bool _blockNextHit = false;
 
         private ConfigEntry<KeyboardShortcut> _enemyHpBarToggleHotkey;
@@ -394,6 +393,9 @@ namespace BonfireSilksong
                 var ls = LevelingSystem.Instance;
                 var s = Instance.Status;
                 var pd = PlayerData.instance;
+                var hc = HeroController.instance;
+
+                if (hc.IsInLifebloodState) return;
 
                 pd.healthBlue = ls.ExtraMasks(s.ResilienceStat);
                 EventRegister.SendEvent(EventRegisterEvents.UpdateBlueHealth);
@@ -481,7 +483,7 @@ namespace BonfireSilksong
                 var s = Instance.Status;
                 if (s.ResilienceStat <= 0) return;
 
-                int hitsSinceShielded = Instance.HitsSinceShielded;
+                int hitsSinceShielded = Instance._hitsSinceShielded;
                 if (hitsSinceShielded > 7)
                     hitsSinceShielded = 7;
 
@@ -503,14 +505,14 @@ namespace BonfireSilksong
                 Log.LogDebug($"Range value {num} <= {multiplier} * {blockChange}");
                 if (multiplier > 0 && num <= multiplier * blockChange)
                 {
-                    Instance.HitsSinceShielded = 0;
+                    Instance._hitsSinceShielded = 0;
                     Instance.LuckyShieldSetActive();
                     Instance._blockNextHit = true;
                     Log.LogDebug("Blocked a hit!");
                 }
                 else
                 {
-                    Instance.HitsSinceShielded++;
+                    Instance._hitsSinceShielded++;
                 }
             }
 
@@ -656,7 +658,7 @@ namespace BonfireSilksong
                 int critChance = ls.CritChance(s.LuckStat);
                 if (critChance < 1) // must have at least 1% crit chance
                 {
-                    Instance.Crit = false;
+                    Instance._crit = false;
                     return;
                 }
 
@@ -664,7 +666,7 @@ namespace BonfireSilksong
 
                 Log.LogDebug($"Crit chance: {critChance}. Rolled {critRoll}.");
 
-                Instance.Crit = critRoll <= critChance;
+                Instance._crit = critRoll <= critChance;
             }
 
             static void Postfix(DamageEnemies __instance, GameObject target, bool __result)
@@ -672,7 +674,7 @@ namespace BonfireSilksong
                 if (!__result || target == null || target.layer != 11) return;
                 if (!IsHeroDamage(__instance)) return;
 
-                if (Instance.Crit)
+                if (Instance._crit)
                 {
                     // effect comes from prefab value, these can have both visual and sound included. 
                     // Prefer one with no audio + only mild visuals; you will be hearing/seeing this effect a lot if
@@ -740,14 +742,14 @@ namespace BonfireSilksong
 
                     Log.LogDebug($"[Bonfire] Damage for {sourceName} = {hitInstance.DamageDealt}");
 
-                    if (Instance.Crit)
+                    if (Instance._crit)
                     {
                         hitInstance.DamageDealt = ls.CritDamage(s.DexterityStat, hitInstance.DamageDealt);
 
                         Log.LogDebug($"[Crit] Damage for {sourceName} = {hitInstance.DamageDealt}");
 
                         HeroController.instance.GetComponent<SpriteFlash>().FlashGrimmflame();
-                        Instance.Crit = false;
+                        Instance._crit = false;
                     }
                 }
             }
