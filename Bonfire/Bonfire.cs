@@ -73,6 +73,27 @@ namespace BonfireSilksong
             Status = JsonUtility.FromJson<PlayerStatus>(json);
         }
 
+        /* FSM patching */
+
+        // override bind cost gameplay value in FSM
+        // SilkSpool_BindCost_Getter handles the patching of getter value which is used for visually match the silk 
+        // spool
+        public void UpdateBindCostFSM()
+        {
+            if (HeroController.instance == null || LevelingSystem.Instance == null) return;
+
+            int cost = LevelingSystem.Instance.BindCost(Status.IntelligenceStat);
+
+            foreach (var fsm in HeroController.instance.GetComponents<PlayMakerFSM>())
+            {
+                foreach (var variable in fsm.FsmVariables.IntVariables)
+                {
+                    if (variable.Name == "Silk Cost" || variable.Name == "Silk Cost Witch")
+                        variable.Value = cost;
+                }
+            }
+        }
+
 
         // this a guard flag: it stays true until GameManager.instance != null and it's profileID field has value > 1
         // which corresponds to a valid save slot (1-4). And every time the user quits to main menu, it flips back 
@@ -122,29 +143,6 @@ namespace BonfireSilksong
 
         private void Update()
         {
-            // TODO **Fix this** when modding API gets added or if another solution is found
-            //
-            // this + SilkSpool_BindCost patcher handle the silk cost reduction
-            // BindCost will set the reduced value, but there's some kind of internal flag which still checks if player 
-            // has at least 9 silk (or something other blocker with similar idea). This update loop will override that: 
-            // it keeps forcing player's silk to value 9 in order to cheat this flag check
-            if (GameManager.instance?.hero_ctrl == null)
-                return;
-
-            var hero = GameManager.instance.hero_ctrl;
-            int cost = LevelingSystem.Instance.BindCost(Status.IntelligenceStat);
-
-            if (!HeroChargeEffects.Instance.IsCharging
-                && !hero.cState.casting
-                && (bool)InputHandler.Instance.inputActions.Cast
-                && hero.playerData.silk >= cost
-                && hero.playerData.silk < 9
-                && cost < 9)
-            {
-                hero.playerData.silk = 9;
-                hero.RefreshSilk();
-            }
-
             // hotkeys
 
             // enemy hp bar toggle
@@ -182,6 +180,8 @@ namespace BonfireSilksong
 
             if (BonfireGUI.Instance == null)
                 gameObject.AddComponent<BonfireGUI>();
+
+            UpdateBindCostFSM();
         }
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -196,6 +196,16 @@ namespace BonfireSilksong
         // keep it disabled outside testing, could otherwise heavily affect game performance
         private void DebugLogs()
         {
+            // log PlayMaker FSM variables
+            foreach (var fsm in HeroController.instance.GetComponents<PlayMakerFSM>())
+            {
+                Log.LogInfo($"FSM: {fsm.FsmName}");
+                foreach (var variable in fsm.FsmVariables.FloatVariables)
+                    Log.LogInfo($"  float: {variable.Name} = {variable.Value}");
+                foreach (var variable in fsm.FsmVariables.IntVariables)
+                    Log.LogInfo($"  int: {variable.Name} = {variable.Value}");
+            }
+
             // log all tools
             foreach (var tool in Resources.FindObjectsOfTypeAll<ToolItem>())
             {
@@ -390,19 +400,19 @@ namespace BonfireSilksong
         {
             static void Postfix(HeroController __instance)
             {
-                var ls = LevelingSystem.Instance;
-                var s = Instance.Status;
-                var pd = PlayerData.instance;
                 var hc = HeroController.instance;
 
                 if (hc.IsInLifebloodState) return;
 
+                var ls = LevelingSystem.Instance;
+                var s = Instance.Status;
+                var pd = PlayerData.instance;
+
                 pd.healthBlue = ls.ExtraMasks(s.ResilienceStat);
-                EventRegister.SendEvent(EventRegisterEvents.UpdateBlueHealth);
             }
         }
 
-        // binding cost reduction
+        // binding cost reduction (visually match the FSM variable value by updating silk spool)
         [HarmonyPatch(typeof(SilkSpool), "BindCost", MethodType.Getter)]
         class SilkSpool_BindCost_Getter
         {

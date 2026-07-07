@@ -499,6 +499,8 @@ namespace BonfireSilksong
             s.PendingRosaries = 0;
             s.PendingRosaryLevels = 0;
             s.PendingRelicLevels = 0;
+
+            Bonfire.Instance.UpdateBindCostFSM();
         }
 
         private void EnsureFonts()
