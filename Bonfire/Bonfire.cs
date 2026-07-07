@@ -26,7 +26,7 @@ namespace BonfireSilksong
             if (GameManager.instance == null) return;
 
             int saveProfile = GameManager.instance.profileID;
-            Log.LogInfo("SaveSettings: save slot " + saveProfile);
+            Log.LogDebug("SaveSettings: save slot " + saveProfile);
 
             if (saveProfile < 1)
             {
@@ -54,7 +54,7 @@ namespace BonfireSilksong
             }
 
             int saveProfile = GameManager.instance.profileID;
-            Log.LogInfo("LoadSettings: save slot " + saveProfile);
+            Log.LogDebug("LoadSettings: save slot " + saveProfile);
 
             if (saveProfile < 1)
             {
@@ -192,18 +192,35 @@ namespace BonfireSilksong
 
         /* -- helpers -- */
 
-        // debugging, call it inside LateUpdate (when sitting on a bench) or inside Update()
+        // debugging, call it inside LateUpdate (when sitting on a bench) or Update()
         // keep it disabled outside testing, could otherwise heavily affect game performance
         private void DebugLogs()
         {
             // log PlayMaker FSM variables
             foreach (var fsm in HeroController.instance.GetComponents<PlayMakerFSM>())
             {
-                Log.LogInfo($"FSM: {fsm.FsmName}");
+                Log.LogDebug($"FSM: {fsm.FsmName}");
                 foreach (var variable in fsm.FsmVariables.FloatVariables)
-                    Log.LogInfo($"  float: {variable.Name} = {variable.Value}");
+                    Log.LogDebug($"  float: {variable.Name} = {variable.Value}");
                 foreach (var variable in fsm.FsmVariables.IntVariables)
-                    Log.LogInfo($"  int: {variable.Name} = {variable.Value}");
+                    Log.LogDebug($"  int: {variable.Name} = {variable.Value}");
+            }
+
+            // log blue mask related data
+            // this could be useful for fixing the blue hp visual desync issue (see HeroController_UpdateBlueHealth 
+            // patch), but so far no luck
+            var gameCameras = GameCameras.instance.gameObject;
+            foreach (var fsm in gameCameras.GetComponentsInChildren<PlayMakerFSM>(includeInactive: true))
+            {
+                if (fsm.FsmName != "Blue Health Control") continue;
+
+                Log.LogDebug("=== Blue Health Control variables ===");
+                foreach (var v in fsm.FsmVariables.IntVariables)
+                    Log.LogDebug($"  int: {v.Name} = {v.Value}");
+                foreach (var v in fsm.FsmVariables.FloatVariables)
+                    Log.LogDebug($"  float: {v.Name} = {v.Value}");
+                foreach (var v in fsm.FsmVariables.BoolVariables)
+                    Log.LogDebug($"  bool: {v.Name} = {v.Value}");
             }
 
             // log all tools
@@ -400,9 +417,7 @@ namespace BonfireSilksong
         {
             static void Postfix(HeroController __instance)
             {
-                var hc = HeroController.instance;
-
-                if (hc.IsInLifebloodState) return;
+                if (__instance.IsInLifebloodState) return;
 
                 var ls = LevelingSystem.Instance;
                 var s = Instance.Status;
@@ -429,19 +444,6 @@ namespace BonfireSilksong
                 Log.LogDebug("Bind cost: " + cost);
 
                 __result = cost;
-            }
-        }
-
-        [HarmonyPatch(typeof(HeroController), "TakeSilk", typeof(int), typeof(SilkSpool.SilkTakeSource))]
-        class HeroController_TakeSilk
-        {
-            static void Prefix(ref int amount)
-            {
-                // default bind cost is 9
-                if (amount == 9)
-                {
-                    amount = LevelingSystem.Instance.BindCost(Instance.Status.IntelligenceStat);
-                }
             }
         }
 
