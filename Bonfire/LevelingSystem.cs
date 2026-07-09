@@ -21,11 +21,6 @@ namespace BonfireSilksong
             private set => _instance = value;
         }
 
-        private void Awake()
-        {
-            _instance = this;
-        }
-
         /* -- stat formulas -- */
 
         // strength: needle damage
@@ -301,5 +296,10 @@ namespace BonfireSilksong
 
         private static LevelingSystem _instance;
         private int _cachedRelicsObtained = 0;
+
+        private void Awake()
+        {
+            _instance = this;
+        }
     }
 }

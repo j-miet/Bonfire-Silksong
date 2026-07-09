@@ -10,12 +10,7 @@ using UnityEngine;
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Bench fast travel system.
-    /// Most of the core functionality is from "BonfireTeleport" mod by kassent. This has then been further simplified/
-    /// modified to fit BonfireSilksong's needs.
-    /// Doesn't include all the logic so this is more like a lite version. Nonetheless it's their hard work that has 
-    /// made allowed this feature to be added.
-    /// BonfireTeleport Nexusmods page: https://www.nexusmods.com/hollowknightsilksong/mods/156
+    /// Bench fast travel system using map bench pins.
     /// </summary>
     public class BenchTeleport : MonoBehaviour
     {
@@ -34,6 +29,20 @@ namespace BonfireSilksong
 
         private static readonly FieldInfo GameMapObjectField = typeof(MapMarkerMenu)
             .GetField("gameMapObject", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        private static bool CanTeleport()
+        {
+            if (Bonfire.Instance == null || !Bonfire.Instance.Status.UnlockedFastTravel)
+                return false;
+
+            if (GameManager.instance == null)
+                return false;
+
+            if (GameManager.instance.IsMemoryScene())
+                return false;
+
+            return PlayerData.instance.atBench;
+        }
 
         private static void TeleportToBench(MapPin closestPin)
         {
@@ -164,20 +173,6 @@ namespace BonfireSilksong
             Bonfire.Log.LogDebug("Calling ReadyForRespawn...");
 
             gm.ReadyForRespawn(false);
-        }
-
-        private static bool CanTeleport()
-        {
-            if (Bonfire.Instance == null || !Bonfire.Instance.Status.UnlockedFastTravel)
-                return false;
-
-            if (GameManager.instance == null)
-                return false;
-
-            if (GameManager.instance.IsMemoryScene())
-                return false;
-
-            return PlayerData.instance.atBench;
         }
 
         // get bench pin position in map coordinates

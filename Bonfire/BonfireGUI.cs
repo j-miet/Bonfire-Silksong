@@ -43,6 +43,7 @@ namespace BonfireSilksong
                 ResetPendingLevelUp();
         }
 
+
         private bool _pendingCrestUnlock = false;
 
         private Font _trajanBold;
@@ -324,7 +325,10 @@ namespace BonfireSilksong
                 Bonfire.Instance.Status.UnlockedAllCrests = true;
 
                 foreach (var crest in Resources.FindObjectsOfTypeAll<ToolCrest>())
+                {
+                    Bonfire.Log.LogDebug("Unlocked Crest name: " + crest.name); // "Warrior" = beast crest
                     crest.Unlock();
+                }
 
                 Bonfire.Instance.SaveSettings();
             }
