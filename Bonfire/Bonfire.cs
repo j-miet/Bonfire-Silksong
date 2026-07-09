@@ -8,6 +8,7 @@ using BepInEx.Logging;
 using GlobalEnums;
 using GlobalSettings;
 using HarmonyLib;
+using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -158,8 +159,6 @@ namespace BonfireSilksong
             if (PlayerData.instance.atBench)
             {
                 ShowCursor();
-
-                //DebugLogs();
             }
         }
 
@@ -188,73 +187,12 @@ namespace BonfireSilksong
         {
             SaveSettings();
             Init();
+
+            Log.LogDebug("Beast chapel beast fly defeated: " + PlayerData.instance.defeatedBoneFlyerGiant);
+            Log.LogDebug("Beast chapel closed: " + PlayerData.instance.chapelClosed_beast);
         }
 
         /* -- helpers -- */
-
-        // debugging, call it inside LateUpdate (when sitting on a bench) or Update()
-        // keep it disabled outside testing, could otherwise heavily affect game performance
-        private void DebugLogs()
-        {
-            // log PlayMaker FSM variables
-            foreach (var fsm in HeroController.instance.GetComponents<PlayMakerFSM>())
-            {
-                Log.LogDebug($"FSM: {fsm.FsmName}");
-                foreach (var variable in fsm.FsmVariables.FloatVariables)
-                    Log.LogDebug($"  float: {variable.Name} = {variable.Value}");
-                foreach (var variable in fsm.FsmVariables.IntVariables)
-                    Log.LogDebug($"  int: {variable.Name} = {variable.Value}");
-            }
-
-            // log blue mask related data
-            // this could be useful for fixing the blue hp visual desync issue (see HeroController_UpdateBlueHealth 
-            // patch), but so far no luck
-            var gameCameras = GameCameras.instance.gameObject;
-            foreach (var fsm in gameCameras.GetComponentsInChildren<PlayMakerFSM>(includeInactive: true))
-            {
-                if (fsm.FsmName != "Blue Health Control") continue;
-
-                Log.LogDebug("=== Blue Health Control variables ===");
-                foreach (var v in fsm.FsmVariables.IntVariables)
-                    Log.LogDebug($"  int: {v.Name} = {v.Value}");
-                foreach (var v in fsm.FsmVariables.FloatVariables)
-                    Log.LogDebug($"  float: {v.Name} = {v.Value}");
-                foreach (var v in fsm.FsmVariables.BoolVariables)
-                    Log.LogDebug($"  bool: {v.Name} = {v.Value}");
-            }
-
-            // log all tools
-            foreach (var tool in Resources.FindObjectsOfTypeAll<ToolItem>())
-            {
-                Log.LogDebug($"{tool.name} ({tool.GetType().FullName})");
-            }
-
-            // log all collectable items
-            foreach (var item in Resources.FindObjectsOfTypeAll<CollectableItem>())
-                Logger.LogDebug(item.name);
-
-            // log attack speed values
-            var config = HeroController.instance?.Config;
-            if (config == null) return;
-            Log.LogDebug("Attack duration: " + config.AttackDuration);
-            Log.LogDebug("Attack cooldown time: " + config.AttackCooldownTime);
-            Log.LogDebug("Quick attack speed mult: " + config.QuickAttackSpeedMult);
-            Log.LogDebug("Quick attack cooldown time: " + config.QuickAttackCooldownTime);
-
-            // log enemy drops: expensive to calculate, will reduce fps a lot!
-            var enemies = Resources.FindObjectsOfTypeAll<HealthManager>();
-            if (enemies.Length > 0)
-            {
-                foreach (var field in enemies[0].GetType().GetFields(
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
-                {
-                    if (field.Name.ToLower().Contains("geo")
-                        || field.Name.ToLower().Contains("drop")
-                        || field.Name.ToLower().Contains("rosary"))
-                        Log.LogDebug($"{field.Name}: {field.GetValue(enemies[0])}");
-                }
-            }
-        }
 
         // display cursor when player sits on a bench in order to access leveling GUI
         private void ShowCursor()
@@ -320,6 +258,36 @@ namespace BonfireSilksong
         }
 
         /* -- Harmony patches -- */
+
+        // if player unlocks all crests, the beast crest (internally "Warrior") prevents fighting Savage
+        // Beastfly boss, thus preventing getting the second encounter and its mask shard reward.
+        // This fix intercepts the check when player enters the chapel of the beast gate: normally it would
+        // check if player already has the crest (in this case always true) and set door open/closed. Luckily there's
+        // a helper flag for boss kill called 'defeatedBoneFlyerGiant' which can then be used for tracking this state
+        // -> thus if player leaves the chapel after killing the boss, the door closes permanently. This is no longer
+        // an issue because there's no crest to collect anyway if it was already unlocked.
+        // [Note] there's also PlayerData.instance.chapelClosed_beast, but game will override its value before door 
+        // state logic, making it useless for this particular issue
+        [HarmonyPatch(typeof(PlayerDataBoolTest), "OnEnter")]
+        class Patch_PlayerDataBoolTest
+        {
+            static bool Prefix(PlayerDataBoolTest __instance)
+            {
+                if (__instance.boolName.Value == "chapelClosed_beast"
+                    && Gameplay.WarriorCrest.IsUnlocked
+                    && !PlayerData.instance.defeatedBoneFlyerGiant)
+                {
+                    // FSM event to keep the chapel gate open. It has other values: "CLOSE" which means its closed
+                    // when scene loads and "DO CLOSE" which plays the door closing animation
+                    __instance.Fsm.Event("OPEN");
+                    __instance.Finish();
+
+                    return false; // return false to skip default OnEnter behavior
+                }
+
+                return true;
+            }
+        }
 
         // force config data saving after sitting on a bench and in more general, when charms are updated
         // as leveling up and respecing needs these, it's important to call CharmUpdate inside them in LevelingSystem
@@ -511,7 +479,7 @@ namespace BonfireSilksong
                     hitsSinceShielded = 7;
 
                 float num = Random.Range(1, 100);
-                float blockChange = LevelingSystem.Instance.BlockChance(s.ResilienceStat);
+                float blockChance = LevelingSystem.Instance.BlockChance(s.ResilienceStat);
                 float multiplier = 0f;
 
                 switch (hitsSinceShielded)
@@ -525,8 +493,8 @@ namespace BonfireSilksong
                     case 7: multiplier = 90f; break;
                 }
 
-                Log.LogDebug($"Range value {num} <= {multiplier} * {blockChange}");
-                if (multiplier > 0 && num <= multiplier * blockChange)
+                Log.LogDebug($"Range value {num} <= {multiplier} * {blockChance}");
+                if (multiplier > 0 && num <= multiplier * blockChance)
                 {
                     Instance._hitsSinceShielded = 0;
                     Instance.LuckyShieldSetActive();
