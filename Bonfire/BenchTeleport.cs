@@ -159,7 +159,7 @@ namespace BonfireSilksong
             Bonfire.Log.LogDebug($"Respawn Marker: {respawnMarker}");
             Bonfire.Log.LogDebug($"Respawn Type  : {respawnType}");
 
-            // these define the respawn outcome: scene, bench, type
+            // these define the respawn (= fast travel) outcome
             PlayerData.instance.tempRespawnScene = respawnScene;
             PlayerData.instance.tempRespawnMarker = respawnMarker;
             PlayerData.instance.tempRespawnType = respawnType;
@@ -227,7 +227,7 @@ namespace BonfireSilksong
 
         /* patched methods */
 
-        // handle transition post-check
+        // handle transition post-check: set spawn location to targeted bench
         [HarmonyPatch(typeof(HeroController), "FinishedEnteringScene")]
         class HeroController_FinishedEnteringScene
         {
@@ -238,9 +238,21 @@ namespace BonfireSilksong
 
                 IsBenchTeleporting = false;
 
-                __instance.proxyFSM.SendEvent("HeroCtrl-EnteringScene");
+                var markers = RespawnMarker.Markers
+                    .FirstOrDefault(r => r.gameObject != null &&
+                                    r.gameObject.activeInHierarchy &&
+                                    r.name == PlayerData.instance.respawnMarkerName);
 
-                Bonfire.Log.LogDebug("Sent HeroCtrl-EnteringScene");
+                if (markers != null)
+                {
+                    var benchFSM = FSMUtility.LocateFSM(markers.gameObject, "Bench Control");
+
+                    // properly update spawn location to destination bench: this will also ensure the save slot 
+                    // displays image of correct main/side area
+                    benchFSM?.SetState("Set Spawn Location");
+                }
+
+                __instance.proxyFSM.SendEvent("HeroCtrl-EnteringScene");
             }
         }
 
