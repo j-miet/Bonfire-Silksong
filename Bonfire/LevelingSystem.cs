@@ -182,6 +182,7 @@ namespace BonfireSilksong
             LuckIncrease = 0;
 
             HeroController.instance.CharmUpdate();
+            EventRegister.SendEvent(EventRegisterEvents.HealthUpdate);
             EventRegister.SendEvent(EventRegisterEvents.UpdateBlueHealth);
 
             Bonfire.Instance.UpdateBindCostFSM();
@@ -236,7 +237,7 @@ namespace BonfireSilksong
             s.RespecCost++;
 
             HeroController.instance.CharmUpdate();
-            EventRegister.SendEvent(EventRegisterEvents.UpdateBlueHealth);
+            EventRegister.SendEvent(EventRegisterEvents.HealthUpdate);
 
             Bonfire.Instance.UpdateBindCostFSM();
         }

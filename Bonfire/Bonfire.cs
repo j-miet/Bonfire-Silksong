@@ -187,9 +187,6 @@ namespace BonfireSilksong
         {
             SaveSettings();
             Init();
-
-            Log.LogDebug("Beast chapel beast fly defeated: " + PlayerData.instance.defeatedBoneFlyerGiant);
-            Log.LogDebug("Beast chapel closed: " + PlayerData.instance.chapelClosed_beast);
         }
 
         /* -- helpers -- */
@@ -289,7 +286,7 @@ namespace BonfireSilksong
             }
         }
 
-        // force config data saving after sitting on a bench and in more general, when charms are updated
+        // force config data saving when charms are updated
         // as leveling up and respecing needs these, it's important to call CharmUpdate inside them in LevelingSystem
         [HarmonyPatch(typeof(HeroController), "CharmUpdate")]
         class HeroController_CharmUpdate
@@ -419,8 +416,6 @@ namespace BonfireSilksong
                 // In Hk, range is then divided by 33, in silksong by 9
                 // => Silksong scaling is not as smooth, but ramps a bit harder on high intelligence
                 int cost = LevelingSystem.Instance.BindCost(Instance.Status.IntelligenceStat);
-
-                Log.LogDebug("Bind cost: " + cost);
 
                 __result = cost;
             }
@@ -585,7 +580,6 @@ namespace BonfireSilksong
                     }
                     else
                     {
-                        Log.LogDebug("Checking silk regen conditions");
                         int silkRegenInterval = ls.SilkRegenInterval(Instance.Status.WisdomStat);
                         if (silkRegenInterval <= 0)
                         {
