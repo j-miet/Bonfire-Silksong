@@ -247,12 +247,14 @@ namespace BonfireSilksong
                 {
                     var benchFSM = FSMUtility.LocateFSM(markers.gameObject, "Bench Control");
 
-                    // properly update spawn location to destination bench: this will also ensure the save slot 
-                    // displays image of correct main/side area
+                    // properly update spawn location. This will also ensure the save slot displays image of correct 
+                    // main/side area
                     benchFSM?.SetState("Set Spawn Location");
                 }
 
                 __instance.proxyFSM.SendEvent("HeroCtrl-EnteringScene");
+
+                GameManager.instance.SaveGame(null);
             }
         }
 
