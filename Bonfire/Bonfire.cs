@@ -101,6 +101,7 @@ namespace BonfireSilksong
         // to true upon detecting invalid profileID. Then, when user continues from another save slot, it prevents 
         // SaveSettings from using previous save's status config data to override status of current one.
         private bool _firstSave = true;
+        private bool _invClosedCheck = false;
 
         private int _critRoll = 0;
         public bool _crit = false;
@@ -156,9 +157,28 @@ namespace BonfireSilksong
 
         private void LateUpdate()
         {
-            if (PlayerData.instance.atBench)
+            if (PlayerData.instance == null) return;
+            var pd = PlayerData.instance;
+
+            if (pd.atBench)
             {
-                ShowCursor();
+                if (!pd.isInventoryOpen)
+                {
+                    ShowCursor();
+
+                    // this check refreshes blue masks after inventory is closed, otherwise they get wiped
+                    if (_invClosedCheck && pd.healthBlue < LevelingSystem.Instance.ExtraMasks(Status.ResilienceStat))
+                    {
+                        pd.healthBlue = LevelingSystem.Instance.ExtraMasks(Status.ResilienceStat);
+                        EventRegister.SendEvent(EventRegisterEvents.HealthUpdate);
+                        EventRegister.SendEvent(EventRegisterEvents.UpdateBlueHealth);
+
+                        _invClosedCheck = false;
+                    }
+                }
+                else
+                    _invClosedCheck = true;
+
             }
         }
 
@@ -187,6 +207,7 @@ namespace BonfireSilksong
         {
             SaveSettings();
             Init();
+            LevelingSystem.Instance.RefreshRelicsObtained();
         }
 
         /* -- helpers -- */
@@ -293,6 +314,7 @@ namespace BonfireSilksong
         {
             static void Postfix()
             {
+                LevelingSystem.Instance.RefreshRelicsObtained();
                 Instance.SaveSettings();
             }
         }
@@ -375,19 +397,16 @@ namespace BonfireSilksong
         //
         // TODO **Fix this** when modding API gets added or if another solution is found
         //
+        // (THIS BUG IS PURELY VISUAL)
         // lifeblood/plasmium masks work internally just fine, but the visual is weird: it always displays one extra
         // mask worth of damage on first hit only, then works normally. For example:
         // - player has 6 blue masks from resiliency stat
         // - player takes a hit dealing 2 masks of damage
         // - visual goes from 6 -> 2 - 1 = 3, but internally blue masks go from 6 -> 4 as expected
-        // - afterwards everything works as expected, only just visual displays {current_blue_hp - 1}
+        // - afterwards everything works as expected, only just visual keeps displaying {current_blue_hp - 1}
         // So taking any damage will subtract the same amount, but of course visual will always display that one
         // extra offset of damage. So eventually if you reach 1 blue mask, the hp bar displays none but you can still
-        // absorb a single damage hit before actual masks are removed
-        // => no idea how to fix this for now. I've tried lots of different things, but result is always the same:
-        // - either visual offset by 1, or 
-        // - no blue masks are displayed at all,
-        //   but in both cases, internal hp tracking works just fine so it's just a visual mismatch, nothing else
+        // absorb a single mask of damage before actual masks are removed
         [HarmonyPatch(typeof(HeroController), "UpdateBlueHealth")]
         class HeroController_UpdateBlueHealth
         {

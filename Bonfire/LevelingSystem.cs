@@ -111,7 +111,7 @@ namespace BonfireSilksong
             else if (stat == "Wisdom") WisdomIncrease++;
             else LuckIncrease++;
 
-            int relicsObtained = RelicsObtained();
+            int relicsObtained = CachedRelicsObtained;
             if (relicsObtained < 0)
             {
                 Bonfire.Log.LogError("Failed to fetch relic data");
@@ -243,35 +243,6 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// Counts all rune harps and arcane eggs the player has given to relic seeker npc
-        /// </summary>
-        public int RelicsObtained()
-        {
-            var relicChoralCommandments = Resources.FindObjectsOfTypeAll<CollectableItemRelicType>()
-                .FirstOrDefault(r => r.name == "R Seal Chit");
-
-            var relicRuneHarps = Resources.FindObjectsOfTypeAll<CollectableItemRelicType>()
-                .FirstOrDefault(r => r.name == "R Weaver Record");
-
-            var relicArcaneEggs = Resources.FindObjectsOfTypeAll<CollectableItemRelicType>()
-                .FirstOrDefault(r => r.name == "R Ancient Egg");
-
-            if (relicChoralCommandments == null || relicRuneHarps == null || relicArcaneEggs == null)
-                return -1;
-
-            int total = 0;
-            foreach (var relic in relicChoralCommandments.Relics
-                .Concat(relicRuneHarps.Relics)
-                .Concat(relicArcaneEggs.Relics))
-            {
-                var data = relic.SavedData;
-                if (data.IsDeposited) total++;
-            }
-
-            return total;
-        }
-
-        /// <summary>
         /// Returns average damage blocking chance from current resiliency stat value
         /// </summary>
         public float AverageBlockChance(int totalRes)
@@ -301,6 +272,33 @@ namespace BonfireSilksong
         private void Awake()
         {
             _instance = this;
+        }
+
+        // counts all rune harps and arcane eggs the player has given to relic seeker npc
+        private int RelicsObtained()
+        {
+            var relicChoralCommandments = Resources.FindObjectsOfTypeAll<CollectableItemRelicType>()
+                .FirstOrDefault(r => r.name == "R Seal Chit");
+
+            var relicRuneHarps = Resources.FindObjectsOfTypeAll<CollectableItemRelicType>()
+                .FirstOrDefault(r => r.name == "R Weaver Record");
+
+            var relicArcaneEggs = Resources.FindObjectsOfTypeAll<CollectableItemRelicType>()
+                .FirstOrDefault(r => r.name == "R Ancient Egg");
+
+            if (relicChoralCommandments == null || relicRuneHarps == null || relicArcaneEggs == null)
+                return -1;
+
+            int total = 0;
+            foreach (var relic in relicChoralCommandments.Relics
+                .Concat(relicRuneHarps.Relics)
+                .Concat(relicArcaneEggs.Relics))
+            {
+                var data = relic.SavedData;
+                if (data.IsDeposited) total++;
+            }
+
+            return total;
         }
     }
 }
