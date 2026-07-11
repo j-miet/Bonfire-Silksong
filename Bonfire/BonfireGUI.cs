@@ -214,7 +214,7 @@ namespace BonfireSilksong
 
             GUI.backgroundColor = Color.red;
             if (GUILayout.Button(
-                    $"Respec ({s.RespecCost}  Silkeater)",
+                    $"Respec ({s.RespecCost} " + $"{(s.RespecCost > 1 ? "Silkeaters" : "Silkeater")})",
                     _buttonStyle,
                     GUILayout.Height(40f),
                     GUILayout.Width(522f))
