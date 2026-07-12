@@ -167,7 +167,7 @@ namespace BonfireSilksong
                     ShowCursor();
 
                     // this check refreshes blue masks after inventory is closed, otherwise they get wiped
-                    if (_invClosedCheck && pd.healthBlue < LevelingSystem.Instance.ExtraMasks(Status.ResilienceStat))
+                    if (_invClosedCheck)
                     {
                         pd.healthBlue = LevelingSystem.Instance.ExtraMasks(Status.ResilienceStat);
                         EventRegister.SendEvent(EventRegisterEvents.HealthUpdate);
@@ -178,7 +178,6 @@ namespace BonfireSilksong
                 }
                 else
                     _invClosedCheck = true;
-
             }
         }
 
@@ -208,6 +207,8 @@ namespace BonfireSilksong
             SaveSettings();
             Init();
             LevelingSystem.Instance.RefreshRelicsObtained();
+
+            //Debug.VisitedScenes();
         }
 
         /* -- helpers -- */
