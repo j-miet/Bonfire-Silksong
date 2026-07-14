@@ -14,7 +14,7 @@ using UnityEngine.SceneManagement;
 
 namespace BonfireSilksong
 {
-    [BepInPlugin("hksilksong.mod.bonfiresilksong", "Bonfire Silksong", "0.3.0")]
+    [BepInPlugin("hksilksong.mod.bonfire-silksong", "Bonfire-Silksong", "0.3.0")]
     public class Bonfire : BaseUnityPlugin
     {
         public PlayerStatus Status;
@@ -74,11 +74,11 @@ namespace BonfireSilksong
             Status = JsonUtility.FromJson<PlayerStatus>(json);
         }
 
-        /* FSM patching */
-
-        // override bind cost gameplay value in FSM
-        // SilkSpool_BindCost_Getter handles the patching of getter value which is used for visually match the silk 
-        // spool
+        /// <summary>
+        /// Override bind cost gameplay value in FSM.
+        /// SilkSpool_BindCost_Getter handles the patching of getter value which is used for visually match the silk 
+        /// spool.
+        /// </summary>
         public void UpdateBindCostFSM()
         {
             if (HeroController.instance == null || LevelingSystem.Instance == null) return;
@@ -113,14 +113,14 @@ namespace BonfireSilksong
         private ConfigEntry<KeyboardShortcut> _enemyHpBarToggleHotkey;
         private bool _enemyHPBarsEnabled = false;
 
-        /* Unity hooks */
+        // -- Unity hooks -- //
 
         private void Awake()
         {
             Instance = this;
             Log = Logger;
 
-            Log.LogInfo("Initializing BonfireSilksong...");
+            Log.LogInfo("Initializing Bonfire-Silksong...");
 
             _enemyHpBarToggleHotkey = Instance.Config.Bind(
                 "Hotkeys",
@@ -135,7 +135,7 @@ namespace BonfireSilksong
 
             SceneManager.sceneLoaded += OnSceneLoaded;
 
-            Log.LogInfo("BonfireSilksong initialized");
+            Log.LogInfo("Bonfire-Silksong initialized");
         }
 
         private void OnDestroy()
@@ -158,6 +158,11 @@ namespace BonfireSilksong
         private void LateUpdate()
         {
             if (PlayerData.instance == null) return;
+
+            // when saving & exiting, sometimes ShowCursor might keep overriding default cursor behavior in main menu
+            // for several seconds, preventing mouse use. Checking IsGamePlayScene should fix this.
+            if (GameManager.instance == null || !GameManager.instance.IsGameplayScene()) return;
+
             var pd = PlayerData.instance;
 
             if (pd.atBench)
@@ -181,12 +186,12 @@ namespace BonfireSilksong
             }
         }
 
-        /* Bonfire's initialization and scene updates */
+        // mod initialization and scene updates //
 
         private string SavePath()
         {
             int saveProfile = GameManager.instance.profileID;
-            return Path.Combine(Paths.ConfigPath, $"BonfireSilksong_Save{saveProfile}.json");
+            return Path.Combine(Paths.ConfigPath, $"Bonfire-Silksong_Save{saveProfile}.json");
         }
 
         private void Init()
@@ -211,7 +216,7 @@ namespace BonfireSilksong
             //Debug.VisitedScenes();
         }
 
-        /* -- helpers -- */
+        // -- helpers -- //
 
         // display cursor when player sits on a bench in order to access leveling GUI
         private void ShowCursor()
@@ -276,7 +281,7 @@ namespace BonfireSilksong
             return a || b;
         }
 
-        /* -- Harmony patches -- */
+        // -- Harmony patches -- //
 
         // if player unlocks all crests, the beast crest (internally "Warrior") prevents fighting Savage
         // Beastfly boss, thus preventing getting the second encounter and its mask shard reward.
@@ -309,7 +314,7 @@ namespace BonfireSilksong
         }
 
         // force config data saving when charms are updated
-        // as leveling up and respecing needs these, it's important to call CharmUpdate inside them in LevelingSystem
+        // as leveling up and respeccing needs these, it's important to call CharmUpdate inside them in LevelingSystem
         [HarmonyPatch(typeof(HeroController), "CharmUpdate")]
         class HeroController_CharmUpdate
         {
@@ -650,7 +655,7 @@ namespace BonfireSilksong
         // - Hit checks and handles player's perspective by adding damage and displaying visual effect on player
         // - Postfix adds the effect on enemy that got hit
         [HarmonyPatch(typeof(DamageEnemies), "DoDamage", new[] { typeof(GameObject), typeof(bool) })]
-        internal static class DamageEnemies_DoDamage
+        class DamageEnemies_DoDamage
         {
             static void Prefix(DamageEnemies __instance, GameObject target)
             {

@@ -21,7 +21,7 @@ namespace BonfireSilksong
             private set => _instance = value;
         }
 
-        /* -- stat formulas -- */
+        // -- stat formulas -- //
 
         // strength: needle damage
         public int NeedleDamage(int totalStr) =>
@@ -31,7 +31,7 @@ namespace BonfireSilksong
         public float AttackSpeed(int totalDex) =>
             (float)Math.Round(2.7 / (1.0 + 1.82 * Math.Exp(-0.08 * (totalDex + 1))) - 0.01, 2);
 
-        // dexterity: nail crit damage
+        // dexterity: needle crit damage
         public int CritDamage(int totalDex, int needleDamage) => (int)(needleDamage * (1.2 + Math.Log(totalDex + 1)));
 
         // intelligence: silk skill damage
@@ -41,7 +41,7 @@ namespace BonfireSilksong
         // intelligence: binding (healing) cost
         public int BindCost(int totalInt) => (int)Math.Round(9.1 * Math.Exp(-0.01 * (totalInt + 2.0)));
 
-        // artifice: red/blue tool damage
+        // artifice: red and blue tool damage
         public int ToolDamage(int baseDamage, int totalArt)
         {
             if (totalArt <= 0) return baseDamage;
@@ -56,10 +56,10 @@ namespace BonfireSilksong
         {
             if (totalArt < 5) return -1;
 
-            return (int)(4.0 + 56.0 * Math.Exp(-0.06 * (totalArt - 5)));
+            return (int)(2.0 + 58.0 * Math.Exp(-0.06 * (totalArt - 5)));
         }
 
-        // resilience: extra lifeblood masks. Caps at 8 on level 40; using a single plasmium from vial will then
+        // resilience: extra lifeblood masks. Caps at 8 on level 40; using a single plasmium from phial will then
         // activate overdose regen effect
         public int ExtraMasks(int totalRes)
         {
@@ -92,11 +92,12 @@ namespace BonfireSilksong
             return (int)Math.Round(60.0 / (1.0 + 15.0 * Math.Exp(-0.08 * totalLck)));
         }
 
-        // luck: rosary drop multiplier from enemies (5% per stat level)
+        // luck: rosary drop multiplier from enemies.
+        // Multiplier per level is additive 5% to current stat e.g. 1x -> 1.05x -> 1.10x -> 1.15x etc.
         public int IncreaseRosaries(int droppedRosaries, int totalLck) =>
             (int)(droppedRosaries * (1f + (totalLck / 20f)));
 
-        /* -- stat formulas end here */
+        // -- stat formulas end here -- //
 
         /// <summary>
         /// Increments the pending allocation for a single stat.
@@ -194,10 +195,10 @@ namespace BonfireSilksong
         public void Respec()
         {
             var s = Bonfire.Instance.Status;
-            var silkGrubs = Resources.FindObjectsOfTypeAll<CollectableItem>()
+            var silkEaters = Resources.FindObjectsOfTypeAll<CollectableItem>()
                 .FirstOrDefault(i => i.name == "Silk Grub");
 
-            if (silkGrubs == null || silkGrubs.CollectedAmount < s.RespecCost) return;
+            if (silkEaters == null || silkEaters.CollectedAmount < s.RespecCost) return;
 
             int relicLevelsSpent = s.StrengthStat + s.DexterityStat + s.IntelligenceStat
                                 + s.ArtificeStat + s.ResilienceStat + s.WisdomStat + s.LuckStat
@@ -233,7 +234,7 @@ namespace BonfireSilksong
             s.PendingRosaryLevels = 0;
             s.PendingRelicLevels = 0;
 
-            silkGrubs.Take(s.RespecCost);
+            silkEaters.Take(s.RespecCost);
             s.RespecCost++;
 
             HeroController.instance.CharmUpdate();
@@ -274,7 +275,7 @@ namespace BonfireSilksong
             _instance = this;
         }
 
-        // counts all rune harps and arcane eggs the player has given to relic seeker npc
+        // counts all tier 3-5 relics the player has given to relic seeker npc
         private int RelicsObtained()
         {
             var relicChoralCommandments = Resources.FindObjectsOfTypeAll<CollectableItemRelicType>()

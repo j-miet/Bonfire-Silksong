@@ -280,6 +280,48 @@ namespace BonfireSilksong
             GUILayout.EndVertical();
         }
 
+        // draws floating health bars above tracked enemies
+        private void DrawEnemyHealthBars()
+        {
+            var s = Bonfire.Instance.Status;
+
+            if (!s.EnemyHealthBarsEnabled) return;
+
+            foreach (var kvp in EnemyMaxHp)
+            {
+                HealthManager hm = kvp.Key;
+                if (hm == null) continue;
+
+                Vector3 screenPos = Camera.main.WorldToScreenPoint(hm.transform.position);
+                if (screenPos.z < 0) continue;
+
+                float maxHp = kvp.Value;
+                float currentHp = hm.hp;
+                bool isBoss = EnemyIsBoss.TryGetValue(hm, out bool b) && b;
+
+                if (currentHp == maxHp && !isBoss) continue; // full HP = hide bars for normal enemies
+
+                float pct = Mathf.Clamp01(currentHp / maxHp);
+                float width = isBoss ? 300f : 120f;
+                float height = isBoss ? 20f : 10f;
+                float x = screenPos.x - width / 2f;
+                float y = Screen.height - screenPos.y - 20f;
+
+                DrawRect(new Rect(x, y, width, height), new Color(0f, 0f, 0f, 0.7f));
+
+                Color fillColor;
+                if (s.EnemyHpBarColorProgression)
+                    fillColor = pct > 0.6f ? Color.green : pct > 0.3f ? Color.yellow : Color.red;
+                else
+                    fillColor = isBoss ? new Color(1f, 0.5f, 0f) : Color.red;
+
+                DrawRect(new Rect(x, y, width * pct, height), fillColor);
+
+                GUI.color = Color.white;
+            }
+        }
+
+        // crest unlock button
         private void DrawCrestUnlockUI()
         {
             if (Bonfire.Instance.Status.UnlockedAllCrests) return;
@@ -290,18 +332,17 @@ namespace BonfireSilksong
 
             if (_pendingCrestUnlock)
             {
-                // dim background
                 GUI.color = new Color(0, 0, 0, 0.8f);
                 GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
                 GUI.color = Color.white;
 
-                // modal box
                 float w = 550f, h = 275f;
                 Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
                 GUI.ModalWindow(9999, modalRect, DrawConfirmModal, "Crest unlocking");
             }
         }
 
+        // crest unlock modal window
         private void DrawConfirmModal(int windowId)
         {
             GUILayout.Space(10);
@@ -366,50 +407,11 @@ namespace BonfireSilksong
             GUILayout.EndHorizontal();
         }
 
-        // draws floating health bars above tracked enemies
-        private void DrawEnemyHealthBars()
-        {
-            var s = Bonfire.Instance.Status;
-
-            if (!s.EnemyHealthBarsEnabled) return;
-
-            foreach (var kvp in EnemyMaxHp)
-            {
-                HealthManager hm = kvp.Key;
-                if (hm == null) continue;
-
-                Vector3 screenPos = Camera.main.WorldToScreenPoint(hm.transform.position);
-                if (screenPos.z < 0) continue;
-
-                float maxHp = kvp.Value;
-                float currentHp = hm.hp;
-                bool isBoss = EnemyIsBoss.TryGetValue(hm, out bool b) && b;
-
-                if (currentHp == maxHp && !isBoss) continue; // full HP = hide bars for normal enemies
-
-                float pct = Mathf.Clamp01(currentHp / maxHp);
-                float width = isBoss ? 300f : 120f;
-                float height = isBoss ? 20f : 10f;
-                float x = screenPos.x - width / 2f;
-                float y = Screen.height - screenPos.y - 20f;
-
-                DrawRect(new Rect(x, y, width, height), new Color(0f, 0f, 0f, 0.7f));
-
-                Color fillColor;
-                if (s.EnemyHpBarColorProgression)
-                    fillColor = pct > 0.6f ? Color.green : pct > 0.3f ? Color.yellow : Color.red;
-                else
-                    fillColor = isBoss ? new Color(1f, 0.5f, 0f) : Color.red;
-
-                DrawRect(new Rect(x, y, width * pct, height), fillColor);
-
-                GUI.color = Color.white;
-            }
-        }
-
+        // bench fast travel unlock check
         private void FastTravelUnlockNotification()
         {
-            if (Bonfire.Instance.Status.UnlockedFastTravel) return;
+            if (!(Bonfire.Instance.Status.EnableBenchTeleport && Bonfire.Instance.Status.UnlockedFastTravel))
+                return;
 
             if (PlayerData.instance.defeatedCogworkDancers)
             {
@@ -423,6 +425,7 @@ namespace BonfireSilksong
             }
         }
 
+        // fast travel unlock: GUI.ModalWindow callback for actual popup window
         private void DrawFastTravelUnlockModalPopup(int windowId)
         {
             GUILayout.Space(10);

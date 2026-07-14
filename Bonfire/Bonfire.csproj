@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net481</TargetFramework>
     <OutputType>Library</OutputType>
-    <AssemblyName>BonfireSilksong</AssemblyName>
+    <AssemblyName>Bonfire-Silksong</AssemblyName>
     <RootNamespace>BonfireSilksong</RootNamespace>
     <Nullable>disable</Nullable>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
@@ -17,7 +17,7 @@
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll;$(OutputPath)$(AssemblyName).pdb"
-          DestinationFolder="$(SilksongPath)\BepInEx\plugins\BonfireSilksong" />
+          DestinationFolder="$(SilksongPath)\BepInEx\plugins\Bonfire-Silksong" />
   </Target>
 
   <!-- Required DLLs from both BepInEx and base game's Managed directory -->
