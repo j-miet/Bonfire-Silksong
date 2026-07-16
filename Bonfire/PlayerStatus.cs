@@ -24,7 +24,7 @@ namespace BonfireSilksong
         public int PendingRelicLevels = 0;
         public int RespecCost = 1;
 
-        // other values
+        // other
         public bool InfiniteShellShardsEnabled = false; // obtaining/using shards replenishes them to full
         public bool InfiniteShardsBenchOnly = false; // shards replenish to full, but only when sitting on a bench
 
@@ -32,6 +32,9 @@ namespace BonfireSilksong
         public bool EnemyHpBarColorProgression = false;
 
         public bool UnlockedAllCrests = false;
+
+        // bench fast travel
         public bool UnlockedFastTravel = false;
+        public bool VisitedAbyssSecondTime = false;
     }
 }
