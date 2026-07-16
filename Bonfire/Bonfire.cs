@@ -14,7 +14,7 @@ using UnityEngine.SceneManagement;
 
 namespace BonfireSilksong
 {
-    [BepInPlugin("hksilksong.mod.bonfire-silksong", "Bonfire-Silksong", "0.3.0")]
+    [BepInPlugin("hksilksong.mod.bonfire-silksong", "Bonfire-Silksong", "0.4.0")]
     public class Bonfire : BaseUnityPlugin
     {
         public PlayerStatus Status;
@@ -93,6 +93,26 @@ namespace BonfireSilksong
                         variable.Value = cost;
                 }
             }
+        }
+
+        /// <summary>
+        /// Display cursor when player sits on a bench in order to access leveling GUI.
+        /// Can be used in enabling cursor for leveling GUI outside menu screens, but also in map menu screen for
+        /// fast travel
+        /// </summary>
+        public void ShowCursor()
+        {
+            if (HeroController.instance != null &&
+                HeroController.instance.cState != null &&
+                GameManager.instance != null)
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = PlayerData.instance.atBench || GameManager.instance.isPaused;
+                return;
+            }
+
+            if (GameManager.instance != null)
+                Cursor.visible = GameManager.instance.isPaused;
         }
 
 
@@ -217,22 +237,6 @@ namespace BonfireSilksong
         }
 
         // -- helpers -- //
-
-        // display cursor when player sits on a bench in order to access leveling GUI
-        private void ShowCursor()
-        {
-            if (HeroController.instance != null &&
-                HeroController.instance.cState != null &&
-                GameManager.instance != null)
-            {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = PlayerData.instance.atBench || GameManager.instance.isPaused;
-                return;
-            }
-
-            if (GameManager.instance != null)
-                Cursor.visible = GameManager.instance.isPaused;
-        }
 
         // rosary and shell shard value updates
         private int GetRosaries(string size, HealthManager enemy)
