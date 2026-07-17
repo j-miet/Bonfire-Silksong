@@ -1,29 +1,44 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 using GlobalEnums;
+using HarmonyLib;
 using HutongGames.PlayMaker;
 using UnityEngine;
 
 namespace BonfireSilksong
 {
+    /// <summary>
+    /// Bench user interface, fast travel menu and enemy hp bar rendering
+    /// </summary>
     public class BonfireGUI : MonoBehaviour
     {
-        public static BonfireGUI Instance;
-
         public readonly Dictionary<HealthManager, float> EnemyMaxHp = new Dictionary<HealthManager, float>();
         public readonly Dictionary<HealthManager, bool> EnemyIsBoss = new Dictionary<HealthManager, bool>();
 
+        public static BonfireGUI Instance;
+
         public void OnGUI()
         {
-            if (GameManager.instance == null) return;
+            if (GameManager.instance == null && PlayerData.instance == null) return;
 
+            EnsureFonts();
+
+            if (_fastTravelDisplay)
+            {
+                Bonfire.Instance.ShowCursor();
+                DrawBenchFastTravelUI();
+            }
+
+            // then check if game state is playing, paused or in inventory
+            // if none of them is true, avoid running to prevent lag in main menu
             if (!(GameManager.instance.GameState == GameState.PLAYING ||
                   GameManager.instance.GameState == GameState.PAUSED) ||
                 InInventory())
                 return;
-
-            EnsureFonts();
 
             if (PlayerData.instance.atBench && !GameManager.instance.isPaused)
             {
@@ -44,6 +59,13 @@ namespace BonfireSilksong
         }
 
 
+        private MapPin _selectedPin = null;
+        private string _selectedSceneName = "";
+        private bool _fastTravelDisplay = false;
+        private PlayMakerFSM _currentBenchFSM;
+        private Vector2 _scrollPos;
+        private readonly Dictionary<MapPin, string> _benchPinScenes = new Dictionary<MapPin, string>();
+
         private bool _pendingCrestUnlock = false;
 
         private Font _trajanBold;
@@ -53,6 +75,13 @@ namespace BonfireSilksong
         private GUIStyle _crestUnlockLabelStyle;
         private GUIStyle _crestUnlockButtonStyle;
         private GUIStyle _fastTravelUnlockLabelStyle;
+        private GUIStyle _benchListButtonStyle;
+        private GUIStyle _benchListButtonSelectedStyle;
+        private GUIStyle _fastTravelConfirmHeaderStyle;
+        private GUIStyle _fastTravelConfirmDestinationStyle;
+
+        private static readonly FieldInfo InventoryPaneListInstanceField = typeof(InventoryPaneList)
+            .GetField("_instance", BindingFlags.Static | BindingFlags.NonPublic);
 
         private static Texture2D _tex;
 
@@ -66,6 +95,320 @@ namespace BonfireSilksong
             GUI.color = color;
             GUI.DrawTexture(rect, SolidTex());
         }
+
+        // -- bench fast travel -- //
+
+        private IEnumerator DelayedPinUpdate()
+        {
+            yield return new WaitForSeconds(1f);
+            UpdateBenchPins();
+        }
+
+        // prevent most keyboard inputs in bench menu map screen, rest are handled with patched Update methods.
+        private void BlockInventoryInputs()
+        {
+            var actions = GameManager.instance.inputHandler.inputActions;
+            actions.PaneLeft.Enabled = false;
+            actions.PaneRight.Enabled = false;
+            actions.OpenInventory.Enabled = false;
+            actions.OpenInventoryMap.Enabled = false;
+            actions.OpenInventoryJournal.Enabled = false;
+            actions.OpenInventoryTools.Enabled = false;
+            actions.OpenInventoryQuests.Enabled = false;
+            actions.QuickMap.Enabled = false;
+        }
+
+        private void RestoreInventoryInputs()
+        {
+            var actions = GameManager.instance.inputHandler.inputActions;
+            actions.PaneLeft.Enabled = true;
+            actions.PaneRight.Enabled = true;
+            actions.OpenInventory.Enabled = true;
+            actions.OpenInventoryMap.Enabled = true;
+            actions.OpenInventoryJournal.Enabled = true;
+            actions.OpenInventoryTools.Enabled = true;
+            actions.OpenInventoryQuests.Enabled = true;
+            actions.QuickMap.Enabled = true;
+        }
+
+        private bool UpdateCurrentBenchFSM()
+        {
+            var markers = RespawnMarker.Markers
+                    .FirstOrDefault(r => r.gameObject != null &&
+                                    r.gameObject.activeInHierarchy &&
+                                    r.name == PlayerData.instance.respawnMarkerName);
+
+            Bonfire.Log.LogInfo("Start scene name: " + PlayerData.instance.respawnScene);
+            Bonfire.Log.LogInfo("Start marker name: " + PlayerData.instance.respawnMarkerName);
+
+            if (markers == null) return false;
+
+            var benchFSM = FSMUtility.LocateFSM(markers.gameObject, "Bench Control");
+            if (benchFSM == null) return false;
+
+            _currentBenchFSM = benchFSM;
+            Bonfire.Log.LogDebug("Updated Bench FSM");
+
+            return true;
+        }
+
+        private void UpdateBenchPins()
+        {
+            _benchPinScenes.Clear();
+            var gameMap = GameManager.instance?.gameMap;
+            if (gameMap == null) return;
+
+            List<MapPin> activePins = (List<MapPin>)BenchTeleport.ActivePinsField.GetValue(null);
+            if (activePins == null) return;
+
+            foreach (var pin in activePins)
+            {
+                if (pin == null
+                    || !pin.IsActive
+                    || !pin.gameObject.activeSelf
+                    || !pin.gameObject.activeInHierarchy)
+                    continue;
+
+                var sr = pin.GetComponent<SpriteRenderer>();
+                if (sr?.sprite?.name != "pin_bench") continue;
+
+                if (!BenchTeleport.PrepareTeleportLocation(pin))
+                {
+                    Bonfire.Log.LogError("Error while preparing teleport locations");
+                    _benchPinScenes.Clear();
+                    return;
+                }
+
+                string sceneName = PlayerData.instance.tempRespawnScene;
+                _benchPinScenes.Add(pin, sceneName);
+            }
+
+            Bonfire.Log.LogDebug($"Found {_benchPinScenes.Count} bench pins");
+            Bonfire.Log.LogDebug("GUI: bench pin respawn scenes:");
+            foreach (var p in _benchPinScenes)
+                Bonfire.Log.LogDebug(p.Value);
+        }
+
+        private IEnumerator CloseInventoryMap()
+        {
+            InventoryPaneList inventoryPaneList = null;
+            InventoryPaneInput panelInput = null;
+
+            try
+            {
+                inventoryPaneList = (InventoryPaneList)InventoryPaneListInstanceField.GetValue(null);
+                if (inventoryPaneList == null) yield break;
+
+                panelInput = inventoryPaneList.GetComponentInChildren<InventoryPaneInput>();
+                if (panelInput == null) yield break;
+            }
+            catch (Exception e)
+            {
+                Bonfire.Log.LogError($"CloseInventoryMap init error: {e}");
+                yield break;
+            }
+
+            FSMUtility.SendEventToGameObject(panelInput.gameObject, "UI CANCEL");
+            FSMUtility.SendEventToGameObject(panelInput.gameObject, "UI CANCEL");
+            yield return new WaitForSecondsRealtime(0.25f);
+
+            try
+            {
+                if (inventoryPaneList != null)
+                    inventoryPaneList.CloseBlocked = false;
+
+                if (GameManager.instance?.inventoryFSM != null)
+                    GameManager.instance.inventoryFSM.SendEventSafe("BACK");
+            }
+            catch (Exception e)
+            {
+                Bonfire.Log.LogError($"CloseInventoryMap close error: {e}");
+            }
+
+            yield return new WaitUntil(() =>
+                GameManager.instance == null ||
+                GameManager.instance.inventoryFSM == null ||
+                GameManager.instance.inventoryFSM.ActiveStateName == "Closed");
+
+            try
+            {
+                RestoreInventoryInputs();
+                if (_currentBenchFSM != null && _currentBenchFSM.gameObject != null)
+                    _currentBenchFSM.SendEvent("FINISHED");
+            }
+            catch (Exception e)
+            {
+                Bonfire.Log.LogError($"CloseInventoryMap restore error: {e}");
+            }
+        }
+
+        private void DrawBenchFastTravelButton()
+        {
+            GUI.backgroundColor = Color.blue;
+            GUILayout.BeginVertical("box");
+
+            GUI.backgroundColor = Color.white;
+
+            if (GUILayout.Button("Fast travel menu", _buttonStyle, GUILayout.Height(35f)))
+            {
+                Bonfire.Log.LogDebug("Fast travel menu open button was clicked");
+                if (!UpdateCurrentBenchFSM()) return;
+
+                _currentBenchFSM.SetState("Open Map");
+                _currentBenchFSM.SendEvent("INV MAP");
+                _fastTravelDisplay = true;
+
+                BlockInventoryInputs();
+
+                StartCoroutine(DelayedPinUpdate());
+            }
+
+            GUILayout.EndVertical();
+            GUILayout.Space(10);
+        }
+
+        private void DrawBenchFastTravelUI()
+        {
+            if (!_fastTravelDisplay) return;
+
+            // add color filter on top of map
+            GUI.color = new Color(0, 0, 0, 0.2f);
+            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            // bench list + dark, filled background to hide map elements underneath
+            float listW = 350f, listH = Screen.height * 0.7f;
+            Rect listRect = new Rect(20f, Screen.height / 2f - listH / 2f, listW, listH);
+
+            Color old = GUI.color;
+            GUI.color = new Color(0f, 0f, 0f, 1f);
+            GUI.DrawTexture(listRect, Texture2D.whiteTexture);
+            GUI.color = old;
+
+            GUILayout.BeginArea(listRect);
+            DrawBenchListPanel();
+            GUILayout.EndArea();
+
+            // if a bench is clicked: confirmation panel with dark background and border
+            if (_selectedPin != null)
+            {
+                float confirmW = 400f, confirmH = 110f;
+                float confirmX = Screen.width / 2f - confirmW / 2f;
+                float confirmY = Screen.height - confirmH - 20f;
+                Rect confirmRect = new Rect(confirmX, confirmY, confirmW, confirmH);
+
+                old = GUI.color;
+                GUI.color = new Color(0.8f, 0.7f, 0.3f, 0.9f);
+                GUI.DrawTexture(
+                    new Rect(
+                        confirmX - 2, confirmY - 2,
+                        confirmW + 4, confirmH + 4),
+                        Texture2D.whiteTexture);
+
+                GUI.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
+                GUI.DrawTexture(confirmRect, Texture2D.whiteTexture);
+                GUI.color = old;
+
+                GUILayout.BeginArea(confirmRect);
+                DrawConfirmPanel();
+                GUILayout.EndArea();
+            }
+        }
+
+        private void DrawBenchListPanel()
+        {
+            GUILayout.Label("Bench locations", _labelStyle);
+            GUILayout.Space(10);
+
+            if (_benchPinScenes.Count == 0)
+            {
+                GUILayout.Label("Loading bench locations...");
+                GUILayout.Space(10);
+                UpdateBenchPins();
+            }
+            else
+            {
+                _scrollPos = GUILayout.BeginScrollView(_scrollPos);
+
+                foreach (KeyValuePair<MapPin, string> bench in _benchPinScenes)
+                {
+                    var pin = bench.Key;
+                    var sceneName = bench.Value;
+
+                    bool isSelected = _selectedPin == pin;
+
+                    GUI.backgroundColor = isSelected ? new Color(0.8f, 0.4f, 0f) : Color.white;
+                    GUIStyle buttonStyle = isSelected ? _benchListButtonSelectedStyle : _benchListButtonStyle;
+
+                    // despite many attempts, applying a highlight border color similar to what main UI buttons have
+                    // is not possible/require some extra manipulation. Thing is: none of the buttons get any hover
+                    // style either, but game still gives this white border when cursor is hovered on them. However
+                    // having map open seems to internally disable it. Trying to implement a custom hover never
+                    // works either so something definitely keeps overriding it.
+                    // Conclusion: fast travel menu buttons just have to live without highlighting feature.
+                    if (GUILayout.Button(sceneName, buttonStyle, GUILayout.Height(30f)))
+                    {
+                        _selectedPin = pin;
+                        _selectedSceneName = sceneName;
+
+                        // move map camera to this bench, centered on it
+                        var gameMap = GameManager.instance.gameMap;
+                        Vector2 benchPos = BenchTeleport.GetBenchPinPositionInMapSpace(pin);
+                        Vector2 scaledPos = benchPos * gameMap.transform.localScale.x;
+                        gameMap.UpdateMapPosition(-scaledPos);
+                    }
+                }
+
+                GUILayout.EndScrollView();
+                GUI.backgroundColor = Color.white;
+            }
+
+            GUILayout.Space(10);
+
+            GUI.backgroundColor = Color.red;
+            GUILayout.BeginHorizontal("box");
+            if (GUILayout.Button("Close teleport menu", _buttonStyle, GUILayout.Height(40f)))
+            {
+                _selectedPin = null;
+                _fastTravelDisplay = false;
+                _benchPinScenes.Clear();
+
+                StartCoroutine(CloseInventoryMap());
+            }
+            GUILayout.EndHorizontal();
+        }
+
+        private void DrawConfirmPanel()
+        {
+            GUILayout.Space(8);
+            GUILayout.Label("LOCATION", _fastTravelConfirmHeaderStyle);
+            GUILayout.Label(_selectedSceneName, _fastTravelConfirmDestinationStyle);
+            GUILayout.Space(5);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+
+            GUI.backgroundColor = new Color(0.9f, 0.8f, 0.5f);
+            GUI.contentColor = Color.white;
+            if (GUILayout.Button("Travel", _buttonStyle, GUILayout.Width(200f), GUILayout.Height(30f)))
+            {
+                BenchTeleport.PrepareTeleportLocation(_selectedPin);
+
+                _selectedPin = null;
+                _fastTravelDisplay = false;
+                _benchPinScenes.Clear();
+
+                StartCoroutine(CloseInventoryMap());
+                BenchTeleport.TeleportToBench();
+            }
+
+            GUI.backgroundColor = Color.white;
+            GUI.contentColor = Color.white;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+        }
+
+        // -- main UI --
 
         private void DrawBenchUI()
         {
@@ -146,7 +489,10 @@ namespace BonfireSilksong
             }
 
             // layout
-            GUILayout.BeginArea(new Rect(20f, Screen.height / 4.0f, 530f, 700f));
+            GUILayout.BeginArea(new Rect(20f, Screen.height / 4.25f, 530f, 750f));
+
+            DrawBenchFastTravelButton();
+
             GUILayout.Label("Level Up", _labelStyle);
 
             // stats
@@ -410,8 +756,7 @@ namespace BonfireSilksong
         // bench fast travel unlock check
         private void FastTravelUnlockNotification()
         {
-            if (!(Bonfire.Instance.Status.EnableBenchTeleport && Bonfire.Instance.Status.UnlockedFastTravel))
-                return;
+            if (Bonfire.Instance.Status.UnlockedFastTravel) return;
 
             if (PlayerData.instance.defeatedCogworkDancers)
             {
@@ -542,7 +887,7 @@ namespace BonfireSilksong
                     font = _trajanBold,
                     fontStyle = FontStyle.Normal,
                     fontSize = 15,
-                    alignment = TextAnchor.MiddleCenter
+                    alignment = TextAnchor.MiddleCenter,
                 };
             }
 
@@ -577,6 +922,48 @@ namespace BonfireSilksong
                     fontSize = 14
                 };
             }
+
+            if (_benchListButtonStyle == null)
+            {
+                _benchListButtonStyle = new GUIStyle(GUI.skin.button)
+                {
+                    font = _trajanBold,
+                    fontSize = 13,
+                    fontStyle = FontStyle.Normal,
+                    alignment = TextAnchor.MiddleLeft,
+                    padding = new RectOffset(10, 10, 5, 5),
+                };
+            }
+
+            if (_benchListButtonSelectedStyle == null)
+            {
+                _benchListButtonSelectedStyle = new GUIStyle(GUI.skin.button)
+                {
+                    font = _trajanBold,
+                    fontStyle = FontStyle.Normal,
+                    fontSize = 15,
+                    alignment = TextAnchor.MiddleLeft,
+                };
+                _benchListButtonSelectedStyle.normal.background = Texture2D.whiteTexture;
+            }
+
+            if (_fastTravelConfirmHeaderStyle == null)
+                _fastTravelConfirmHeaderStyle = new GUIStyle(GUI.skin.label)
+                {
+                    font = _trajanNormal,
+                    fontSize = 11,
+                    alignment = TextAnchor.MiddleCenter,
+                    normal = { textColor = new Color(0.8f, 0.7f, 0.3f) }
+                };
+
+            if (_fastTravelConfirmDestinationStyle == null)
+                _fastTravelConfirmDestinationStyle = new GUIStyle(GUI.skin.label)
+                {
+                    font = _trajanBold,
+                    fontSize = 16,
+                    alignment = TextAnchor.MiddleCenter,
+                    normal = { textColor = Color.white }
+                };
         }
 
         private static bool InInventory()
@@ -600,6 +987,33 @@ namespace BonfireSilksong
                 _tex.Apply();
             }
             return _tex;
+        }
+
+        // -- patched methods -- 
+
+        // these should prevent remaining inputs in bench fast travel menu that BlockInventoryInputs can't:
+        // ESC/inventory pane navigation
+        [HarmonyPatch(typeof(InventoryPaneInput), "Update")]
+        class InventoryPaneInput_Update
+        {
+            static bool Prefix()
+            {
+                if (Instance != null && Instance._fastTravelDisplay)
+                    return false;
+                return true;
+            }
+        }
+
+        // map panning
+        [HarmonyPatch(typeof(GameMap), "Update")]
+        class GameMap_Update
+        {
+            static bool Prefix()
+            {
+                if (Instance != null && Instance._fastTravelDisplay)
+                    return false;
+                return true;
+            }
         }
     }
 }
