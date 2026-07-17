@@ -138,8 +138,8 @@ namespace BonfireSilksong
                                     r.gameObject.activeInHierarchy &&
                                     r.name == PlayerData.instance.respawnMarkerName);
 
-            Bonfire.Log.LogInfo("Start scene name: " + PlayerData.instance.respawnScene);
-            Bonfire.Log.LogInfo("Start marker name: " + PlayerData.instance.respawnMarkerName);
+            Bonfire.Log.LogDebug("Start scene name: " + PlayerData.instance.respawnScene);
+            Bonfire.Log.LogDebug("Start marker name: " + PlayerData.instance.respawnMarkerName);
 
             if (markers == null) return false;
 

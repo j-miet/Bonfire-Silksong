@@ -270,7 +270,7 @@ namespace BonfireSilksong
                     // main/side area
                     benchFSM?.SetState("Set Spawn Location");
                     benchFSM?.SendEvent("OVERRIDE");
-                    Bonfire.Log.LogInfo("Set spawn location");
+                    Bonfire.Log.LogDebug("Set spawn location");
                 }
 
                 __instance.proxyFSM.SendEvent("HeroCtrl-EnteringScene");

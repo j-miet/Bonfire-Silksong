@@ -182,9 +182,9 @@ namespace BonfireSilksong
         /// </summary>
         public static void VisitedScenes()
         {
-            Log.LogDebug("- Visited scenes -");
+            Log.LogDebug("== Visited scenes ==");
             foreach (var s in PlayerData.instance.scenesVisited)
-                Log.LogInfo("Scene: " + s);
+                Log.LogDebug("Scene: " + s);
         }
 
 
