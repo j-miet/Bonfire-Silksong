@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -10,52 +9,40 @@ using UnityEngine;
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Bench fast travel system using map bench pins.
+    /// Bench fast travel system
     /// </summary>
     public class BenchTeleport : MonoBehaviour
     {
         internal static bool IsBenchTeleporting;
 
-        private static readonly float ClickThreshold = Mathf.Sqrt(0.2f);
-
-        private static readonly FieldInfo ActivePinsField = typeof(MapPin)
+        public static readonly FieldInfo ActivePinsField = typeof(MapPin)
             .GetField("_activePins", BindingFlags.Static | BindingFlags.NonPublic);
 
-        private static readonly FieldInfo ParentSceneField = typeof(MapPin)
-            .GetField("parentScene", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private static readonly FieldInfo NeedFirstFadeInField = typeof(GameManager).
-            GetField("needFirstFadeIn", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private static readonly FieldInfo GameMapObjectField = typeof(MapMarkerMenu)
-            .GetField("gameMapObject", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private static bool CanTeleport()
+        /// <summary>
+        /// Initializes respawn data: scene, marker and type.
+        /// </summary>
+        public static bool PrepareTeleportLocation(MapPin closestPin)
         {
-            if (Bonfire.Instance == null || !Bonfire.Instance.Status.UnlockedFastTravel)
+            if (closestPin == null || !CanTeleport())
                 return false;
-
-            if (GameManager.instance == null)
-                return false;
-
-            if (GameManager.instance.IsMemoryScene())
-                return false;
-
-            return PlayerData.instance.atBench;
-        }
-
-        private static void TeleportToBench(MapPin closestPin)
-        {
-            if (closestPin == null)
-                return;
 
             GameMapScene parentScene = (GameMapScene)ParentSceneField.GetValue(closestPin);
             if (parentScene == null)
             {
                 Bonfire.Log.LogError("parentScene is null!");
-                return;
+                return false;
             }
 
+            var pd = PlayerData.instance;
+
+            // respawnScene (declared below) corresponds to bundle file names in
+            // "Hollow Knight Silksong_Data/StreamingAssets/aa/Standalone<os>/scenes_scenes_scenes" with each
+            // word capitalized e.g. song_enclave => Song_Enclave
+            // However parentScene.Name might not always correspond to main scene, instead it could be an 
+            // identifier for a region/sub-area e.g. "Slab_16_bench" even when scene is "Slab_16". For this reason the 
+            // code below attempts to retrieve actual scene name, but if it fails, resorts to a fallback.
+            // Furthermore, some scenes might require overriding scene/respawn location/respawn type data manually.
+            // In this case targetScene is very useful as it will always be the most unique descriptor available.
             string targetScene = parentScene.Name;
 
             Bonfire.Log.LogDebug($"Teleport target scene: {targetScene}");
@@ -64,7 +51,7 @@ namespace BonfireSilksong
             if (teleportMap == null)
             {
                 Bonfire.Log.LogError("SceneTeleportMap is null!");
-                return;
+                return false;
             }
 
             string respawnScene = null;
@@ -103,66 +90,97 @@ namespace BonfireSilksong
                             respawnScene = pair.Key;
                         }
 
-                        respawnMarker = pair.Value.RespawnPoints
-                            .FirstOrDefault(p => p.Contains("Bench"));
+                        respawnMarker = pair.Value.RespawnPoints.FirstOrDefault(p => p.Contains("Bench"));
                     }
                 }
             }
 
             // special cases
-            if (targetScene == "Slab_16_bench")
-                respawnMarker = "RestBench (1)";
-
-            if (targetScene == "Ant_17")
-                respawnType = PlayerData.instance.antBenchTrapDefused ? 1 : 0;
-
-            if (targetScene == "Abyss_03_bell_broken")
+            switch (targetScene)
             {
-                respawnScene = "Room_Diving_Bell_Abyss";
-                respawnMarker = "RestBench";
+                // slab room with two benches (where hornet gets her items back if captured)
+                case "Slab_16_bench":
+                    respawnMarker = "RestBench (1)";
+                    break;
+
+                // hunter's march trap bench
+                case "Ant_17":
+                    respawnType = pd.antBenchTrapDefused ? 1 : 0;
+                    break;
+
+                // Songclave bench in Act3: shrine is destroyed, bench moves outside
+                case "Bellshrine_Enclave":
+                    if (pd.blackThreadWorld)
+                    {
+                        respawnScene = "Song_Enclave";
+                        respawnMarker = "RestBench";
+                    }
+                    break;
+
+                // sinner's road Styx bench in Act3: keep blocked until the void masses are destroyed.
+                // in Steel Soul mode, void masses don't exists at all so bench is always available
+                case "Dust_11_right":
+                    if (pd.blackThreadWorld &&
+                        !pd.silkFarmAbyssCoresCleared &&
+                        pd.permadeathMode == PermadeathModes.Off)
+                    {
+                        respawnScene = null;
+                        respawnMarker = null;
+                    }
+                    break;
+
+                // after visiting abyss with fixed diving bell, abyss fast travel becomes normal: at this point there
+                // should no longer be anything that can break game progression so player can freely teleport in and out
+                // of abyss
+                case "Abyss_03_bell_fixed":
+                    if (!Bonfire.Instance.Status.VisitedAbyssSecondTime)
+                        Bonfire.Instance.Status.VisitedAbyssSecondTime = true;
+
+                    respawnScene = "Room_Diving_Bell_Abyss_Fixed";
+                    respawnMarker = "RestBench";
+                    break;
             }
 
-            if (targetScene == "Abyss_03_bell_fixed")
-            {
-                respawnScene = "Room_Diving_Bell_Abyss_Fixed";
-                respawnMarker = "RestBench";
-            }
+            // additional abyss checks to prevent progress softlocks:
+            // 1. first time visit and trying to teleport out is prevented. Must complete the ascent normally. However
+            // can tp between abyss benches normally.
+            if (PlayerData.instance.respawnScene.Contains("Abyss_")
+                && !targetScene.Contains("Abyss_")
+                && !PlayerData.instance.completedAbyssAscent)
+                return false;
 
-            if (targetScene == "Bellshrine_Enclave" &&
-                PlayerData.instance.blackThreadWorld)
-            {
-                respawnScene = "Song_Enclave";
-                respawnMarker = "RestBench";
-            }
-
-            if (targetScene == "Dust_11_right")
-            {
-                var pd = PlayerData.instance;
-
-                if (pd.blackThreadWorld &&
-                    !pd.silkFarmAbyssCoresCleared &&
-                    pd.permadeathMode == PermadeathModes.Off)
-                {
-                    respawnScene = null;
-                    respawnMarker = null;
-                }
-            }
+            // 2. finished ascent and trying to teleport to abyss without using the fixed diving bell is prevented
+            if (targetScene.Contains("Abyss_")
+                && !Bonfire.Instance.Status.VisitedAbyssSecondTime)
+                return false;
 
             if (string.IsNullOrEmpty(respawnScene) ||
                 string.IsNullOrEmpty(respawnMarker))
             {
                 Bonfire.Log.LogError("Couldn't determine respawn destination.");
-                return;
+                return false;
             }
 
             Bonfire.Log.LogDebug($"Respawn Scene : {respawnScene}");
             Bonfire.Log.LogDebug($"Respawn Marker: {respawnMarker}");
             Bonfire.Log.LogDebug($"Respawn Type  : {respawnType}");
 
-            // these define the respawn (= fast travel) outcome
-            PlayerData.instance.tempRespawnScene = respawnScene;
-            PlayerData.instance.tempRespawnMarker = respawnMarker;
-            PlayerData.instance.tempRespawnType = respawnType;
+            // these define the fast travel outcome: 
+            // bench scene, respawn location, spawn type i.e. does Hornet sit/stand/lay on ground
+            pd.tempRespawnScene = respawnScene;
+            pd.tempRespawnMarker = respawnMarker;
+            pd.tempRespawnType = respawnType;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Force game into respawn state and simulate fast travel. Requires PrepareToTeleport
+        /// to initialize PlayerData respawn fields.
+        /// </summary>
+        public static void TeleportToBench()
+        {
+            if (!CanTeleport()) return;
 
             GameManager gm = GameManager.instance;
 
@@ -175,20 +193,30 @@ namespace BonfireSilksong
             gm.ReadyForRespawn(false);
         }
 
-        // get bench pin position in map coordinates
-        // 
-        // technically the same gameMapObject trick could be done here what GetClickPositionInMapSpace uses.
-        // however pin position getter is called once for each bench pin available vs click only once per pin location.
-        // Also pin location is a temporary object, which mean it
-        // - doesn't trigger side effects (just a cursor position tracker, no hooks are attached to it)
-        // - cause permanent issues should an error be thrown during processing it
-        // Finally: performance costs for triggering transformation calculations repeatedly when reparenting could be
-        // an issue: loop iteration is much cheaper for larger object count
-        private static Vector2 GetBenchPinPosition(MapPin pin)
+        /// <summary>
+        /// Get bench pin position in map coordinates.
+        /// </summary>
+        public static Vector2 GetBenchPinPositionInMapSpace(MapPin pin)
         {
+            // In Unity, one could use the transform.parent reparenting trick by temporarily changing parent under
+            // different object, which triggers recalculation of coordinates respect to that parent transform then 
+            // switch back. This allows easy updates of coordinates from one basis to another. However this is not a 
+            // viable strategy unless objects with persistent state or external hooks attached to it that could trigger 
+            // side effects. 
+            // MapPin is indeed such object: it's placed inside a hierarchial parent structure with multiple 
+            // layers where changing its transform could seriously mess the map rending process.
+            // In conclusion: loop-based position search is safer to active objects with parent chains, temporary 
+            // object are simpler with direct transform reparenting. MapPin fits to former, it uses a parent chain
+            // which behaves somewhat like this: pin position -> bench pos -> scene pos -> map pos. Changing pin under
+            // map would then recalculate anything below it, very likely to break stuff and lead to a crash.
+
             Vector3 position = pin.transform.localPosition;
             Transform parent = pin.transform.parent;
 
+            // private field MapMarkerMenu.gameMapObject is the map, gameMapObject.name returns "Game_Map_Hornet(Clone)"
+            // which is the loop termination condition. 
+            // Loop iterates upward (child -> parent): always updating the pin position relative to 
+            // the parents local coordinate basis then moving onto parent of that parent.
             while (parent != null && !parent.gameObject.name.StartsWith("Game_Map_Hornet"))
             {
                 position = Vector3.Scale(position, parent.localScale) + parent.localPosition;
@@ -198,34 +226,25 @@ namespace BonfireSilksong
             return new Vector2(position.x, position.y);
         }
 
-        // get custom pin's placement position in map coordinates
-        private static Vector2 GetPinPositionInMapSpace(MapMarkerMenu menu)
+
+        private static readonly FieldInfo ParentSceneField = typeof(MapPin)
+            .GetField("parentScene", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        private static readonly FieldInfo NeedFirstFadeInField = typeof(GameManager).
+            GetField("needFirstFadeIn", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        private static bool CanTeleport()
         {
-            GameObject gameMapObject = (GameObject)GameMapObjectField.GetValue(menu); // map
-            GameObject placementBox = menu.placementBox; // pin location
+            if (Bonfire.Instance == null || !Bonfire.Instance.Status.UnlockedFastTravel)
+                return false;
 
-            // reads placementBox's position in map space:
-            // - temporarily reparent placementBox under gameMapObject: Unity will preserve object's world position and 
-            // automatically recalculates the localPosition of assigned transform.parent. Because it now gets passed
-            // gameMapObject, it will instead calculate the pin box position relative to gameMapObject's local space,
-            // that is, the map space 
-            // - get position and produce return value vector
-            // - restoring its original parent afterwards to revert chances i.e. force to again recalculate the 
-            // position, returning back to original values
-            // Why is this required: pin positions from GetBenchPosition are expressed relative to Game_Map_Hornet, 
-            // while placementBox lives under a different parent. The localPosition is always expressed relative to
-            // its parent transform. Thus here this means that particular parent of placementBox, whatever it is.
-            Transform originalParent = placementBox.transform.parent;
+            return PlayerData.instance.atBench;
 
-            placementBox.transform.parent = gameMapObject.transform;
-            Vector3 localPosition = placementBox.transform.localPosition;
-            Vector2 result = new Vector2(localPosition.x, localPosition.y);
-            placementBox.transform.parent = originalParent;
-
-            return result;
+            //if (GameManager.instance == null || GameManager.instance.IsMemoryScene())
+            //    return false;
         }
 
-        /* patched methods */
+        // -- patched methods -- //
 
         // handle transition post-check: set spawn location to targeted bench
         [HarmonyPatch(typeof(HeroController), "FinishedEnteringScene")]
@@ -250,6 +269,8 @@ namespace BonfireSilksong
                     // properly update spawn location. This will also ensure the save slot displays image of correct 
                     // main/side area
                     benchFSM?.SetState("Set Spawn Location");
+                    benchFSM?.SendEvent("OVERRIDE");
+                    Bonfire.Log.LogInfo("Set spawn location");
                 }
 
                 __instance.proxyFSM.SendEvent("HeroCtrl-EnteringScene");
@@ -288,6 +309,7 @@ namespace BonfireSilksong
                 RespawnMarker found = markers.FirstOrDefault(r => r.name == marker);
                 if (found != null)
                 {
+                    __instance.playerData.respawnMarkerName = marker;
                     Bonfire.Log.LogDebug("Destination marker exists.");
                     return;
                 }
@@ -301,95 +323,9 @@ namespace BonfireSilksong
                 if (found != null)
                 {
                     __instance.playerData.tempRespawnMarker = found.name;
+                    __instance.playerData.respawnMarkerName = found.name;
 
                     Bonfire.Log.LogDebug($"Fallback marker = {found.name}");
-                }
-            }
-        }
-
-        // override map pin placement function by fast travel teleport when player uses pin very close/on top of a 
-        // bench icon
-        [HarmonyPatch(typeof(MapMarkerMenu), "PlaceMarker")]
-        private class MapMarkerMenu_PlaceMarker
-        {
-            static bool Prefix(MapMarkerMenu __instance)
-            {
-                try
-                {
-                    if (__instance == null)
-                        return true;
-
-                    if (!CanTeleport())
-                        return true;
-
-                    GameObject placementCursor = __instance.placementCursor;
-
-                    if (placementCursor == null)
-                    {
-                        Bonfire.Log.LogError("placementCursor is null!");
-                        return true;
-                    }
-
-                    Vector2 placedPinPos = GetPinPositionInMapSpace(__instance);
-
-                    Bonfire.Log.LogDebug($"Pin cursor position (map space): {placedPinPos}");
-
-                    List<MapPin> activePins = (List<MapPin>)ActivePinsField.GetValue(null);
-                    if (activePins == null)
-                    {
-                        Bonfire.Log.LogError("MapPin._activePins is null!");
-                        return true;
-                    }
-
-                    float closestDistance = float.MaxValue;
-                    MapPin closestPin = null;
-
-                    foreach (MapPin pin in activePins)
-                    {
-                        if (pin == null ||
-                            !pin.IsActive ||
-                            !pin.gameObject.activeSelf ||
-                            !pin.gameObject.activeInHierarchy)
-                            continue;
-
-                        SpriteRenderer sr = pin.GetComponent<SpriteRenderer>();
-
-                        if (sr?.sprite?.name != "pin_bench") // get only bench pins
-                            continue;
-
-                        Vector2 benchPos = GetBenchPinPosition(pin);
-                        float distance = Vector2.Distance(placedPinPos, benchPos);
-
-                        if (distance < closestDistance)
-                        {
-                            closestDistance = distance;
-                            closestPin = pin;
-                        }
-                    }
-
-                    // only trigger teleport if the click actually landed directly/very near a bench pin.
-                    if (closestPin == null || closestDistance >= ClickThreshold)
-                    {
-                        Bonfire.Log.LogDebug(
-                            $"No bench pin is close enough to trigger traveling: closest distance = {closestDistance}");
-
-                        return true;
-                    }
-
-                    Bonfire.Log.LogDebug($"Closest bench: {closestPin.name}, distance = {closestDistance}");
-
-                    // close marker menu before teleporting, otherwise it stays open and requires a manual close into
-                    // reopen from the player
-                    __instance.Close();
-
-                    TeleportToBench(closestPin);
-
-                    return false; // cancel the actual pin placement with 'false'
-                }
-                catch (Exception ex)
-                {
-                    Bonfire.Log.LogError(ex);
-                    return true;
                 }
             }
         }
