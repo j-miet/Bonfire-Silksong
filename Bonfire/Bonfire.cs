@@ -97,11 +97,14 @@ namespace BonfireSilksong
 
         /// <summary>
         /// Display cursor when player sits on a bench in order to access leveling GUI.
-        /// Can be used in enabling cursor for leveling GUI outside menu screens, but also in map menu screen for
-        /// fast travel
+        /// Can be used in enabling cursor outside menu screens, but also in map menu screen for fast travel
         /// </summary>
         public void ShowCursor()
         {
+            // when saving & exiting, sometimes ShowCursor might keep overriding default cursor behavior in main menu
+            // for several seconds, preventing mouse use. Checking IsGamePlayScene should fix this.
+            if (GameManager.instance == null || !GameManager.instance.IsGameplayScene()) return;
+
             if (HeroController.instance != null &&
                 HeroController.instance.cState != null &&
                 GameManager.instance != null)
@@ -178,10 +181,6 @@ namespace BonfireSilksong
         private void LateUpdate()
         {
             if (PlayerData.instance == null) return;
-
-            // when saving & exiting, sometimes ShowCursor might keep overriding default cursor behavior in main menu
-            // for several seconds, preventing mouse use. Checking IsGamePlayScene should fix this.
-            if (GameManager.instance == null || !GameManager.instance.IsGameplayScene()) return;
 
             var pd = PlayerData.instance;
 
