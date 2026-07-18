@@ -59,14 +59,70 @@ namespace BonfireSilksong
         }
 
 
+        private bool _pendingCrestUnlock = false;
+
         private MapPin _selectedPin = null;
-        private string _selectedSceneName = "";
+        private string _selectedFullName;
         private bool _fastTravelDisplay = false;
         private PlayMakerFSM _currentBenchFSM;
         private Vector2 _scrollPos;
-        private readonly Dictionary<MapPin, string> _benchPinScenes = new Dictionary<MapPin, string>();
 
-        private bool _pendingCrestUnlock = false;
+        // MapPin -> <location scene, location bench marker>
+        // Used in: UpdateBenchPins stores data by using MapPin object, this ensures each key being unique. 
+        // For each pin, the scene and marker name are also stored. This is because in UpdateActiveLocationData,
+        // pin and scene are used for categorizing bench locations by area (see _benchActiveLocationData below), but
+        // in rare cases, different pins could get same scene names from BenchTeleport.PrepareTeleportLocation thus
+        // requiring an extra secondary identifier i.e. the marker name.
+        private readonly Dictionary<MapPin, Tuple<string, string>> _benchPinScenes =
+            new Dictionary<MapPin, Tuple<string, string>>();
+
+        // Map area -> List of all benches in that area as <location scene, location map pin>
+        // Used in: UpdateActiveLocationData divides all available benches under main areas. Then DrawBenchListPanel
+        // creates the GUI list by iterating over each area and it's bench locations
+        private readonly Dictionary<string, List<Tuple<string, MapPin>>> _benchActiveLocationData =
+            new Dictionary<string, List<Tuple<string, MapPin>>>();
+
+        // custom scene names for teleport locations (left = game's internal default, right = custom name)
+        // scene names are ones after BenchTeleport.PrepareToTeleport has been applied!
+        // if no key-value pair is found for specific scene, keeps using the default.
+        //
+        // TODO: add better names for key locations; leave rest either as defaults or something like "Bench 1"
+        private readonly Dictionary<string, string> _benchStaticLocations =
+            new Dictionary<string, string>
+            {
+                {"Tut_03", "Church"},
+            };
+
+        // custom order for area names, in-game map list GUI follows same order.
+        // adding/removing entries is also possible, just make sure to update UpdateActiveLocationData as well.
+        private readonly List<string> _orderedBenchAreaNames = new List<string>
+        {
+            "Bone Bottom",
+            "Weavenest Atla",
+            "The Marrow",
+            "Wormways",
+            "Deep Docks",
+            "Hunter's March",
+            "Far Fields",
+            "Greymoor",
+            "Wisp Thicket",
+            "Sinner's Road",
+            "Bilewater",
+            "Putrified Ducts",
+            "Bellhart",
+            "Shellwood",
+            "Blasted Steps",
+            "Sands of Karak",
+            "The Slab",
+            "Mount Fay",
+            "The Citadel",
+            "Underworks",
+            "Arborium",
+            "The Cradle",
+            "Verdania",
+            "The Abyss",
+            "Other"
+        };
 
         private Font _trajanBold;
         private Font _trajanNormal;
@@ -75,6 +131,7 @@ namespace BonfireSilksong
         private GUIStyle _crestUnlockLabelStyle;
         private GUIStyle _crestUnlockButtonStyle;
         private GUIStyle _fastTravelUnlockLabelStyle;
+        private GUIStyle _benchListAreaLabelStyle;
         private GUIStyle _benchListButtonStyle;
         private GUIStyle _benchListButtonSelectedStyle;
         private GUIStyle _fastTravelConfirmHeaderStyle;
@@ -88,12 +145,6 @@ namespace BonfireSilksong
         private void Awake()
         {
             Instance = this;
-        }
-
-        private void DrawRect(Rect rect, Color color)
-        {
-            GUI.color = color;
-            GUI.DrawTexture(rect, SolidTex());
         }
 
         // -- bench fast travel -- //
@@ -129,6 +180,110 @@ namespace BonfireSilksong
             actions.OpenInventoryTools.Enabled = true;
             actions.OpenInventoryQuests.Enabled = true;
             actions.QuickMap.Enabled = true;
+        }
+
+        private void UpdateActiveLocationData()
+        {
+            foreach (KeyValuePair<MapPin, Tuple<string, string>> bench in _benchPinScenes)
+            {
+                try
+                {
+                    string b = bench.Value.Item1; // bench scene; Item2 is the be bench marker
+                    var p = bench.Key; // map pin
+
+                    // bench custom name; only used for naming teleport locations, either by itself
+                    string customName;
+                    string areaName;
+
+                    // use custom name if available; otherwise default to internal scene name e.g. "Tut_03"
+                    if (_benchStaticLocations.TryGetValue(b, out string location))
+                        customName = location;
+                    else
+                        customName = b;
+
+                    // get map area name
+                    // <IMPORTANT> scene names are from BenchTeleport.PrepareToTeleport:
+                    // ---> if respawnScene is manually updated, use that value instead! <---
+                    //
+                    // TODO: could simplify this a bit using StartsWith statements
+                    // e.g. b.StartsWith("Bone_"), b.StartsWith("Bone_East_") etc.
+                    if (b == "Tut_03" || b == "Tut_04" || b == "Mosstown_02c")
+                        areaName = "Bone Bottom";
+                    else if (b == "Weave_07")
+                        areaName = "Weavenest Atla";
+                    else if (b == "Bone_01c" || b == "Bone_04" || b == "Bone_10" || b == "Bone_12" || b == "Bellshrine")
+                        areaName = "The Marrow";
+                    else if (b == "Crawl_08")
+                        areaName = "Wormways";
+                    else if (b == "Dock_01" || b == "Dock_06_Church" || b == "Dock_10" || b == "Bellshrine_05"
+                            || b == "Room_Forge" || b == "Room_Diving_Bell")
+                        areaName = "Deep Docks";
+                    else if (b == "Ant_17")
+                        areaName = "Hunter's March";
+                    else if (b == "Bone_East_10_Room" || b == "Bone_East_15" || b == "Bone_East_27" || b == "Bellway_03"
+                            || b == "Bone_East_Umbrella" || b == "Bone_East_Weavehome" || b == "Sprintmaster_Cave")
+                        areaName = "Far Fields";
+                    else if (b == "Bellshrine_02" || b == "Halfway_01")
+                        areaName = "Greymoor";
+                    else if (b == "Dust_10" || b == "Dust_11")
+                        areaName = "Sinner's Road";
+                    else if (b == "Wisp_04")
+                        areaName = "Wisp Thicket";
+                    else if (b == "Shadow_08" || b == "Shadow_18" || b == "Bellway_Shadow" || b == "Organ_01")
+                        areaName = "Bilewater";
+                    else if (b == "Aqueduct_05" || b == "Bellway_Aqueduct" || b == "Room_Huntress")
+                        areaName = "Putrified Ducts";
+                    else if (b == "Belltown")
+                        areaName = "Bellhart";
+                    else if (b == "Bellshrine_03" || b == "Shellwood_01b" || b == "Shellwood_08c" || b == "Mosstown_03")
+                        areaName = "Shellwood";
+                    else if (b == "Bellway_08" || b == "Coral_02" || b == "Room_Pinstress")
+                        areaName = "Blasted Steps";
+                    else if (b == "Coral_Tower_01" || b == "Bellshrine_Coral")
+                        areaName = "Sands of Karak";
+                    else if (b == "Slab_06" || b == "Slab_16" || b == "Slab_20")
+                    {
+                        // rare case requiring a secondary identifier via marker name
+                        if (b == "Slab_16" && bench.Value.Item2 == "RestBench (1)")
+                        {
+                            customName = "Slab_16_bench";
+
+                            if (_benchStaticLocations.TryGetValue(customName, out string locationUpdated))
+                                customName = locationUpdated;
+                        }
+
+                        areaName = "The Slab";
+                    }
+                    else if (b == "Peak_07" || b == "Peak_12" || b == "Bellway_Peak")
+                        areaName = "Mount Fay";
+                    else if (b == "Song_10" || b == "Song_18" || b == "Hang_01" || b == "Hang_06b" || b == "Under_07b"
+                            || b == "Bellway_City" || b == "Bellshrine_Enclave" || b == "Song_Enclave"
+                            || b == "Library_08" || b == "Library_10" || b == "Cog_Bench" || b == "Ward_01")
+                        areaName = "The Citadel";
+                    else if (b == "Under_01b" || b == "Under_08" || b == "Under_17")
+                        areaName = "Underworks";
+                    else if (b == "Arborium_04")
+                        areaName = "Arborium";
+                    else if (b == "Tube_Hub")
+                        areaName = "The Cradle";
+                    else if (b == "Clover_20")
+                        areaName = "Verdania";
+                    else if (b == "Abyss_09" || b == "Abyss_12" || b == "Room_Diving_Bell_Abyss"
+                            || b == "Room_Diving_Bell_Abyss_Fixed")
+                        areaName = "The Abyss";
+                    else
+                        areaName = "Other";
+
+                    if (!_benchActiveLocationData.ContainsKey(areaName))
+                        _benchActiveLocationData.Add(areaName, new List<Tuple<string, MapPin>>());
+
+                    _benchActiveLocationData[areaName].Add(new Tuple<string, MapPin>(customName, p));
+                }
+                catch (Exception e)
+                {
+                    Bonfire.Log.LogInfo($"[UpdateActiveLocationData]: {e}");
+                }
+            }
         }
 
         private bool UpdateCurrentBenchFSM()
@@ -180,8 +335,12 @@ namespace BonfireSilksong
                 }
 
                 string sceneName = PlayerData.instance.tempRespawnScene;
-                _benchPinScenes.Add(pin, sceneName);
+                string markerName = PlayerData.instance.tempRespawnMarker;
+                _benchPinScenes.Add(pin, new Tuple<string, string>(sceneName, markerName));
             }
+
+            _benchActiveLocationData.Clear();
+            UpdateActiveLocationData(); // must only call this after filling _benchPinScenes!
 
             Bonfire.Log.LogDebug($"Found {_benchPinScenes.Count} bench pins");
             Bonfire.Log.LogDebug("GUI: bench pin respawn scenes:");
@@ -330,32 +489,32 @@ namespace BonfireSilksong
             {
                 _scrollPos = GUILayout.BeginScrollView(_scrollPos);
 
-                foreach (KeyValuePair<MapPin, string> bench in _benchPinScenes)
+                foreach (string mapArea in _orderedBenchAreaNames)
                 {
-                    var pin = bench.Key;
-                    var sceneName = bench.Value;
+                    if (!_benchActiveLocationData.Keys.Contains(mapArea)) continue;
 
-                    bool isSelected = _selectedPin == pin;
+                    GUILayout.Label(mapArea, _benchListAreaLabelStyle);
+                    GUILayout.Space(4);
 
-                    GUI.backgroundColor = isSelected ? new Color(0.8f, 0.4f, 0f) : Color.white;
-                    GUIStyle buttonStyle = isSelected ? _benchListButtonSelectedStyle : _benchListButtonStyle;
-
-                    // despite many attempts, applying a highlight border color similar to what main UI buttons have
-                    // is not possible/require some extra manipulation. Thing is: none of the buttons get any hover
-                    // style either, but game still gives this white border when cursor is hovered on them. However
-                    // having map open seems to internally disable it. Trying to implement a custom hover never
-                    // works either so something definitely keeps overriding it.
-                    // Conclusion: fast travel menu buttons just have to live without highlighting feature.
-                    if (GUILayout.Button(sceneName, buttonStyle, GUILayout.Height(30f)))
+                    foreach (var (customName, mapPin) in _benchActiveLocationData[mapArea])
                     {
-                        _selectedPin = pin;
-                        _selectedSceneName = sceneName;
+                        bool isSelected = _selectedPin == mapPin;
 
-                        // move map camera to this bench, centered on it
-                        var gameMap = GameManager.instance.gameMap;
-                        Vector2 benchPos = BenchTeleport.GetBenchPinPositionInMapSpace(pin);
-                        Vector2 scaledPos = benchPos * gameMap.transform.localScale.x;
-                        gameMap.UpdateMapPosition(-scaledPos);
+                        GUI.backgroundColor = isSelected ? new Color(0.8f, 0.4f, 0f) : Color.white;
+                        GUIStyle buttonStyle = isSelected ? _benchListButtonSelectedStyle : _benchListButtonStyle;
+
+                        if (GUILayout.Button(customName, buttonStyle, GUILayout.Height(30f)))
+                        {
+                            _selectedPin = mapPin;
+                            _selectedFullName = mapArea + ": " + customName;
+
+                            // pan map camera on top of this bench if possible; otherwise close as possible
+                            var gameMap = GameManager.instance.gameMap;
+                            Vector2 benchPos = BenchTeleport.GetBenchPinPositionInMapSpace(mapPin);
+                            Vector2 scaledPos = benchPos * gameMap.transform.localScale.x;
+                            gameMap.UpdateMapPosition(-scaledPos);
+                        }
+                        GUILayout.Space(2);
                     }
                 }
 
@@ -382,7 +541,7 @@ namespace BonfireSilksong
         {
             GUILayout.Space(8);
             GUILayout.Label("LOCATION", _fastTravelConfirmHeaderStyle);
-            GUILayout.Label(_selectedSceneName, _fastTravelConfirmDestinationStyle);
+            GUILayout.Label(_selectedFullName, _fastTravelConfirmDestinationStyle);
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
@@ -653,7 +812,8 @@ namespace BonfireSilksong
                 float x = screenPos.x - width / 2f;
                 float y = Screen.height - screenPos.y - 20f;
 
-                DrawRect(new Rect(x, y, width, height), new Color(0f, 0f, 0f, 0.7f));
+                GUI.color = new Color(0f, 0f, 0f, 0.7f);
+                GUI.DrawTexture(new Rect(x, y, width, height), SolidTex());
 
                 Color fillColor;
                 if (s.EnemyHpBarColorProgression)
@@ -661,7 +821,8 @@ namespace BonfireSilksong
                 else
                     fillColor = isBoss ? new Color(1f, 0.5f, 0f) : Color.red;
 
-                DrawRect(new Rect(x, y, width * pct, height), fillColor);
+                GUI.color = fillColor;
+                GUI.DrawTexture(new Rect(x, y, width * pct, height), SolidTex());
 
                 GUI.color = Color.white;
             }
@@ -923,12 +1084,24 @@ namespace BonfireSilksong
                 };
             }
 
+            if (_benchListAreaLabelStyle == null)
+            {
+                _benchListAreaLabelStyle = new GUIStyle(GUI.skin.label)
+                {
+                    font = _trajanBold,
+                    fontSize = 16,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleLeft,
+                    normal = { textColor = new Color(0.8f, 0.75f, 0.1f) }
+                };
+            }
+
             if (_benchListButtonStyle == null)
             {
                 _benchListButtonStyle = new GUIStyle(GUI.skin.button)
                 {
                     font = _trajanBold,
-                    fontSize = 13,
+                    fontSize = 14,
                     fontStyle = FontStyle.Normal,
                     alignment = TextAnchor.MiddleLeft,
                     padding = new RectOffset(10, 10, 5, 5),
