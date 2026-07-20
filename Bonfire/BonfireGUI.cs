@@ -116,6 +116,32 @@ namespace BonfireSilksong
             Instance = this;
         }
 
+        private void Update()
+        {
+            if (!_fastTravelDisplay) return;
+
+            var inputActions = GameManager.instance?.inputHandler?.inputActions;
+            if (inputActions == null) return;
+
+            // check if user presses "Inventory", "Quick Map" or "Map" buttons and if so, closes travel menu
+            if (inputActions.OpenInventoryMap.WasPressed ||
+                inputActions.QuickMap.WasPressed ||
+                inputActions.OpenInventory.WasPressed)
+            {
+                CloseFastTravelMenu();
+            }
+        }
+
+        private void CloseFastTravelMenu()
+        {
+            _selectedPin = null;
+            _fastTravelDisplay = false;
+
+            GUILogic.BenchPinScenes.Clear();
+
+            StartCoroutine(GUILogic.CloseInventoryMap());
+        }
+
         // -- fast travel --
 
         private void DrawBenchFastTravelButton()
@@ -294,11 +320,7 @@ namespace BonfireSilksong
             GUILayout.BeginHorizontal("box");
             if (GUILayout.Button("Close teleport menu", _buttonStyle, GUILayout.Height(40f)))
             {
-                _selectedPin = null;
-                _fastTravelDisplay = false;
-                GUILogic.BenchPinScenes.Clear();
-
-                StartCoroutine(GUILogic.CloseInventoryMap());
+                CloseFastTravelMenu();
             }
             GUILayout.EndHorizontal();
         }
@@ -319,11 +341,8 @@ namespace BonfireSilksong
             {
                 BenchTeleport.PrepareTeleportLocation(_selectedPin);
 
-                _selectedPin = null;
-                _fastTravelDisplay = false;
-                GUILogic.BenchPinScenes.Clear();
+                CloseFastTravelMenu();
 
-                StartCoroutine(GUILogic.CloseInventoryMap());
                 BenchTeleport.TeleportToBench();
             }
 

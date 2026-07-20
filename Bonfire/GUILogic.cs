@@ -39,19 +39,25 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// Prevent most keyboard inputs in bench menu map screen, rest are handled with patched Update methods.
+        /// Prevent most keyboard inputs in bench menu map screen, the rest require prefix patching of
+        /// InventoryPaneInput.Update.
         /// </summary>
         public static void BlockInventoryInputs()
         {
             var actions = GameManager.instance.inputHandler.inputActions;
             actions.PaneLeft.Enabled = false;
             actions.PaneRight.Enabled = false;
-            actions.OpenInventory.Enabled = false;
-            actions.OpenInventoryMap.Enabled = false;
             actions.OpenInventoryJournal.Enabled = false;
             actions.OpenInventoryTools.Enabled = false;
             actions.OpenInventoryQuests.Enabled = false;
-            actions.QuickMap.Enabled = false;
+
+            // allow these through: patched InventoryPaneInput.Update will prevent any inputs from doing their
+            // normal behavior while map is open. However it still allows them to register which allows BonfireGUI
+            // to check if they were pressed and perform actions
+            //
+            //actions.OpenInventory.Enabled = false;
+            //actions.OpenInventoryMap.Enabled = false;
+            //actions.QuickMap.Enabled = false;
         }
 
         /// <summary>
@@ -62,12 +68,13 @@ namespace BonfireSilksong
             var actions = GameManager.instance.inputHandler.inputActions;
             actions.PaneLeft.Enabled = true;
             actions.PaneRight.Enabled = true;
-            actions.OpenInventory.Enabled = true;
-            actions.OpenInventoryMap.Enabled = true;
             actions.OpenInventoryJournal.Enabled = true;
             actions.OpenInventoryTools.Enabled = true;
             actions.OpenInventoryQuests.Enabled = true;
-            actions.QuickMap.Enabled = true;
+
+            //actions.OpenInventory.Enabled = true;
+            //actions.OpenInventoryMap.Enabled = true;
+            //actions.QuickMap.Enabled = true;
         }
 
         /// <summary>
