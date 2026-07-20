@@ -166,7 +166,9 @@ namespace BonfireSilksong
             Bonfire.Log.LogDebug($"Respawn Type  : {respawnType}");
 
             // these define the fast travel outcome: 
-            // bench scene, respawn location, spawn type i.e. does Hornet sit/stand/lay on ground
+            // - bench scene, 
+            // - respawn location within scene
+            // - spawn type -> usual values are either 0 = lay on ground, or 1 = sit down)
             pd.tempRespawnScene = respawnScene;
             pd.tempRespawnMarker = respawnMarker;
             pd.tempRespawnType = respawnType;
@@ -175,7 +177,7 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// Force game into respawn state and simulate fast travel. Requires PrepareToTeleport
+        /// Force game into respawn state and simulate fast travel. Requires PrepareTeleportLocation
         /// to initialize PlayerData respawn fields.
         /// </summary>
         public static void TeleportToBench()
@@ -239,9 +241,6 @@ namespace BonfireSilksong
                 return false;
 
             return PlayerData.instance.atBench;
-
-            //if (GameManager.instance == null || GameManager.instance.IsMemoryScene())
-            //    return false;
         }
 
         // -- patched methods -- //
