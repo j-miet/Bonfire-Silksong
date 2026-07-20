@@ -59,45 +59,126 @@ namespace BonfireSilksong
         }
 
 
-        private bool _pendingCrestUnlock = false;
-
-        private MapPin _selectedPin = null;
-        private string _selectedFullName;
-        private bool _fastTravelDisplay = false;
-        private PlayMakerFSM _currentBenchFSM;
-        private Vector2 _scrollPos;
-
-        // MapPin -> <location scene, location bench marker>
-        // Used in: UpdateBenchPins stores data by using MapPin object, this ensures each key being unique. 
-        // For each pin, the scene and marker name are also stored. This is because in UpdateActiveLocationData,
-        // pin and scene are used for categorizing bench locations by area (see _benchActiveLocationData below), but
-        // in rare cases, different pins could get same scene names from BenchTeleport.PrepareTeleportLocation thus
-        // requiring an extra secondary identifier i.e. the marker name.
-        private readonly Dictionary<MapPin, Tuple<string, string>> _benchPinScenes =
-            new Dictionary<MapPin, Tuple<string, string>>();
-
-        // Map area -> List of all benches in that area as <location scene, location map pin>
-        // Used in: UpdateActiveLocationData divides all available benches under main areas. Then DrawBenchListPanel
-        // creates the GUI list by iterating over each area and it's bench locations
-        private readonly Dictionary<string, List<Tuple<string, MapPin>>> _benchActiveLocationData =
-            new Dictionary<string, List<Tuple<string, MapPin>>>();
-
-        // custom scene names for teleport locations (left = game's internal default, right = custom name)
-        // scene names are ones after BenchTeleport.PrepareToTeleport has been applied!
-        // if no key-value pair is found for specific scene, keeps using the default.
-        //
-        // TODO: add better names for key locations; leave rest either as defaults or something like "Bench 1"
-        private readonly Dictionary<string, string> _benchStaticLocations =
-            new Dictionary<string, string>
+        // Custom scene names for teleport locations
+        // Key is the raw scene value from BenchTeleport.PrepareToTeleport
+        //   => make sure to use final scene value for manually handled special cases!
+        // Value is a tuple (custom name, map area). Custom name is optional: using empty string "" reverts back to
+        // raw scene name. Map area is used in categorizing bench scenes; their order can be customized
+        // by modifying _orderedBenchAreaNames list.
+        // If no key-value pair is found for specific scene, keeps using the default: raw scene name and map area
+        // becomes "Other"
+        private readonly Dictionary<string, (string customName, string areaName)> _benchStaticLocations =
+            new Dictionary<string, (string, string)>
             {
-                {"Tut_03", "Church"},
+                {"Tut_03", ("Ruined Chapel", "Mosslands")},
+                {"Tut_04", ("Ruined Chapel Interior", "Mosslands")},
+                {"Bonetown", ("Bone Bottom", "Mosslands")},
+                {"Mosstown_02c", ("Mosshome", "Mosslands")},
+
+                {"Weave_07", ("Rest", "Weavenest Atla")},
+
+                {"Bone_01c", ("Entrance", "The Marrow")},
+                {"Bone_04", ("Crossing", "The Marrow")},
+                {"Bone_10", ("Enclave", "The Marrow")},
+                {"Bone_12", ("Cells", "The Marrow")},
+                {"Bellshrine", ("Bellshrine", "The Marrow")},
+
+                {"Crawl_08", ("Alchemist", "Wormways")},
+
+                {"Dock_01", ("Entrance Top", "Deep Docks")},
+                {"Dock_06_Church", ("Ascent", "Deep Docks")},
+                {"Dock_10", ("Sauna", "Deep Docks")},
+                {"Bellshrine_05", ("Bellshrine", "Deep Docks")},
+                {"Room_Forge", ("Forge", "Deep Docks")},
+                {"Room_Diving_Bell", ("Diving Bell", "Deep Docks")},
+
+                {"Ant_17", ("Rest", "Hunter's March")},
+
+                {"Bone_East_10_Room", ("Pilgrim's Rest", "Far Fields")},
+                {"Bone_East_15", ("Entrance", "Far Fields")},
+                {"Bone_East_27", ("Hideout", "Far Fields")},
+                {"Bellway_03", ("Bellway", "Far Fields")},
+                {"Bone_East_Umbrella", ("Seamstress", "Far Fields")},
+                {"Bone_East_Weavehome", ("Weavenest Cindril", "Far Fields")},
+                {"Sprintmaster_Cave", ("Sprintmaster Cave", "Far Fields")},
+
+                {"Bellshrine_02", ("Bellshrine", "Greymoor")},
+                {"Halfway_01", ("Halfway Home", "Greymoor")},
+                {"Greymoor_02", ("Camp", "Greymoor")},
+                {"Greymoor_08", ("Flea Caravan", "Greymoor")},
+
+                {"Dust_10", ("Rest", "Sinner's Road")},
+                {"Dust_11", ("Styx", "Sinner's Road")},
+
+                {"Wisp_04", ("Entrance", "Wisp Thicket")},
+
+                {"Shadow_08", ("Hidden", "Bilewater")},
+                {"Shadow_18", ("Bilehaven", "Bilewater")},
+                {"Bellway_Shadow", ("Bellway", "Bilewater")},
+                {"Organ_01", ("Exhaust Organ", "Bilewater")},
+                {"Shadow_15", ("Trap", "Bilewater")},
+
+                {"Aqueduct_05", ("Fleatopia", "Putrified Ducts")},
+                {"Bellway_Aqueduct", ("Bellway", "Putrified Ducts")},
+                {"Room_Huntress", ("Huntress", "Putrified Ducts")},
+
+                {"Belltown", ("Town", "Bellhart")},
+
+                {"Bellshrine_03", ("Bellshrine", "Shellwood")},
+                {"Shellwood_01b", ("Room Center", "Shellwood")},
+                {"Shellwood_08c", ("West Entrance", "Shellwood")},
+                {"Mosstown_03", ("South Entrance", "Shellwood")},
+
+                {"Bellway_08", ("Bellway", "Blasted Steps")},
+                {"Coral_02", ("Entrance", "Blasted Steps")},
+                {"Room_Pinstress", ("Pinstress", "Blasted Steps")},
+                {"Coral_Judge_Arena", ("Flea Caravan", "Blasted Steps")},
+
+                {"Coral_Tower_01", ("Coral Tower", "Sands of Karak")},
+                {"Bellshrine_Coral", ("Room East", "Sands of Karak")},
+
+                {"Slab_06", ("Bellway", "The Slab")},
+                {"Slab_16", ("Room Northwest Alcove", "The Slab")},
+                {"Slab_16_bench", ("Room Northwest", "The Slab")},
+                {"Slab_20", ("Room East", "The Slab")},
+
+                {"Peak_02", ("Entrance", "Mount Fay")},
+                {"Peak_07", ("East Hidden", "Mount Fay")},
+                {"Peak_12", ("Top Hidden", "Mount Fay")},
+                {"Bellway_Peak", ("Shelter", "Mount Fay")},
+
+                {"Song_10", ("Citadel Spa", "The Citadel")},
+                {"Song_18", ("Room Center", "The Citadel")},
+                {"Hang_01", ("Room West", "The Citadel")},
+                {"Under_07b", ("Underworks Entrance", "The Citadel")},
+                {"Bellway_City", ("Bellway", "The Citadel")},
+                {"Song_Enclave", ("Songclave", "The Citadel")},
+                {"Library_08", ("Vaultkeeper", "The Citadel")},
+                {"Library_10", ("Vaults South", "The Citadel")},
+                {"Cog_Bench", ("Cogwork Core", "The Citadel")},
+                {"Ward_01", ("Whiteward", "The Citadel")},
+                {"Hang_06b", ("High Halls", "The Citadel")},
+
+                {"Under_01b", ("West Entrance", "Underworks")},
+                {"Under_08", ("Confessional", "Underworks")},
+                {"Under_17", ("The Cauldron", "Underworks")},
+
+                {"Arborium_04", ("Entrance", "Memorium")},
+
+                {"Tube_Hub", ("Ventrica", "The Cradle")},
+
+                {"Clover_20", ("Rest", "Verdania")},
+
+                {"Abyss_09", ("Ascent", "The Abyss")},
+                {"Abyss_12", ("Lake of Void", "The Abyss")},
+                {"Room_Diving_Bell_Abyss", ("Diving Bell", "The Abyss")},
+                {"Room_Diving_Bell_Abyss_Fixed", ("Diving Bell", "The Abyss")},
             };
 
-        // custom order for area names, in-game map list GUI follows same order.
-        // adding/removing entries is also possible, just make sure to update UpdateActiveLocationData as well.
+        // custom order for area names, in-game fast travel bench list then displays them in same order
         private readonly List<string> _orderedBenchAreaNames = new List<string>
         {
-            "Bone Bottom",
+            "Mosslands",
             "Weavenest Atla",
             "The Marrow",
             "Wormways",
@@ -106,10 +187,10 @@ namespace BonfireSilksong
             "Far Fields",
             "Greymoor",
             "Wisp Thicket",
+            "Bellhart",
             "Sinner's Road",
             "Bilewater",
             "Putrified Ducts",
-            "Bellhart",
             "Shellwood",
             "Blasted Steps",
             "Sands of Karak",
@@ -117,15 +198,39 @@ namespace BonfireSilksong
             "Mount Fay",
             "The Citadel",
             "Underworks",
-            "Arborium",
+            "Memorium",
             "The Cradle",
             "Verdania",
             "The Abyss",
-            "Other"
+            "Other" // default option for uncategorized benches
         };
+
+        // MapPin -> (location scene, location bench marker) tuple
+        // Used in: UpdateBenchPins stores data by using MapPin object, this ensures each key being unique. 
+        // For each pin, the scene and marker name are also stored. This is because in UpdateActiveLocationData,
+        // pin and scene are used for categorizing bench locations by area (see _benchActiveLocationData below), but
+        // in rare cases, different pins could get same scene names from BenchTeleport.PrepareTeleportLocation thus
+        // requiring an extra secondary identifier i.e. the marker name.
+        private readonly Dictionary<MapPin, (string scene, string marker)> _benchPinScenes =
+            new Dictionary<MapPin, (string, string)>();
+
+        // Map area -> List of all benches in that area as (location scene, location map pin) tuples
+        // Used in: UpdateActiveLocationData divides all available benches under main areas. Then DrawBenchListPanel
+        // creates the GUI list by iterating over each area and it's bench locations
+        private readonly Dictionary<string, List<(string scene, MapPin mapPin)>> _benchActiveLocationData =
+            new Dictionary<string, List<(string, MapPin)>>();
+
+        private MapPin _selectedPin = null;
+        private string _selectedFullName;
+        private bool _fastTravelDisplay = false;
+        private PlayMakerFSM _currentBenchFSM;
+        private Vector2 _scrollPos;
+
+        private bool _pendingCrestUnlock = false;
 
         private Font _trajanBold;
         private Font _trajanNormal;
+
         private GUIStyle _labelStyle;
         private GUIStyle _buttonStyle;
         private GUIStyle _crestUnlockLabelStyle;
@@ -182,106 +287,83 @@ namespace BonfireSilksong
             actions.QuickMap.Enabled = true;
         }
 
+        // location data parser
         private void UpdateActiveLocationData()
         {
-            foreach (KeyValuePair<MapPin, Tuple<string, string>> bench in _benchPinScenes)
+            Bonfire.Log.LogDebug("== Bench location data ==");
+            foreach (KeyValuePair<MapPin, (string scene, string marker)> bench in _benchPinScenes)
             {
                 try
                 {
-                    string b = bench.Value.Item1; // bench scene; Item2 is the be bench marker
-                    var p = bench.Key; // map pin
+                    string s = bench.Value.scene;
+                    string m = bench.Value.marker;
+                    if (s == null || m == null) continue;
 
-                    // bench custom name; only used for naming teleport locations, either by itself
+                    var p = bench.Key;
+
+                    Bonfire.Log.LogDebug("Scene: " + s);
+                    Bonfire.Log.LogDebug("Marker: " + bench.Value.marker);
+
                     string customName;
                     string areaName;
 
-                    // use custom name if available; otherwise default to internal scene name e.g. "Tut_03"
-                    if (_benchStaticLocations.TryGetValue(b, out string location))
-                        customName = location;
-                    else
-                        customName = b;
+                    // get map area name:
 
-                    // get map area name
-                    // <IMPORTANT> scene names are from BenchTeleport.PrepareToTeleport:
-                    // ---> if respawnScene is manually updated, use that value instead! <---
-                    //
-                    // TODO: could simplify this a bit using StartsWith statements
-                    // e.g. b.StartsWith("Bone_"), b.StartsWith("Bone_East_") etc.
-                    if (b == "Tut_03" || b == "Tut_04" || b == "Mosstown_02c")
-                        areaName = "Bone Bottom";
-                    else if (b == "Weave_07")
-                        areaName = "Weavenest Atla";
-                    else if (b == "Bone_01c" || b == "Bone_04" || b == "Bone_10" || b == "Bone_12" || b == "Bellshrine")
-                        areaName = "The Marrow";
-                    else if (b == "Crawl_08")
-                        areaName = "Wormways";
-                    else if (b == "Dock_01" || b == "Dock_06_Church" || b == "Dock_10" || b == "Bellshrine_05"
-                            || b == "Room_Forge" || b == "Room_Diving_Bell")
-                        areaName = "Deep Docks";
-                    else if (b == "Ant_17")
-                        areaName = "Hunter's March";
-                    else if (b == "Bone_East_10_Room" || b == "Bone_East_15" || b == "Bone_East_27" || b == "Bellway_03"
-                            || b == "Bone_East_Umbrella" || b == "Bone_East_Weavehome" || b == "Sprintmaster_Cave")
-                        areaName = "Far Fields";
-                    else if (b == "Bellshrine_02" || b == "Halfway_01")
-                        areaName = "Greymoor";
-                    else if (b == "Dust_10" || b == "Dust_11")
-                        areaName = "Sinner's Road";
-                    else if (b == "Wisp_04")
-                        areaName = "Wisp Thicket";
-                    else if (b == "Shadow_08" || b == "Shadow_18" || b == "Bellway_Shadow" || b == "Organ_01")
-                        areaName = "Bilewater";
-                    else if (b == "Aqueduct_05" || b == "Bellway_Aqueduct" || b == "Room_Huntress")
-                        areaName = "Putrified Ducts";
-                    else if (b == "Belltown")
-                        areaName = "Bellhart";
-                    else if (b == "Bellshrine_03" || b == "Shellwood_01b" || b == "Shellwood_08c" || b == "Mosstown_03")
-                        areaName = "Shellwood";
-                    else if (b == "Bellway_08" || b == "Coral_02" || b == "Room_Pinstress")
-                        areaName = "Blasted Steps";
-                    else if (b == "Coral_Tower_01" || b == "Bellshrine_Coral")
-                        areaName = "Sands of Karak";
-                    else if (b == "Slab_06" || b == "Slab_16" || b == "Slab_20")
+                    // main logic
+                    if (_benchStaticLocations.ContainsKey(s))
                     {
-                        // rare case requiring a secondary identifier via marker name
-                        if (b == "Slab_16" && bench.Value.Item2 == "RestBench (1)")
-                        {
-                            customName = "Slab_16_bench";
+                        var value = _benchStaticLocations[s];
+                        var name = value.customName;
 
-                            if (_benchStaticLocations.TryGetValue(customName, out string locationUpdated))
-                                customName = locationUpdated;
+                        // leaving custom name empty defaults to internal scene name e.g. "Tut_03"
+                        customName = name != "" ? name : s;
+                        areaName = value.areaName;
+                    }
+                    else
+                    {
+                        customName = s;
+                        areaName = "Other";
+                    }
+
+                    // special cases where scene name is same and marker name must be used for unique identification
+                    if (s == "Slab_16" && bench.Value.marker == "RestBench (1)")
+                    {
+                        customName = "Slab_16_bench";
+                        if (_benchStaticLocations.ContainsKey(customName))
+                            customName = _benchStaticLocations[customName].customName;
+                    }
+
+                    // some scenes have duplicate markers for same bench location. This prevents adding more than one
+                    if ((s == "Tube_Hub" || s == "Bone_10")
+                        && bench.Value.marker == "RestBench"
+                        && _benchActiveLocationData.ContainsKey(areaName))
+                    {
+                        Bonfire.Log.LogDebug($"Scene '{s}' duplicate check =>");
+                        bool alreadyFound = false;
+
+                        foreach (var (scene, _) in _benchActiveLocationData[areaName])
+                        {
+                            // compare to customName as that's what is stored. This of course will be either original
+                            // value or custom name, depending if latter has been defined in _benchStaticLocations
+                            if (string.Equals(scene, customName))
+                            {
+                                Bonfire.Log.LogDebug("Found duplicate!");
+                                alreadyFound = true;
+                                break;
+                            }
                         }
 
-                        areaName = "The Slab";
+                        if (alreadyFound) continue;
                     }
-                    else if (b == "Peak_07" || b == "Peak_12" || b == "Bellway_Peak")
-                        areaName = "Mount Fay";
-                    else if (b == "Song_10" || b == "Song_18" || b == "Hang_01" || b == "Hang_06b" || b == "Under_07b"
-                            || b == "Bellway_City" || b == "Bellshrine_Enclave" || b == "Song_Enclave"
-                            || b == "Library_08" || b == "Library_10" || b == "Cog_Bench" || b == "Ward_01")
-                        areaName = "The Citadel";
-                    else if (b == "Under_01b" || b == "Under_08" || b == "Under_17")
-                        areaName = "Underworks";
-                    else if (b == "Arborium_04")
-                        areaName = "Arborium";
-                    else if (b == "Tube_Hub")
-                        areaName = "The Cradle";
-                    else if (b == "Clover_20")
-                        areaName = "Verdania";
-                    else if (b == "Abyss_09" || b == "Abyss_12" || b == "Room_Diving_Bell_Abyss"
-                            || b == "Room_Diving_Bell_Abyss_Fixed")
-                        areaName = "The Abyss";
-                    else
-                        areaName = "Other";
 
                     if (!_benchActiveLocationData.ContainsKey(areaName))
-                        _benchActiveLocationData.Add(areaName, new List<Tuple<string, MapPin>>());
+                        _benchActiveLocationData.Add(areaName, new List<(string, MapPin)>());
 
-                    _benchActiveLocationData[areaName].Add(new Tuple<string, MapPin>(customName, p));
+                    _benchActiveLocationData[areaName].Add((customName, p));
                 }
                 catch (Exception e)
                 {
-                    Bonfire.Log.LogInfo($"[UpdateActiveLocationData]: {e}");
+                    Bonfire.Log.LogError($"[UpdateActiveLocationData]: {e}");
                 }
             }
         }
@@ -328,15 +410,11 @@ namespace BonfireSilksong
                 if (sr?.sprite?.name != "pin_bench") continue;
 
                 if (!BenchTeleport.PrepareTeleportLocation(pin))
-                {
-                    Bonfire.Log.LogError("Error while preparing teleport locations");
-                    _benchPinScenes.Clear();
-                    return;
-                }
+                    continue;
 
                 string sceneName = PlayerData.instance.tempRespawnScene;
                 string markerName = PlayerData.instance.tempRespawnMarker;
-                _benchPinScenes.Add(pin, new Tuple<string, string>(sceneName, markerName));
+                _benchPinScenes.Add(pin, (sceneName, markerName));
             }
 
             _benchActiveLocationData.Clear();
