@@ -36,5 +36,6 @@ namespace BonfireSilksong
         // bench fast travel
         public bool UnlockedFastTravel = false;
         public bool VisitedAbyssSecondTime = false;
+        public bool ToggleColoredTeleportMenuStyle = false;
     }
 }

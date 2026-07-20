@@ -1,18 +1,15 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 using GlobalEnums;
 using HarmonyLib;
-using HutongGames.PlayMaker;
 using UnityEngine;
 
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Bench user interface, fast travel menu and enemy hp bar rendering
+    /// GUI component drawing
     /// </summary>
     public class BonfireGUI : MonoBehaviour
     {
@@ -37,7 +34,7 @@ namespace BonfireSilksong
             // if none of them is true, avoid running to prevent lag in main menu
             if (!(GameManager.instance.GameState == GameState.PLAYING ||
                   GameManager.instance.GameState == GameState.PAUSED) ||
-                InInventory())
+                GUILogic.InInventory())
                 return;
 
             if (PlayerData.instance.atBench && !GameManager.instance.isPaused)
@@ -55,182 +52,51 @@ namespace BonfireSilksong
             DrawEnemyHealthBars();  // hp bar display must not be tied to bench check
 
             if (!PlayerData.instance.atBench)
-                ResetPendingLevelUp();
+                GUILogic.ResetPendingLevelUp();
         }
 
 
-        // Custom scene names for teleport locations
-        // Key is the raw scene value from BenchTeleport.PrepareToTeleport
-        //   => make sure to use final scene value for manually handled special cases!
-        // Value is a tuple (custom name, map area). Custom name is optional: using empty string "" reverts back to
-        // raw scene name. Map area is used in categorizing bench scenes; their order can be customized
-        // by modifying _orderedBenchAreaNames list.
-        // If no key-value pair is found for specific scene, keeps using the default: raw scene name and map area
-        // becomes "Other"
-        private readonly Dictionary<string, (string customName, string areaName)> _benchStaticLocations =
-            new Dictionary<string, (string, string)>
-            {
-                {"Tut_03", ("Ruined Chapel", "Mosslands")},
-                {"Tut_04", ("Ruined Chapel Interior", "Mosslands")},
-                {"Bonetown", ("Bone Bottom", "Mosslands")},
-                {"Mosstown_02c", ("Mosshome", "Mosslands")},
-
-                {"Weave_07", ("Rest", "Weavenest Atla")},
-
-                {"Bone_01c", ("Entrance", "The Marrow")},
-                {"Bone_04", ("Crossing", "The Marrow")},
-                {"Bone_10", ("Enclave", "The Marrow")},
-                {"Bone_12", ("Cells", "The Marrow")},
-                {"Bellshrine", ("Bellshrine", "The Marrow")},
-
-                {"Crawl_08", ("Alchemist", "Wormways")},
-
-                {"Dock_01", ("Entrance Top", "Deep Docks")},
-                {"Dock_06_Church", ("Ascent", "Deep Docks")},
-                {"Dock_10", ("Sauna", "Deep Docks")},
-                {"Bellshrine_05", ("Bellshrine", "Deep Docks")},
-                {"Room_Forge", ("Forge", "Deep Docks")},
-                {"Room_Diving_Bell", ("Diving Bell", "Deep Docks")},
-
-                {"Ant_17", ("Rest", "Hunter's March")},
-
-                {"Bone_East_10_Room", ("Pilgrim's Rest", "Far Fields")},
-                {"Bone_East_15", ("Entrance", "Far Fields")},
-                {"Bone_East_27", ("Hideout", "Far Fields")},
-                {"Bellway_03", ("Bellway", "Far Fields")},
-                {"Bone_East_Umbrella", ("Seamstress", "Far Fields")},
-                {"Bone_East_Weavehome", ("Weavenest Cindril", "Far Fields")},
-                {"Sprintmaster_Cave", ("Sprintmaster Cave", "Far Fields")},
-
-                {"Bellshrine_02", ("Bellshrine", "Greymoor")},
-                {"Halfway_01", ("Halfway Home", "Greymoor")},
-                {"Greymoor_02", ("Camp", "Greymoor")},
-                {"Greymoor_08", ("Flea Caravan", "Greymoor")},
-
-                {"Dust_10", ("Rest", "Sinner's Road")},
-                {"Dust_11", ("Styx", "Sinner's Road")},
-
-                {"Wisp_04", ("Entrance", "Wisp Thicket")},
-
-                {"Shadow_08", ("Hidden", "Bilewater")},
-                {"Shadow_18", ("Bilehaven", "Bilewater")},
-                {"Bellway_Shadow", ("Bellway", "Bilewater")},
-                {"Organ_01", ("Exhaust Organ", "Bilewater")},
-                {"Shadow_15", ("Trap", "Bilewater")},
-
-                {"Aqueduct_05", ("Fleatopia", "Putrified Ducts")},
-                {"Bellway_Aqueduct", ("Bellway", "Putrified Ducts")},
-                {"Room_Huntress", ("Huntress", "Putrified Ducts")},
-
-                {"Belltown", ("Town", "Bellhart")},
-
-                {"Bellshrine_03", ("Bellshrine", "Shellwood")},
-                {"Shellwood_01b", ("Room Center", "Shellwood")},
-                {"Shellwood_08c", ("West Entrance", "Shellwood")},
-                {"Mosstown_03", ("South Entrance", "Shellwood")},
-
-                {"Bellway_08", ("Bellway", "Blasted Steps")},
-                {"Coral_02", ("Entrance", "Blasted Steps")},
-                {"Room_Pinstress", ("Pinstress", "Blasted Steps")},
-                {"Coral_Judge_Arena", ("Flea Caravan", "Blasted Steps")},
-
-                {"Coral_Tower_01", ("Coral Tower", "Sands of Karak")},
-                {"Bellshrine_Coral", ("Room East", "Sands of Karak")},
-
-                {"Slab_06", ("Bellway", "The Slab")},
-                {"Slab_16", ("Room Northwest Alcove", "The Slab")},
-                {"Slab_16_bench", ("Room Northwest", "The Slab")},
-                {"Slab_20", ("Room East", "The Slab")},
-
-                {"Peak_02", ("Entrance", "Mount Fay")},
-                {"Peak_07", ("East Hidden", "Mount Fay")},
-                {"Peak_12", ("Top Hidden", "Mount Fay")},
-                {"Bellway_Peak", ("Shelter", "Mount Fay")},
-
-                {"Song_10", ("Citadel Spa", "The Citadel")},
-                {"Song_18", ("Room Center", "The Citadel")},
-                {"Hang_01", ("Room West", "The Citadel")},
-                {"Under_07b", ("Underworks Entrance", "The Citadel")},
-                {"Bellway_City", ("Bellway", "The Citadel")},
-                {"Song_Enclave", ("Songclave", "The Citadel")},
-                {"Library_08", ("Vaultkeeper", "The Citadel")},
-                {"Library_10", ("Vaults South", "The Citadel")},
-                {"Cog_Bench", ("Cogwork Core", "The Citadel")},
-                {"Ward_01", ("Whiteward", "The Citadel")},
-                {"Hang_06b", ("High Halls", "The Citadel")},
-
-                {"Under_01b", ("West Entrance", "Underworks")},
-                {"Under_08", ("Confessional", "Underworks")},
-                {"Under_17", ("The Cauldron", "Underworks")},
-
-                {"Arborium_04", ("Entrance", "Memorium")},
-
-                {"Tube_Hub", ("Ventrica", "The Cradle")},
-
-                {"Clover_20", ("Rest", "Verdania")},
-
-                {"Abyss_09", ("Ascent", "The Abyss")},
-                {"Abyss_12", ("Lake of Void", "The Abyss")},
-                {"Room_Diving_Bell_Abyss", ("Diving Bell", "The Abyss")},
-                {"Room_Diving_Bell_Abyss_Fixed", ("Diving Bell", "The Abyss")},
-            };
-
         // custom order for area names, in-game fast travel bench list then displays them in same order
-        private readonly List<string> _orderedBenchAreaNames = new List<string>
+        // GUILogic._benchStaticLocations is the source of truth: if there isn't a valid map area under any of the
+        // scenes, it will be ignored and falls to "Other" category instead.
+        private readonly List<(string areaName, Color32 color)> _orderedBenchAreaNames = new List<(string, Color32)>
         {
-            "Mosslands",
-            "Weavenest Atla",
-            "The Marrow",
-            "Wormways",
-            "Deep Docks",
-            "Hunter's March",
-            "Far Fields",
-            "Greymoor",
-            "Wisp Thicket",
-            "Bellhart",
-            "Sinner's Road",
-            "Bilewater",
-            "Putrified Ducts",
-            "Shellwood",
-            "Blasted Steps",
-            "Sands of Karak",
-            "The Slab",
-            "Mount Fay",
-            "The Citadel",
-            "Underworks",
-            "Memorium",
-            "The Cradle",
-            "Verdania",
-            "The Abyss",
-            "Other" // default option for uncategorized benches
+            ("Mosslands", Rgb(117, 160, 103)),
+            ("Weavenest Atla", Rgb(109, 116, 151)),
+            ("The Marrow", Rgb(120, 122, 120)),
+            ("Wormways", Rgb(119, 106, 88)),
+            ("Deep Docks", Rgb(192, 131, 66)),
+            ("Hunter's March", Rgb(168, 94, 77)),
+            ("Far Fields", Rgb(126, 137, 71)),
+            ("Greymoor", Rgb(90, 123, 123)),
+            ("Wisp Thicket", Rgb(68, 126, 81)),
+            ("Bellhart", Rgb(238, 192, 128)),
+            ("Sinner's Road", Rgb(187, 140, 118)),
+            ("Bilewater", Rgb(157, 153, 73)),
+            ("Putrified Ducts", Rgb(86, 120, 135)),
+            ("Shellwood", Rgb(145, 151, 111)),
+            ("Blasted Steps", Rgb(159, 132, 92)),
+            ("Sands of Karak", Rgb(227, 134, 151)),
+            ("The Slab", Rgb(122, 128, 138)),
+            ("Mount Fay", Rgb(80, 108, 151)),
+            ("The Citadel", Rgb(209, 194, 127)),
+            ("Underworks", Rgb(99, 103, 109)),
+            ("Memorium", Rgb(192, 178, 159)),
+            ("The Cradle", Rgb(100, 106, 142)),
+            ("Verdania", Rgb(96, 173, 120)),
+            ("The Abyss", Rgb(94, 95, 94)),
+            ("Other", _defaultMenuColor), // default option for uncategorized benches, never remove this
         };
-
-        // MapPin -> (location scene, location bench marker) tuple
-        // Used in: UpdateBenchPins stores data by using MapPin object, this ensures each key being unique. 
-        // For each pin, the scene and marker name are also stored. This is because in UpdateActiveLocationData,
-        // pin and scene are used for categorizing bench locations by area (see _benchActiveLocationData below), but
-        // in rare cases, different pins could get same scene names from BenchTeleport.PrepareTeleportLocation thus
-        // requiring an extra secondary identifier i.e. the marker name.
-        private readonly Dictionary<MapPin, (string scene, string marker)> _benchPinScenes =
-            new Dictionary<MapPin, (string, string)>();
-
-        // Map area -> List of all benches in that area as (location scene, location map pin) tuples
-        // Used in: UpdateActiveLocationData divides all available benches under main areas. Then DrawBenchListPanel
-        // creates the GUI list by iterating over each area and it's bench locations
-        private readonly Dictionary<string, List<(string scene, MapPin mapPin)>> _benchActiveLocationData =
-            new Dictionary<string, List<(string, MapPin)>>();
 
         private MapPin _selectedPin = null;
         private string _selectedFullName;
         private bool _fastTravelDisplay = false;
-        private PlayMakerFSM _currentBenchFSM;
         private Vector2 _scrollPos;
 
         private bool _pendingCrestUnlock = false;
 
         private Font _trajanBold;
         private Font _trajanNormal;
-
         private GUIStyle _labelStyle;
         private GUIStyle _buttonStyle;
         private GUIStyle _crestUnlockLabelStyle;
@@ -242,242 +108,15 @@ namespace BonfireSilksong
         private GUIStyle _fastTravelConfirmHeaderStyle;
         private GUIStyle _fastTravelConfirmDestinationStyle;
 
-        private static readonly FieldInfo InventoryPaneListInstanceField = typeof(InventoryPaneList)
-            .GetField("_instance", BindingFlags.Static | BindingFlags.NonPublic);
-
         private static Texture2D _tex;
+        private static readonly Color32 _defaultMenuColor = Rgb(204, 191, 26);
 
         private void Awake()
         {
             Instance = this;
         }
 
-        // -- bench fast travel -- //
-
-        private IEnumerator DelayedPinUpdate()
-        {
-            yield return new WaitForSeconds(1f);
-            UpdateBenchPins();
-        }
-
-        // prevent most keyboard inputs in bench menu map screen, rest are handled with patched Update methods.
-        private void BlockInventoryInputs()
-        {
-            var actions = GameManager.instance.inputHandler.inputActions;
-            actions.PaneLeft.Enabled = false;
-            actions.PaneRight.Enabled = false;
-            actions.OpenInventory.Enabled = false;
-            actions.OpenInventoryMap.Enabled = false;
-            actions.OpenInventoryJournal.Enabled = false;
-            actions.OpenInventoryTools.Enabled = false;
-            actions.OpenInventoryQuests.Enabled = false;
-            actions.QuickMap.Enabled = false;
-        }
-
-        private void RestoreInventoryInputs()
-        {
-            var actions = GameManager.instance.inputHandler.inputActions;
-            actions.PaneLeft.Enabled = true;
-            actions.PaneRight.Enabled = true;
-            actions.OpenInventory.Enabled = true;
-            actions.OpenInventoryMap.Enabled = true;
-            actions.OpenInventoryJournal.Enabled = true;
-            actions.OpenInventoryTools.Enabled = true;
-            actions.OpenInventoryQuests.Enabled = true;
-            actions.QuickMap.Enabled = true;
-        }
-
-        // location data parser
-        private void UpdateActiveLocationData()
-        {
-            Bonfire.Log.LogDebug("== Bench location data ==");
-            foreach (KeyValuePair<MapPin, (string scene, string marker)> bench in _benchPinScenes)
-            {
-                try
-                {
-                    string s = bench.Value.scene;
-                    string m = bench.Value.marker;
-                    if (s == null || m == null) continue;
-
-                    var p = bench.Key;
-
-                    Bonfire.Log.LogDebug("Scene: " + s);
-                    Bonfire.Log.LogDebug("Marker: " + bench.Value.marker);
-
-                    string customName;
-                    string areaName;
-
-                    // get map area name:
-
-                    // main logic
-                    if (_benchStaticLocations.ContainsKey(s))
-                    {
-                        var value = _benchStaticLocations[s];
-                        var name = value.customName;
-
-                        // leaving custom name empty defaults to internal scene name e.g. "Tut_03"
-                        customName = name != "" ? name : s;
-                        areaName = value.areaName;
-                    }
-                    else
-                    {
-                        customName = s;
-                        areaName = "Other";
-                    }
-
-                    // special cases where scene name is same and marker name must be used for unique identification
-                    if (s == "Slab_16" && bench.Value.marker == "RestBench (1)")
-                    {
-                        customName = "Slab_16_bench";
-                        if (_benchStaticLocations.ContainsKey(customName))
-                            customName = _benchStaticLocations[customName].customName;
-                    }
-
-                    // some scenes have duplicate markers for same bench location. This prevents adding more than one
-                    if ((s == "Tube_Hub" || s == "Bone_10")
-                        && bench.Value.marker == "RestBench"
-                        && _benchActiveLocationData.ContainsKey(areaName))
-                    {
-                        Bonfire.Log.LogDebug($"Scene '{s}' duplicate check =>");
-                        bool alreadyFound = false;
-
-                        foreach (var (scene, _) in _benchActiveLocationData[areaName])
-                        {
-                            // compare to customName as that's what is stored. This of course will be either original
-                            // value or custom name, depending if latter has been defined in _benchStaticLocations
-                            if (string.Equals(scene, customName))
-                            {
-                                Bonfire.Log.LogDebug("Found duplicate!");
-                                alreadyFound = true;
-                                break;
-                            }
-                        }
-
-                        if (alreadyFound) continue;
-                    }
-
-                    if (!_benchActiveLocationData.ContainsKey(areaName))
-                        _benchActiveLocationData.Add(areaName, new List<(string, MapPin)>());
-
-                    _benchActiveLocationData[areaName].Add((customName, p));
-                }
-                catch (Exception e)
-                {
-                    Bonfire.Log.LogError($"[UpdateActiveLocationData]: {e}");
-                }
-            }
-        }
-
-        private bool UpdateCurrentBenchFSM()
-        {
-            var markers = RespawnMarker.Markers
-                    .FirstOrDefault(r => r.gameObject != null &&
-                                    r.gameObject.activeInHierarchy &&
-                                    r.name == PlayerData.instance.respawnMarkerName);
-
-            Bonfire.Log.LogDebug("Start scene name: " + PlayerData.instance.respawnScene);
-            Bonfire.Log.LogDebug("Start marker name: " + PlayerData.instance.respawnMarkerName);
-
-            if (markers == null) return false;
-
-            var benchFSM = FSMUtility.LocateFSM(markers.gameObject, "Bench Control");
-            if (benchFSM == null) return false;
-
-            _currentBenchFSM = benchFSM;
-            Bonfire.Log.LogDebug("Updated Bench FSM");
-
-            return true;
-        }
-
-        private void UpdateBenchPins()
-        {
-            _benchPinScenes.Clear();
-            var gameMap = GameManager.instance?.gameMap;
-            if (gameMap == null) return;
-
-            List<MapPin> activePins = (List<MapPin>)BenchTeleport.ActivePinsField.GetValue(null);
-            if (activePins == null) return;
-
-            foreach (var pin in activePins)
-            {
-                if (pin == null
-                    || !pin.IsActive
-                    || !pin.gameObject.activeSelf
-                    || !pin.gameObject.activeInHierarchy)
-                    continue;
-
-                var sr = pin.GetComponent<SpriteRenderer>();
-                if (sr?.sprite?.name != "pin_bench") continue;
-
-                if (!BenchTeleport.PrepareTeleportLocation(pin))
-                    continue;
-
-                string sceneName = PlayerData.instance.tempRespawnScene;
-                string markerName = PlayerData.instance.tempRespawnMarker;
-                _benchPinScenes.Add(pin, (sceneName, markerName));
-            }
-
-            _benchActiveLocationData.Clear();
-            UpdateActiveLocationData(); // must only call this after filling _benchPinScenes!
-
-            Bonfire.Log.LogDebug($"Found {_benchPinScenes.Count} bench pins");
-            Bonfire.Log.LogDebug("GUI: bench pin respawn scenes:");
-            foreach (var p in _benchPinScenes)
-                Bonfire.Log.LogDebug(p.Value);
-        }
-
-        private IEnumerator CloseInventoryMap()
-        {
-            InventoryPaneList inventoryPaneList = null;
-            InventoryPaneInput panelInput = null;
-
-            try
-            {
-                inventoryPaneList = (InventoryPaneList)InventoryPaneListInstanceField.GetValue(null);
-                if (inventoryPaneList == null) yield break;
-
-                panelInput = inventoryPaneList.GetComponentInChildren<InventoryPaneInput>();
-                if (panelInput == null) yield break;
-            }
-            catch (Exception e)
-            {
-                Bonfire.Log.LogError($"CloseInventoryMap init error: {e}");
-                yield break;
-            }
-
-            FSMUtility.SendEventToGameObject(panelInput.gameObject, "UI CANCEL");
-            FSMUtility.SendEventToGameObject(panelInput.gameObject, "UI CANCEL");
-            yield return new WaitForSecondsRealtime(0.25f);
-
-            try
-            {
-                if (inventoryPaneList != null)
-                    inventoryPaneList.CloseBlocked = false;
-
-                if (GameManager.instance?.inventoryFSM != null)
-                    GameManager.instance.inventoryFSM.SendEventSafe("BACK");
-            }
-            catch (Exception e)
-            {
-                Bonfire.Log.LogError($"CloseInventoryMap close error: {e}");
-            }
-
-            yield return new WaitUntil(() =>
-                GameManager.instance == null ||
-                GameManager.instance.inventoryFSM == null ||
-                GameManager.instance.inventoryFSM.ActiveStateName == "Closed");
-
-            try
-            {
-                RestoreInventoryInputs();
-                if (_currentBenchFSM != null && _currentBenchFSM.gameObject != null)
-                    _currentBenchFSM.SendEvent("FINISHED");
-            }
-            catch (Exception e)
-            {
-                Bonfire.Log.LogError($"CloseInventoryMap restore error: {e}");
-            }
-        }
+        // -- fast travel --
 
         private void DrawBenchFastTravelButton()
         {
@@ -489,15 +128,14 @@ namespace BonfireSilksong
             if (GUILayout.Button("Fast travel menu", _buttonStyle, GUILayout.Height(35f)))
             {
                 Bonfire.Log.LogDebug("Fast travel menu open button was clicked");
-                if (!UpdateCurrentBenchFSM()) return;
+                if (!GUILogic.UpdateCurrentBenchFSM()) return;
 
-                _currentBenchFSM.SetState("Open Map");
-                _currentBenchFSM.SendEvent("INV MAP");
+                GUILogic.SendOpenMapFSM();
                 _fastTravelDisplay = true;
 
-                BlockInventoryInputs();
+                GUILogic.BlockInventoryInputs();
 
-                StartCoroutine(DelayedPinUpdate());
+                StartCoroutine(GUILogic.DelayedPinUpdate());
             }
 
             GUILayout.EndVertical();
@@ -554,31 +192,74 @@ namespace BonfireSilksong
 
         private void DrawBenchListPanel()
         {
+            var menuStyle = Bonfire.Instance.Status.ToggleColoredTeleportMenuStyle;
+
+            GUI.backgroundColor = Color.white;
+            GUILayout.BeginHorizontal("box");
+            if (GUILayout.Button($"Style: {(menuStyle ? "Colored" : "Basic")}", _buttonStyle, GUILayout.Height(30f)))
+            {
+                var s = Bonfire.Instance.Status;
+                s.ToggleColoredTeleportMenuStyle = !s.ToggleColoredTeleportMenuStyle;
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(15);
+
             GUILayout.Label("Bench locations", _labelStyle);
             GUILayout.Space(10);
 
-            if (_benchPinScenes.Count == 0)
+            if (GUILogic.BenchPinScenes.Count == 0)
             {
-                GUILayout.Label("Loading bench locations...");
-                GUILayout.Space(10);
-                UpdateBenchPins();
+                Bonfire.Log.LogDebug("Loading bench locations...");
+                GUILogic.UpdateBenchPins();
             }
             else
             {
                 _scrollPos = GUILayout.BeginScrollView(_scrollPos);
 
-                foreach (string mapArea in _orderedBenchAreaNames)
+                foreach ((string mapArea, Color32 c) in _orderedBenchAreaNames)
                 {
-                    if (!_benchActiveLocationData.Keys.Contains(mapArea)) continue;
+                    if (!GUILogic.BenchActiveLocationData.Keys.Contains(mapArea)) continue;
 
+                    Color bgOld = GUI.backgroundColor;
+                    Color textOld = GUI.color;
+
+                    Color bg;
+                    Color textLabel;
+                    Color text;
+                    if (menuStyle)
+                    {
+                        bg = (Color)c * 1.5f;
+                        textLabel = c;
+                        text = Color.Lerp(c, Color.white, 0.9f);
+                    }
+                    else
+                    {
+                        bg = bgOld;
+                        textLabel = _defaultMenuColor;
+                        text = textOld;
+                    }
+
+                    GUI.backgroundColor = bg;
+                    GUI.color = textLabel;
                     GUILayout.Label(mapArea, _benchListAreaLabelStyle);
+
                     GUILayout.Space(4);
 
-                    foreach (var (customName, mapPin) in _benchActiveLocationData[mapArea])
+                    foreach (var (customName, mapPin) in GUILogic.BenchActiveLocationData[mapArea])
                     {
                         bool isSelected = _selectedPin == mapPin;
 
-                        GUI.backgroundColor = isSelected ? new Color(0.8f, 0.4f, 0f) : Color.white;
+                        if (isSelected)
+                        {
+                            GUI.color = Color.white;
+                            GUI.backgroundColor = new Color(0.8f, 0.4f, 0f);
+                        }
+                        else
+                        {
+                            GUI.color = text;
+                        }
+
+                        //GUI.backgroundColor = isSelected ? new Color(0.8f, 0.4f, 0f) : Color.white;
                         GUIStyle buttonStyle = isSelected ? _benchListButtonSelectedStyle : _benchListButtonStyle;
 
                         if (GUILayout.Button(customName, buttonStyle, GUILayout.Height(30f)))
@@ -592,15 +273,22 @@ namespace BonfireSilksong
                             Vector2 scaledPos = benchPos * gameMap.transform.localScale.x;
                             gameMap.UpdateMapPosition(-scaledPos);
                         }
+
                         GUILayout.Space(2);
+
+                        GUI.backgroundColor = bg;
+                        GUI.color = text;
                     }
+
+                    GUI.backgroundColor = bgOld;
+                    GUI.color = textOld;
                 }
 
                 GUILayout.EndScrollView();
                 GUI.backgroundColor = Color.white;
             }
 
-            GUILayout.Space(10);
+            GUILayout.Space(15);
 
             GUI.backgroundColor = Color.red;
             GUILayout.BeginHorizontal("box");
@@ -608,9 +296,9 @@ namespace BonfireSilksong
             {
                 _selectedPin = null;
                 _fastTravelDisplay = false;
-                _benchPinScenes.Clear();
+                GUILogic.BenchPinScenes.Clear();
 
-                StartCoroutine(CloseInventoryMap());
+                StartCoroutine(GUILogic.CloseInventoryMap());
             }
             GUILayout.EndHorizontal();
         }
@@ -633,9 +321,9 @@ namespace BonfireSilksong
 
                 _selectedPin = null;
                 _fastTravelDisplay = false;
-                _benchPinScenes.Clear();
+                GUILogic.BenchPinScenes.Clear();
 
-                StartCoroutine(CloseInventoryMap());
+                StartCoroutine(GUILogic.CloseInventoryMap());
                 BenchTeleport.TeleportToBench();
             }
 
@@ -645,178 +333,7 @@ namespace BonfireSilksong
             GUILayout.EndHorizontal();
         }
 
-        // -- main UI --
-
-        private void DrawBenchUI()
-        {
-            var s = Bonfire.Instance.Status;
-            var ls = LevelingSystem.Instance;
-
-            int availableRelicLevels = ls.CachedRelicsObtained - s.ConsumedRelicLevels
-                                     + s.RespecRelicLevels - s.PendingRelicLevels;
-            bool gotFreeLevel = availableRelicLevels > 0;
-
-            int rosaryLevels = s.TotalRosaryLevels + s.PendingRosaryLevels;
-            int rosariesToLvlUp = (int)(Math.Pow(rosaryLevels, 2.0) + (10 * rosaryLevels) + 50.0);
-
-            int currentLvl = s.StrengthStat + s.DexterityStat + s.IntelligenceStat
-                        + s.ArtificeStat + s.ResilienceStat + s.WisdomStat + s.LuckStat
-                        + s.PendingRelicLevels
-                        + s.PendingRosaryLevels
-                        + 1; // base level is 1
-
-            // preview strings
-            string totalStr = (s.StrengthStat + ls.StrengthIncrease).ToString();
-            string totalDex = (s.DexterityStat + ls.DexterityIncrease).ToString();
-            string totalInt = (s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
-            string totalArt = (s.ArtificeStat + ls.ArtificeIncrease).ToString();
-            string totalRes = (s.ResilienceStat + ls.ResilienceIncrease).ToString();
-            string totalWsdm = (s.WisdomStat + ls.WisdomIncrease).ToString();
-            string totalLck = (s.LuckStat + ls.LuckIncrease).ToString();
-
-            string needleDamage = ls.NeedleDamage(s.StrengthStat + ls.StrengthIncrease).ToString();
-
-            string attackSpeed = ls.AttackSpeed(s.DexterityStat + ls.DexterityIncrease).ToString();
-            string critDamage = ls.CritDamage(s.DexterityStat + ls.DexterityIncrease, 100).ToString();
-
-            string spellDamage = ls.SpellDamage(100, s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
-            string bindCost = ls.BindCost(s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
-
-            string toolDamage = ls.ToolDamage(100, s.ArtificeStat + ls.ArtificeIncrease).ToString();
-            string toolRegenInterval = "-";
-            if (s.ArtificeStat + ls.ArtificeIncrease > 0)
-            {
-                int toolRegen = ls.ToolRegenInterval(s.ArtificeStat + ls.ArtificeIncrease);
-                toolRegenInterval = toolRegen > 0 ? toolRegen.ToString() + " s" : "-";
-            }
-
-            string extraMasks = ls.ExtraMasks(s.ResilienceStat + ls.ResilienceIncrease).ToString();
-            string blockChance = s.ResilienceStat + ls.ResilienceIncrease > 0
-                ? ls.AverageBlockChance(s.ResilienceStat + ls.ResilienceIncrease).ToString("F0")
-                : "0";
-
-            string extraSilk = ls.ExtraSilk(s.WisdomStat + ls.WisdomIncrease, 1).ToString();
-            string silkRegenInterval = "-";
-            if (s.WisdomStat + ls.WisdomIncrease > 0)
-            {
-                int silkRegen = ls.SilkRegenInterval(s.WisdomStat + ls.WisdomIncrease);
-                silkRegenInterval = silkRegen > 0 ? silkRegen.ToString() + " s" : "-";
-            }
-
-            string critChance = ls.CritChance(s.LuckStat + ls.LuckIncrease).ToString();
-            string rosaryIncrease = (5 * (s.LuckStat + ls.LuckIncrease)).ToString();
-
-            // apply button label
-            string applyText;
-            if (s.PendingRelicLevels > 0 && s.PendingRosaries > 0)
-            {
-                applyText = $"Apply ({s.PendingRosaries} rosaries and {s.PendingRelicLevels} relics)";
-            }
-            else if (s.PendingRelicLevels > 0)
-            {
-                applyText = $"Apply ({s.PendingRelicLevels} relic levels)";
-            }
-            else if (gotFreeLevel)
-            {
-                applyText = $"{availableRelicLevels} Free Levels available!";
-            }
-            else
-            {
-                applyText = $"Apply ({s.PendingRosaries} rosaries)";
-            }
-
-            // layout
-            GUILayout.BeginArea(new Rect(20f, Screen.height / 4.25f, 530f, 750f));
-
-            DrawBenchFastTravelButton();
-
-            GUILayout.Label("Level Up", _labelStyle);
-
-            // stats
-            GUILayout.BeginHorizontal("box");
-
-            GUILayout.BeginVertical("box");
-            DrawStatButton("Strength", totalStr, gotFreeLevel, s, rosariesToLvlUp);
-            DrawStatButton("Dexterity", totalDex, gotFreeLevel, s, rosariesToLvlUp);
-            DrawStatButton("Intelligence", totalInt, gotFreeLevel, s, rosariesToLvlUp);
-            DrawStatButton("Artifice", totalArt, gotFreeLevel, s, rosariesToLvlUp);
-            DrawStatButton("Resilience", totalRes, gotFreeLevel, s, rosariesToLvlUp);
-            DrawStatButton("Wisdom", totalWsdm, gotFreeLevel, s, rosariesToLvlUp);
-            DrawStatButton("Luck", totalLck, gotFreeLevel, s, rosariesToLvlUp);
-            GUILayout.EndVertical();
-
-            GUILayout.BeginVertical("box");
-            DrawStatLabel("Needle Damage: " + needleDamage);
-            DrawStatLabel("Slash Speed: " + attackSpeed);
-            DrawStatLabel("Silk Skill Damage: " + spellDamage + "%");
-            DrawStatLabel("Tool Damage: " + toolDamage + "%");
-            DrawStatLabel("Extra Lifeblood Masks: " + extraMasks);
-            DrawStatLabel("Silk Gained On Hit: " + extraSilk);
-            DrawStatLabel("Crit Chance: " + critChance + "%");
-            GUILayout.EndVertical();
-
-            GUILayout.BeginVertical("box");
-            DrawStatLabel("");   // spacer to align with column 1
-            DrawStatLabel("Crit Damage: " + critDamage + "%");
-            DrawStatLabel("Binding Cost: " + bindCost);
-            DrawStatLabel("Tool Regen interval: " + toolRegenInterval);
-            DrawStatLabel("Block Chance: " + blockChance + "%");
-            DrawStatLabel("Silk Regen interval: " + silkRegenInterval);
-            DrawStatLabel("Rosary + Shard Increase: " + rosaryIncrease + "%");
-            GUILayout.EndVertical();
-
-            GUILayout.EndHorizontal();
-
-            GUILayout.Label("Current Level: " + currentLvl, _labelStyle);
-            GUILayout.Label("Rosaries to Level Up: " + rosariesToLvlUp, _labelStyle);
-
-            // apply and cancel
-            GUILayout.BeginHorizontal("box");
-
-            GUI.backgroundColor = Color.green;
-            if (GUILayout.Button(applyText, _buttonStyle, GUILayout.Height(40f), GUILayout.Width(258f))
-                && PlayerData.instance.atBench)
-            {
-                LevelingSystem.Instance.ApplyLevel();
-            }
-
-            GUILayout.FlexibleSpace();
-
-            GUI.backgroundColor = Color.white;
-            if (GUILayout.Button("Cancel", _buttonStyle, GUILayout.Height(40f), GUILayout.Width(258f))
-                && PlayerData.instance.atBench)
-            {
-                ResetPendingLevelUp();
-            }
-
-            GUILayout.EndHorizontal();
-
-            // respec
-            GUILayout.BeginHorizontal("box");
-            GUILayout.FlexibleSpace();
-
-            GUI.backgroundColor = Color.red;
-            if (GUILayout.Button(
-                    $"Respec ({s.RespecCost} " + $"{(s.RespecCost > 1 ? "Silkeaters" : "Silkeater")})",
-                    _buttonStyle,
-                    GUILayout.Height(40f),
-                    GUILayout.Width(522f))
-                && PlayerData.instance.atBench)
-            {
-                LevelingSystem.Instance.Respec();
-            }
-
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
-            DrawShellShardSettingsUI();
-            DrawEnemyHPToggleUI();
-            DrawCrestUnlockUI();
-
-            FastTravelUnlockNotification();
-
-            GUILayout.EndArea();
-        }
+        // -- QoL
 
         // ui panel for shell shard replenishment
         private void DrawShellShardSettingsUI()
@@ -1046,6 +563,8 @@ namespace BonfireSilksong
             GUILayout.EndHorizontal();
         }
 
+        // -- main UI --
+
         private void DrawStatButton(string statName, string displayValue, bool gotFreeLevel, PlayerStatus s,
                                     int rosariesToLvlUp)
         {
@@ -1054,7 +573,7 @@ namespace BonfireSilksong
                     _buttonStyle,
                     GUILayout.Height(40f),
                     GUILayout.Width(160f))
-                && CanLevelUp(gotFreeLevel, rosariesToLvlUp)
+                && GUILogic.CanLevelUp(gotFreeLevel, rosariesToLvlUp)
                 && PlayerData.instance.atBench)
             {
                 LevelingSystem.Instance.IncreaseStat(statName, s, rosariesToLvlUp);
@@ -1066,33 +585,180 @@ namespace BonfireSilksong
             GUILayout.Label(text, _labelStyle, GUILayout.Height(40f), GUILayout.Width(160f));
         }
 
-        private bool CanLevelUp(bool gotFreeLevel, int rosariesToLvlUp)
-        {
-            var s = Bonfire.Instance.Status;
-            return PlayerData.instance.atBench &&
-                   (gotFreeLevel || (rosariesToLvlUp + s.PendingRosaries <= PlayerData.instance.geo));
-        }
-
-        // resets all pending (unapplied) stat allocations
-        private void ResetPendingLevelUp()
+        private void DrawBenchUI()
         {
             var s = Bonfire.Instance.Status;
             var ls = LevelingSystem.Instance;
 
-            ls.StrengthIncrease = 0;
-            ls.DexterityIncrease = 0;
-            ls.IntelligenceIncrease = 0;
-            ls.ArtificeIncrease = 0;
-            ls.WisdomIncrease = 0;
-            ls.ResilienceIncrease = 0;
-            ls.LuckIncrease = 0;
+            int availableRelicLevels = ls.CachedRelicsObtained - s.ConsumedRelicLevels
+                                     + s.RespecRelicLevels - s.PendingRelicLevels;
+            bool gotFreeLevel = availableRelicLevels > 0;
 
-            s.PendingRosaries = 0;
-            s.PendingRosaryLevels = 0;
-            s.PendingRelicLevels = 0;
+            int rosaryLevels = s.TotalRosaryLevels + s.PendingRosaryLevels;
+            int rosariesToLvlUp = (int)(Math.Pow(rosaryLevels, 2.0) + (10 * rosaryLevels) + 50.0);
 
-            Bonfire.Instance.UpdateBindCostFSM();
+            int currentLvl = s.StrengthStat + s.DexterityStat + s.IntelligenceStat
+                        + s.ArtificeStat + s.ResilienceStat + s.WisdomStat + s.LuckStat
+                        + s.PendingRelicLevels
+                        + s.PendingRosaryLevels
+                        + 1; // base level is 1
+
+            // preview strings
+            string totalStr = (s.StrengthStat + ls.StrengthIncrease).ToString();
+            string totalDex = (s.DexterityStat + ls.DexterityIncrease).ToString();
+            string totalInt = (s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
+            string totalArt = (s.ArtificeStat + ls.ArtificeIncrease).ToString();
+            string totalRes = (s.ResilienceStat + ls.ResilienceIncrease).ToString();
+            string totalWsdm = (s.WisdomStat + ls.WisdomIncrease).ToString();
+            string totalLck = (s.LuckStat + ls.LuckIncrease).ToString();
+
+            string needleDamage = ls.NeedleDamage(s.StrengthStat + ls.StrengthIncrease).ToString();
+
+            string attackSpeed = ls.AttackSpeed(s.DexterityStat + ls.DexterityIncrease).ToString();
+            string critDamage = ls.CritDamage(s.DexterityStat + ls.DexterityIncrease, 100).ToString();
+
+            string spellDamage = ls.SpellDamage(100, s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
+            string bindCost = ls.BindCost(s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
+
+            string toolDamage = ls.ToolDamage(100, s.ArtificeStat + ls.ArtificeIncrease).ToString();
+            string toolRegenInterval = "-";
+            if (s.ArtificeStat + ls.ArtificeIncrease > 0)
+            {
+                int toolRegen = ls.ToolRegenInterval(s.ArtificeStat + ls.ArtificeIncrease);
+                toolRegenInterval = toolRegen > 0 ? toolRegen.ToString() + " s" : "-";
+            }
+
+            string extraMasks = ls.ExtraMasks(s.ResilienceStat + ls.ResilienceIncrease).ToString();
+            string blockChance = s.ResilienceStat + ls.ResilienceIncrease > 0
+                ? ls.AverageBlockChance(s.ResilienceStat + ls.ResilienceIncrease).ToString("F0")
+                : "0";
+
+            string extraSilk = ls.ExtraSilk(s.WisdomStat + ls.WisdomIncrease, 1).ToString();
+            string silkRegenInterval = "-";
+            if (s.WisdomStat + ls.WisdomIncrease > 0)
+            {
+                int silkRegen = ls.SilkRegenInterval(s.WisdomStat + ls.WisdomIncrease);
+                silkRegenInterval = silkRegen > 0 ? silkRegen.ToString() + " s" : "-";
+            }
+
+            string critChance = ls.CritChance(s.LuckStat + ls.LuckIncrease).ToString();
+            string rosaryIncrease = (5 * (s.LuckStat + ls.LuckIncrease)).ToString();
+
+            // apply button label
+            string applyText;
+            if (s.PendingRelicLevels > 0 && s.PendingRosaries > 0)
+            {
+                applyText = $"Apply ({s.PendingRosaries} rosaries and {s.PendingRelicLevels} relics)";
+            }
+            else if (s.PendingRelicLevels > 0)
+            {
+                applyText = $"Apply ({s.PendingRelicLevels} relic levels)";
+            }
+            else if (gotFreeLevel)
+            {
+                applyText = $"{availableRelicLevels} Free Levels available!";
+            }
+            else
+            {
+                applyText = $"Apply ({s.PendingRosaries} rosaries)";
+            }
+
+            // layout
+            GUILayout.BeginArea(new Rect(20f, Screen.height / 4.25f, 530f, 750f));
+
+            DrawBenchFastTravelButton();
+
+            GUILayout.Label("Level Up", _labelStyle);
+
+            // stats
+            GUILayout.BeginHorizontal("box");
+
+            GUILayout.BeginVertical("box");
+            DrawStatButton("Strength", totalStr, gotFreeLevel, s, rosariesToLvlUp);
+            DrawStatButton("Dexterity", totalDex, gotFreeLevel, s, rosariesToLvlUp);
+            DrawStatButton("Intelligence", totalInt, gotFreeLevel, s, rosariesToLvlUp);
+            DrawStatButton("Artifice", totalArt, gotFreeLevel, s, rosariesToLvlUp);
+            DrawStatButton("Resilience", totalRes, gotFreeLevel, s, rosariesToLvlUp);
+            DrawStatButton("Wisdom", totalWsdm, gotFreeLevel, s, rosariesToLvlUp);
+            DrawStatButton("Luck", totalLck, gotFreeLevel, s, rosariesToLvlUp);
+            GUILayout.EndVertical();
+
+            GUILayout.BeginVertical("box");
+            DrawStatLabel("Needle Damage: " + needleDamage);
+            DrawStatLabel("Slash Speed: " + attackSpeed);
+            DrawStatLabel("Silk Skill Damage: " + spellDamage + "%");
+            DrawStatLabel("Tool Damage: " + toolDamage + "%");
+            DrawStatLabel("Extra Lifeblood Masks: " + extraMasks);
+            DrawStatLabel("Silk Gained On Hit: " + extraSilk);
+            DrawStatLabel("Crit Chance: " + critChance + "%");
+            GUILayout.EndVertical();
+
+            GUILayout.BeginVertical("box");
+            DrawStatLabel("");   // spacer to align with column 1
+            DrawStatLabel("Crit Damage: " + critDamage + "%");
+            DrawStatLabel("Binding Cost: " + bindCost);
+            DrawStatLabel("Tool Regen interval: " + toolRegenInterval);
+            DrawStatLabel("Block Chance: " + blockChance + "%");
+            DrawStatLabel("Silk Regen interval: " + silkRegenInterval);
+            DrawStatLabel("Rosary + Shard Increase: " + rosaryIncrease + "%");
+            GUILayout.EndVertical();
+
+            GUILayout.EndHorizontal();
+
+            GUILayout.Label("Current Level: " + currentLvl, _labelStyle);
+            GUILayout.Label("Rosaries to Level Up: " + rosariesToLvlUp, _labelStyle);
+
+            // apply and cancel
+            GUILayout.BeginHorizontal("box");
+
+            GUI.backgroundColor = Color.green;
+            if (GUILayout.Button(applyText, _buttonStyle, GUILayout.Height(40f), GUILayout.Width(258f))
+                && PlayerData.instance.atBench)
+            {
+                LevelingSystem.Instance.ApplyLevel();
+            }
+
+            GUILayout.FlexibleSpace();
+
+            GUI.backgroundColor = Color.white;
+            if (GUILayout.Button("Cancel", _buttonStyle, GUILayout.Height(40f), GUILayout.Width(258f))
+                && PlayerData.instance.atBench)
+            {
+                GUILogic.ResetPendingLevelUp();
+            }
+
+            GUILayout.EndHorizontal();
+
+            // respec
+            GUILayout.BeginHorizontal("box");
+            GUILayout.FlexibleSpace();
+
+            GUI.backgroundColor = Color.red;
+            if (GUILayout.Button(
+                    $"Respec ({s.RespecCost} " + $"{(s.RespecCost > 1 ? "Silkeaters" : "Silkeater")})",
+                    _buttonStyle,
+                    GUILayout.Height(40f),
+                    GUILayout.Width(522f))
+                && PlayerData.instance.atBench)
+            {
+                LevelingSystem.Instance.Respec();
+            }
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            DrawShellShardSettingsUI();
+            DrawEnemyHPToggleUI();
+            DrawCrestUnlockUI();
+
+            FastTravelUnlockNotification();
+
+            GUILayout.EndArea();
         }
+
+        // -- styling --
+
+        private static Color32 Rgb(byte r, byte g, byte b) => new Color32(r, g, b, 255);
 
         private void EnsureFonts()
         {
@@ -1170,7 +836,6 @@ namespace BonfireSilksong
                     fontSize = 16,
                     fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleLeft,
-                    normal = { textColor = new Color(0.8f, 0.75f, 0.1f) }
                 };
             }
 
@@ -1217,18 +882,6 @@ namespace BonfireSilksong
                 };
         }
 
-        private static bool InInventory()
-        {
-            GameObject go = GameObject.FindGameObjectWithTag("Inventory Top");
-            if (go == null) return false;
-
-            PlayMakerFSM fsm = FSMUtility.LocateFSM(go, "Inventory Control");
-            if (fsm == null) return false;
-
-            FsmBool open = fsm.FsmVariables.GetFsmBool("Open");
-            return open != null && open.Value;
-        }
-
         private static Texture2D SolidTex()
         {
             if (_tex == null)
@@ -1241,8 +894,9 @@ namespace BonfireSilksong
         }
 
         // -- patched methods -- 
+        // technically responsibility of GUILogic, but this avoids cross-referencing between classes
 
-        // these should prevent remaining inputs in bench fast travel menu that BlockInventoryInputs can't:
+        // these should prevent remaining inputs in bench fast travel menu that GUILogic.BlockInventoryInputs can't:
         // ESC/inventory pane navigation
         [HarmonyPatch(typeof(InventoryPaneInput), "Update")]
         class InventoryPaneInput_Update
