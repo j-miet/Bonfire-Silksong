@@ -9,7 +9,7 @@ using UnityEngine;
 namespace BonfireSilksong
 {
     /// <summary>
-    /// GUI component drawing
+    /// Creates and updates GUI elements
     /// </summary>
     public class BonfireGUI : MonoBehaviour
     {
@@ -48,6 +48,9 @@ namespace BonfireSilksong
 
                 DrawBenchUI();
             }
+
+            FastTravelUnlockNotification();
+            DrawCrestUnlockUI();
 
             DrawEnemyHealthBars();  // hp bar display must not be tied to bench check
 
@@ -88,15 +91,25 @@ namespace BonfireSilksong
             ("Other", _defaultMenuColor), // default option for uncategorized benches, never remove this
         };
 
+        private readonly Dictionary<int, string> BenchMenuStyle = new Dictionary<int, string>
+        {
+            {0, "Basic + Default names"},
+            {1, "Basic + Custom names"},
+            {2, "Colored + Default names"},
+            {3, "Colored + Custom names"}
+        };
+
         private MapPin _selectedPin = null;
         private string _selectedFullName;
         private bool _fastTravelDisplay = false;
         private Vector2 _scrollPos;
 
         private bool _pendingCrestUnlock = false;
+        private bool _pendingFeatureWindow = false;
 
         private Font _trajanBold;
         private Font _trajanNormal;
+        private GUIStyle _levelHeaderStyle;
         private GUIStyle _labelStyle;
         private GUIStyle _buttonStyle;
         private GUIStyle _crestUnlockLabelStyle;
@@ -142,18 +155,39 @@ namespace BonfireSilksong
             StartCoroutine(GUILogic.CloseInventoryMap());
         }
 
+        private void ChangeBenchMenuStyle()
+        {
+            int s = Bonfire.Instance.Status.BenchMenuStyle + 1;
+            if (s >= 4 || s < 0)
+                s = 0;
+
+            Bonfire.Instance.Status.BenchMenuStyle = s;
+        }
+
         // -- fast travel --
 
         private void DrawBenchFastTravelButton()
         {
-            GUI.backgroundColor = Color.blue;
+            if (!Bonfire.Instance.Status.UnlockedFastTravel) return;
+
+            GUI.backgroundColor = new Color(0.8f, 0.5f, 0.2f);
             GUILayout.BeginVertical("box");
 
-            GUI.backgroundColor = Color.white;
+            bool hasAnyMap = PlayerData.instance.HasAnyMap;
+            bool hasBenchPins = PlayerData.instance.hasPinBench;
+            string text = "Fast travel";
 
-            if (GUILayout.Button("Fast travel menu", _buttonStyle, GUILayout.Height(35f)))
+            if (hasAnyMap && hasBenchPins) { }
+            else if (hasAnyMap) text += "\n(Locked, need Bench Pins from Shakra)";
+            else if (hasBenchPins) text += "\n(Locked, need a map from Shakra)";
+            else text += "\n(Locked, need a map + Bench Pins from Shakra)";
+
+            if (GUILayout.Button(text, _buttonStyle, GUILayout.Height(40f)))
             {
                 Bonfire.Log.LogDebug("Fast travel menu open button was clicked");
+
+                if (!hasAnyMap || !hasBenchPins) return;
+
                 if (!GUILogic.UpdateCurrentBenchFSM()) return;
 
                 GUILogic.SendOpenMapFSM();
@@ -164,8 +198,9 @@ namespace BonfireSilksong
                 StartCoroutine(GUILogic.DelayedPinUpdate());
             }
 
+            GUI.backgroundColor = Color.white;
+
             GUILayout.EndVertical();
-            GUILayout.Space(10);
         }
 
         private void DrawBenchFastTravelUI()
@@ -211,21 +246,32 @@ namespace BonfireSilksong
                 GUI.color = old;
 
                 GUILayout.BeginArea(confirmRect);
-                DrawConfirmPanel();
+                DrawTeleportConfirmPanel();
                 GUILayout.EndArea();
             }
         }
 
         private void DrawBenchListPanel()
         {
-            var menuStyle = Bonfire.Instance.Status.ToggleColoredTeleportMenuStyle;
+            int menuStyleIndex = Bonfire.Instance.Status.BenchMenuStyle;
+            string styleText = BenchMenuStyle[menuStyleIndex];
+
+            bool coloredStyle = menuStyleIndex == 2 || menuStyleIndex == 3;
+            bool customNameStyle = menuStyleIndex == 1 || menuStyleIndex == 3;
+            GUILogic.IsCustomNameStyle = customNameStyle;
 
             GUI.backgroundColor = Color.white;
+
             GUILayout.BeginHorizontal("box");
-            if (GUILayout.Button($"Style: {(menuStyle ? "Colored" : "Basic")}", _buttonStyle, GUILayout.Height(30f)))
+            if (GUILayout.Button($"Style: {styleText}", _buttonStyle, GUILayout.Height(30f)))
             {
-                var s = Bonfire.Instance.Status;
-                s.ToggleColoredTeleportMenuStyle = !s.ToggleColoredTeleportMenuStyle;
+                ChangeBenchMenuStyle();
+
+                menuStyleIndex = Bonfire.Instance.Status.BenchMenuStyle;
+                GUILogic.IsCustomNameStyle = menuStyleIndex == 1 || menuStyleIndex == 3;
+                GUILogic.UpdateBenchPins();
+
+                return;
             }
             GUILayout.EndHorizontal();
             GUILayout.Space(15);
@@ -252,7 +298,7 @@ namespace BonfireSilksong
                     Color bg;
                     Color textLabel;
                     Color text;
-                    if (menuStyle)
+                    if (coloredStyle)
                     {
                         bg = (Color)c * 1.5f;
                         textLabel = c;
@@ -325,7 +371,7 @@ namespace BonfireSilksong
             GUILayout.EndHorizontal();
         }
 
-        private void DrawConfirmPanel()
+        private void DrawTeleportConfirmPanel()
         {
             GUILayout.Space(8);
             GUILayout.Label("LOCATION", _fastTravelConfirmHeaderStyle);
@@ -352,15 +398,124 @@ namespace BonfireSilksong
             GUILayout.EndHorizontal();
         }
 
-        // -- QoL
+        // bench fast travel unlock check
+        private void FastTravelUnlockNotification()
+        {
+            if (Bonfire.Instance.Status.UnlockedFastTravel) return;
 
-        // ui panel for shell shard replenishment
+            if (PlayerData.instance.defeatedBellBeast)
+            {
+                GUI.color = new Color(0, 0, 0, 0.8f);
+                GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+                GUI.color = Color.yellow;
+
+                float w = 600f, h = 280f;
+                Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
+                GUI.ModalWindow(10000, modalRect, DrawFastTravelUnlockModalPopup, "Bench fast travel unlocked!");
+            }
+        }
+
+        private void DrawFastTravelUnlockModalPopup(int windowId)
+        {
+            GUILayout.Space(10);
+            GUILayout.Label(
+                "You have freed the Bell Beast and " +
+                "unlocked the bench fast travel system!",
+                _crestUnlockLabelStyle
+            );
+
+            GUILayout.Space(5);
+            GUILayout.Label(
+                "=>To access travel menu: you need to own a map + Bench Pins item from Shakra.\n" +
+                "To fast travel:\n" +
+                "- Sit down on any bench and click the new \"Fast Travel\" button.\n" +
+                "- Select any bench from the list\n" +
+                "- Then click the \"Travel\" button bottom-middle to teleport.\n",
+                _fastTravelUnlockLabelStyle
+            );
+
+            GUILayout.Space(20);
+            GUILayout.BeginHorizontal();
+
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button(
+                    "Close this popup",
+                    _crestUnlockButtonStyle,
+                    GUILayout.Width(150f),
+                    GUILayout.Height(50f)))
+            {
+                Bonfire.Instance.Status.UnlockedFastTravel = true;
+                Bonfire.Instance.SaveSettings();
+            }
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+        }
+
+        // -- QoL --
+
+        // button for extra features/QoL
+        private void DrawExtraFeatureButton()
+        {
+            GUI.backgroundColor = Color.white;
+            GUILayout.BeginVertical("box");
+
+            if (GUILayout.Button("Extra Features", _buttonStyle, GUILayout.Height(40f)))
+            {
+                _pendingCrestUnlock = false;
+                _pendingFeatureWindow = true;
+            }
+
+            if (_pendingFeatureWindow)
+            {
+                GUI.color = new Color(0, 0, 0, 0.8f);
+                GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+                GUI.color = Color.white;
+
+                float w = 550f, h = 330f;
+                Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
+                GUI.ModalWindow(10001, modalRect, DrawExtraFeatureModal, "Extra Features");
+            }
+
+            GUI.backgroundColor = Color.white;
+
+            GUILayout.EndVertical();
+        }
+
+        private void DrawExtraFeatureModal(int windowId)
+        {
+            DrawShellShardSettingsUI();
+            GUILayout.Space(10);
+
+            DrawEnemyHPToggleUI();
+            GUILayout.Space(10);
+
+            DrawCrestUnlockButton();
+            GUILayout.Space(30);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+
+            if (GUILayout.Button(
+                    "Close window",
+                    _crestUnlockButtonStyle,
+                    GUILayout.Width(160f),
+                    GUILayout.Height(35f)))
+            {
+                _pendingFeatureWindow = false;
+            }
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+        }
+
+        // toggle shell shard replenishment
         private void DrawShellShardSettingsUI()
         {
             var s = Bonfire.Instance.Status;
 
             GUILayout.BeginVertical("box");
-            GUILayout.Label("Shell shards replenishment");
+            GUILayout.Label("Shell shard replenishment");
 
             GUI.backgroundColor = Color.white;
             s.InfiniteShellShardsEnabled = GUILayout.Toggle(s.InfiniteShellShardsEnabled, "Infinite shards");
@@ -368,16 +523,20 @@ namespace BonfireSilksong
             if (!s.InfiniteShellShardsEnabled)
                 s.InfiniteShardsBenchOnly = false;
 
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(15);
+
             GUI.enabled = s.InfiniteShellShardsEnabled;
             s.InfiniteShardsBenchOnly = GUILayout.Toggle(
                 s.InfiniteShardsBenchOnly,
                 "Shard refill to full only at benches");
             GUI.enabled = true;
 
+            GUILayout.EndHorizontal();
             GUILayout.EndVertical();
         }
 
-        // toggle button to enable/disable enemy HP bars
+        // toggle enemy HP bars
         private void DrawEnemyHPToggleUI()
         {
             var s = Bonfire.Instance.Status;
@@ -390,16 +549,21 @@ namespace BonfireSilksong
                 s.EnemyHealthBarsEnabled,
                 "Display enemy health bars (global hotkey is LeftControl + H)");
 
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(15);
+
             GUI.enabled = s.EnemyHealthBarsEnabled;
             s.EnemyHpBarColorProgression = GUILayout.Toggle(
                 s.EnemyHpBarColorProgression,
                 "Progressive HP bar values (green → yellow → red)");
             GUI.enabled = true;
 
+            GUILayout.EndHorizontal();
             GUILayout.EndVertical();
         }
 
-        // draws floating health bars above tracked enemies
+        // actual hp bars on top of enemies using HealthManager data
         private void DrawEnemyHealthBars()
         {
             var s = Bonfire.Instance.Status;
@@ -443,28 +607,32 @@ namespace BonfireSilksong
         }
 
         // crest unlock button
-        private void DrawCrestUnlockUI()
+        private void DrawCrestUnlockButton()
         {
             if (Bonfire.Instance.Status.UnlockedAllCrests) return;
 
             GUILayout.Space(10);
-            if (GUILayout.Button("Unlock All Crests (asks for confirmation)"))
-                _pendingCrestUnlock = true;
-
-            if (_pendingCrestUnlock)
+            if (GUILayout.Button("Unlock All Crests (asks for confirmation)", GUILayout.Height(30f)))
             {
-                GUI.color = new Color(0, 0, 0, 0.8f);
-                GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
-                GUI.color = Color.white;
-
-                float w = 550f, h = 275f;
-                Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
-                GUI.ModalWindow(9999, modalRect, DrawConfirmModal, "Crest unlocking");
+                _pendingFeatureWindow = false;
+                _pendingCrestUnlock = true;
             }
         }
 
-        // crest unlock modal window
-        private void DrawConfirmModal(int windowId)
+        private void DrawCrestUnlockUI()
+        {
+            if (!_pendingCrestUnlock) return;
+
+            GUI.color = new Color(0, 0, 0, 0.8f);
+            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            float w = 550f, h = 210f;
+            Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
+            GUI.ModalWindow(9999, modalRect, DrawCrestUnlockConfirmModal, "Crest unlocking");
+        }
+
+        private void DrawCrestUnlockConfirmModal(int windowId)
         {
             GUILayout.Space(10);
             GUILayout.Label(
@@ -483,6 +651,7 @@ namespace BonfireSilksong
                     GUILayout.Width(200f),
                     GUILayout.Height(50f)))
             {
+                _pendingFeatureWindow = true;
                 _pendingCrestUnlock = false;
                 Bonfire.Instance.Status.UnlockedAllCrests = true;
 
@@ -495,87 +664,15 @@ namespace BonfireSilksong
                 Bonfire.Instance.SaveSettings();
             }
 
-            GUILayout.Space(10);
+            GUILayout.Space(30);
             if (GUILayout.Button(
                     "No\nLeave my crests alone",
                     _crestUnlockButtonStyle,
                     GUILayout.Width(200f),
                     GUILayout.Height(50f)))
             {
+                _pendingFeatureWindow = true;
                 _pendingCrestUnlock = false;
-            }
-
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
-            GUILayout.Space(25);
-            GUILayout.BeginHorizontal();
-
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button(
-                    "Remove crest unlocking\n" + "(This will permanently hide the \"Unlock All Crests\" button)",
-                    _crestUnlockButtonStyle,
-                    GUILayout.Width(520f),
-                    GUILayout.Height(55f)))
-            {
-                _pendingCrestUnlock = false;
-                Bonfire.Instance.Status.UnlockedAllCrests = true;
-
-                Bonfire.Instance.SaveSettings();
-            }
-
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-        }
-
-        // bench fast travel unlock check
-        private void FastTravelUnlockNotification()
-        {
-            if (Bonfire.Instance.Status.UnlockedFastTravel) return;
-
-            if (PlayerData.instance.defeatedCogworkDancers)
-            {
-                GUI.color = new Color(0, 0, 0, 0.8f);
-                GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
-                GUI.color = Color.yellow;
-
-                float w = 600f, h = 280f;
-                Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
-                GUI.ModalWindow(10000, modalRect, DrawFastTravelUnlockModalPopup, "Bench fast travel unlocked!");
-            }
-        }
-
-        // fast travel unlock: GUI.ModalWindow callback for actual popup window
-        private void DrawFastTravelUnlockModalPopup(int windowId)
-        {
-            GUILayout.Space(10);
-            GUILayout.Label(
-                "You have defeated the Cogwork Dancers boss and " +
-                "therefore have unlocked the bench fast travel feature!",
-                _crestUnlockLabelStyle
-            );
-
-            GUILayout.Space(5);
-            GUILayout.Label(
-                "To fast travel:\n" +
-                "- Open the map while sitting on any bench.\n" +
-                "- Open the pin marker menu\n" +
-                "- Move the marker on top of the bench icon you wish to travel to, then place the pin.\n",
-                _fastTravelUnlockLabelStyle
-            );
-
-            GUILayout.Space(20);
-            GUILayout.BeginHorizontal();
-
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button(
-                    "Close this popup",
-                    _crestUnlockButtonStyle,
-                    GUILayout.Width(150f),
-                    GUILayout.Height(50f)))
-            {
-                Bonfire.Instance.Status.UnlockedFastTravel = true;
-                Bonfire.Instance.SaveSettings();
             }
 
             GUILayout.FlexibleSpace();
@@ -631,6 +728,7 @@ namespace BonfireSilksong
             string totalWsdm = (s.WisdomStat + ls.WisdomIncrease).ToString();
             string totalLck = (s.LuckStat + ls.LuckIncrease).ToString();
 
+            // stat calculations
             string needleDamage = ls.NeedleDamage(s.StrengthStat + ls.StrengthIncrease).ToString();
 
             string attackSpeed = ls.AttackSpeed(s.DexterityStat + ls.DexterityIncrease).ToString();
@@ -684,10 +782,7 @@ namespace BonfireSilksong
 
             // layout
             GUILayout.BeginArea(new Rect(20f, Screen.height / 4.25f, 530f, 750f));
-
-            DrawBenchFastTravelButton();
-
-            GUILayout.Label("Level Up", _labelStyle);
+            GUILayout.Label("Leveling", _levelHeaderStyle);
 
             // stats
             GUILayout.BeginHorizontal("box");
@@ -766,12 +861,16 @@ namespace BonfireSilksong
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            DrawShellShardSettingsUI();
-            DrawEnemyHPToggleUI();
-            DrawCrestUnlockUI();
+            GUILayout.Space(10);
+            GUILayout.Label("Other", _levelHeaderStyle);
 
-            FastTravelUnlockNotification();
+            GUILayout.Space(5);
+            DrawExtraFeatureButton();
 
+            GUILayout.Space(5);
+            DrawBenchFastTravelButton();
+
+            GUILayout.Space(5);
             GUILayout.EndArea();
         }
 
@@ -793,6 +892,17 @@ namespace BonfireSilksong
 
         private void EnsureStyles()
         {
+            if (_levelHeaderStyle == null)
+            {
+                _levelHeaderStyle = new GUIStyle(GUI.skin.label)
+                {
+                    font = _trajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 17,
+                    alignment = TextAnchor.MiddleCenter,
+                };
+            }
+
             if (_labelStyle == null)
             {
                 _labelStyle = new GUIStyle(GUI.skin.label)
@@ -913,9 +1023,8 @@ namespace BonfireSilksong
         }
 
         // -- patched methods -- 
-        // technically responsibility of GUILogic, but this avoids cross-referencing between classes
 
-        // these should prevent remaining inputs in bench fast travel menu that GUILogic.BlockInventoryInputs can't:
+        // these should prevent inputs which GUILogic.BlockInventoryInputs can't block in bench fast travel menu:
         // ESC/inventory pane navigation
         [HarmonyPatch(typeof(InventoryPaneInput), "Update")]
         class InventoryPaneInput_Update

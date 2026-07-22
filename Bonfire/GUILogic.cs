@@ -14,6 +14,8 @@ namespace BonfireSilksong
     /// </summary>
     public static class GUILogic
     {
+        public static bool IsCustomNameStyle = false;
+
         // MapPin -> (location scene, location bench marker) tuple
         // Used in: UpdateBenchPins stores data by using MapPin object, this ensures each key being unique. 
         // For each pin, the scene and marker name are also stored. This is because in UpdateActiveLocationData,
@@ -147,6 +149,9 @@ namespace BonfireSilksong
 
                         if (alreadyFound) continue;
                     }
+
+                    if (!IsCustomNameStyle)
+                        customName = s;
 
                     if (!BenchActiveLocationData.ContainsKey(areaName))
                         BenchActiveLocationData.Add(areaName, new List<(string, MapPin)>());
