@@ -49,8 +49,10 @@ namespace BonfireSilksong
                 DrawBenchUI();
             }
 
+            DrawExtraFeatureUI();
             FastTravelUnlockNotification();
             DrawCrestUnlockUI();
+            DrawPlayerStatusResetUI();
 
             DrawEnemyHealthBars();  // hp bar display must not be tied to bench check
 
@@ -106,6 +108,7 @@ namespace BonfireSilksong
 
         private bool _pendingCrestUnlock = false;
         private bool _pendingFeatureWindow = false;
+        private bool _pendingStatusReset = false;
 
         private Font _trajanBold;
         private Font _trajanNormal;
@@ -184,6 +187,7 @@ namespace BonfireSilksong
 
             if (GUILayout.Button(text, _buttonStyle, GUILayout.Height(40f)))
             {
+                GUI.backgroundColor = Color.white;
                 Bonfire.Log.LogDebug("Fast travel menu open button was clicked");
 
                 if (!hasAnyMap || !hasBenchPins) return;
@@ -409,7 +413,7 @@ namespace BonfireSilksong
                 GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
                 GUI.color = Color.yellow;
 
-                float w = 600f, h = 280f;
+                float w = 600f, h = 300f;
                 Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
                 GUI.ModalWindow(10000, modalRect, DrawFastTravelUnlockModalPopup, "Bench fast travel unlocked!");
             }
@@ -426,23 +430,24 @@ namespace BonfireSilksong
 
             GUILayout.Space(5);
             GUILayout.Label(
-                "=>To access travel menu: you need to own a map + Bench Pins item from Shakra.\n" +
+                "To access travel menu: you need to own a map + Bench Pins item from Shakra.\n" +
                 "To fast travel:\n" +
+                "\n" +
                 "- Sit down on any bench and click the new \"Fast Travel\" button.\n" +
                 "- Select any bench from the list\n" +
                 "- Then click the \"Travel\" button bottom-middle to teleport.\n",
                 _fastTravelUnlockLabelStyle
             );
 
-            GUILayout.Space(20);
+            GUILayout.Space(10);
             GUILayout.BeginHorizontal();
 
             GUILayout.FlexibleSpace();
             if (GUILayout.Button(
-                    "Close this popup",
+                    "Close",
                     _crestUnlockButtonStyle,
-                    GUILayout.Width(150f),
-                    GUILayout.Height(50f)))
+                    GUILayout.Width(100f),
+                    GUILayout.Height(40f)))
             {
                 Bonfire.Instance.Status.UnlockedFastTravel = true;
                 Bonfire.Instance.SaveSettings();
@@ -466,20 +471,20 @@ namespace BonfireSilksong
                 _pendingFeatureWindow = true;
             }
 
-            if (_pendingFeatureWindow)
-            {
-                GUI.color = new Color(0, 0, 0, 0.8f);
-                GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
-                GUI.color = Color.white;
-
-                float w = 550f, h = 330f;
-                Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
-                GUI.ModalWindow(10001, modalRect, DrawExtraFeatureModal, "Extra Features");
-            }
-
-            GUI.backgroundColor = Color.white;
-
             GUILayout.EndVertical();
+        }
+
+        private void DrawExtraFeatureUI()
+        {
+            if (!_pendingFeatureWindow) return;
+
+            GUI.color = new Color(0, 0, 0, 0.8f);
+            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            float w = 550f, h = 420f;
+            Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
+            GUI.ModalWindow(10003, modalRect, DrawExtraFeatureModal, "Extra features and quality of life");
         }
 
         private void DrawExtraFeatureModal(int windowId)
@@ -490,11 +495,19 @@ namespace BonfireSilksong
             DrawEnemyHPToggleUI();
             GUILayout.Space(10);
 
+            DrawOtherFeaturesUI();
+            GUILayout.Space(10);
+
             DrawCrestUnlockButton();
+            GUILayout.Space(15);
+
+            DrawPlayerStatusResetButton();
             GUILayout.Space(30);
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
+
+            GUI.backgroundColor = Color.white;
 
             if (GUILayout.Button(
                     "Close window",
@@ -548,7 +561,6 @@ namespace BonfireSilksong
             s.EnemyHealthBarsEnabled = GUILayout.Toggle(
                 s.EnemyHealthBarsEnabled,
                 "Display enemy health bars (global hotkey is LeftControl + H)");
-
 
             GUILayout.BeginHorizontal();
             GUILayout.Space(15);
@@ -606,12 +618,26 @@ namespace BonfireSilksong
             }
         }
 
+        // other uncategorized features
+        private void DrawOtherFeaturesUI()
+        {
+            var s = Bonfire.Instance.Status;
+
+            GUILayout.BeginVertical("box");
+
+            GUI.backgroundColor = Color.white;
+            s.ReduceFleaGamesScoreLimit = GUILayout.Toggle(
+                s.ReduceFleaGamesScoreLimit,
+                "Reduce Fleatopia game score requirements by 50% (visuals still show original score)");
+
+            GUILayout.EndVertical();
+        }
+
         // crest unlock button
         private void DrawCrestUnlockButton()
         {
             if (Bonfire.Instance.Status.UnlockedAllCrests) return;
 
-            GUILayout.Space(10);
             if (GUILayout.Button("Unlock All Crests (asks for confirmation)", GUILayout.Height(30f)))
             {
                 _pendingFeatureWindow = false;
@@ -629,7 +655,7 @@ namespace BonfireSilksong
 
             float w = 550f, h = 210f;
             Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
-            GUI.ModalWindow(9999, modalRect, DrawCrestUnlockConfirmModal, "Crest unlocking");
+            GUI.ModalWindow(10002, modalRect, DrawCrestUnlockConfirmModal, "Crest unlocking");
         }
 
         private void DrawCrestUnlockConfirmModal(int windowId)
@@ -678,6 +704,80 @@ namespace BonfireSilksong
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
         }
+
+        // reset PlayerData button
+        private void DrawPlayerStatusResetButton()
+        {
+            GUI.backgroundColor = Color.red;
+            if (GUILayout.Button("Reset mod config (asks for confirmation)", GUILayout.Height(30f)))
+            {
+                _pendingFeatureWindow = false;
+                _pendingStatusReset = true;
+            }
+        }
+
+        private void DrawPlayerStatusResetUI()
+        {
+            if (!_pendingStatusReset) return;
+
+            GUI.color = new Color(0, 0, 0, 0.8f);
+            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.color = Color.red;
+
+            float w = 600f, h = 400f;
+            Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
+            GUI.ModalWindow(10003, modalRect, DrawPlayerStatusResetConfirmModal, "Reset mod configurations");
+        }
+
+        private void DrawPlayerStatusResetConfirmModal(int windowId)
+        {
+            GUILayout.Space(10);
+            GUILayout.Label(
+                "Reset your mod configurations e.g. stat levels, for CURRENT SAVE SLOT.\n" +
+                "\n" +
+                "Configs are save slot specific and loaded from an external file.\n" +
+                "Config data remains even if you start a new game on that save slot.\n" +
+                "This feature overrides the config data for currently active slot so you don't " +
+                "need to manually search and delete the file outside the game.\n" +
+                "\n" +
+                "Using this will notably wipe all level progression and make you lose any rosaries " +
+                "spent on leveling. You should only use it at the beginning of a new playthrough " +
+                "if you want a fresh start.",
+                _crestUnlockLabelStyle
+            );
+            GUILayout.Space(10);
+            GUILayout.Label("Do you want to reset config for currently active save slot?", _crestUnlockLabelStyle);
+
+            GUILayout.Space(25);
+            GUILayout.BeginHorizontal();
+
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button(
+                    "Yes\nReset config data",
+                    _crestUnlockButtonStyle,
+                    GUILayout.Width(200f),
+                    GUILayout.Height(50f)))
+            {
+                _pendingStatusReset = false;
+                Bonfire.Instance.Status = new PlayerStatus();
+
+                Bonfire.Instance.SaveSettings();
+            }
+
+            GUILayout.Space(30);
+            if (GUILayout.Button(
+                    "No\nKeep current data",
+                    _crestUnlockButtonStyle,
+                    GUILayout.Width(200f),
+                    GUILayout.Height(50f)))
+            {
+                _pendingStatusReset = false;
+            }
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+        }
+
 
         // -- main UI --
 

@@ -31,6 +31,8 @@ namespace BonfireSilksong
         public bool EnemyHealthBarsEnabled = false;
         public bool EnemyHpBarColorProgression = false;
 
+        public bool ReduceFleaGamesScoreLimit = false;
+
         public bool UnlockedAllCrests = false;
 
         // bench fast travel
