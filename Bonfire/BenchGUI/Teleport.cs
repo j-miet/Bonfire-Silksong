@@ -9,9 +9,159 @@ using UnityEngine;
 
 namespace BonfireSilksong
 {
-    // bench teleport
+    /// <summary>
+    /// Bench teleport.
+    /// </summary>
     public class Teleport
     {
+        public bool FastTravelDisplay { get; private set; } = false;
+
+        public void CloseFastTravelMenu()
+        {
+            _selectedPin = null;
+            FastTravelDisplay = false;
+
+            _benchPinScenes.Clear();
+            _benchActiveLocationData.Clear();
+
+            Bonfire.Instance.StartCoroutine(CloseInventoryMap());
+        }
+
+        public void DrawBenchFastTravelButton()
+        {
+            if (!Bonfire.Instance.Status.UnlockedFastTravel) return;
+
+            GUI.backgroundColor = new Color(0.8f, 0.5f, 0.2f);
+            GUILayout.BeginVertical("box");
+
+            bool hasAnyMap = PlayerData.instance.HasAnyMap;
+            bool hasBenchPins = PlayerData.instance.hasPinBench;
+            string text = "Fast travel";
+
+            if (hasAnyMap && hasBenchPins) { }
+            else if (hasAnyMap) text += "\n(Locked, need Bench Pins from Shakra)";
+            else if (hasBenchPins) text += "\n(Locked, need a map from Shakra)";
+            else text += "\n(Locked, need a map + Bench Pins from Shakra)";
+
+            if (GUILayout.Button(text, Styles._buttonStyle, GUILayout.Height(40f)))
+            {
+                GUI.backgroundColor = Color.white;
+                Bonfire.Log.LogDebug("Fast travel menu open button was clicked");
+
+                if (!hasAnyMap || !hasBenchPins) return;
+
+                if (!UpdateCurrentBenchFSM()) return;
+
+                SendOpenMapFSM();
+                FastTravelDisplay = true;
+
+                BlockInventoryInputs();
+
+                BonfireGUI.Instance.StartCoroutine(DelayedPinUpdate());
+            }
+
+            GUI.backgroundColor = Color.white;
+
+            GUILayout.EndVertical();
+        }
+
+        public void DrawBenchFastTravelUI()
+        {
+            if (!FastTravelDisplay) return;
+
+            // add color filter on top of map
+            GUI.color = new Color(0, 0, 0, 0.2f);
+            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            // bench list + dark, filled background to hide map elements underneath
+            float listW = 350f, listH = Screen.height * 0.7f;
+            Rect listRect = new Rect(20f, Screen.height / 2f - listH / 2f, listW, listH);
+
+            Color old = GUI.color;
+            GUI.color = new Color(0f, 0f, 0f, 1f);
+            GUI.DrawTexture(listRect, Texture2D.whiteTexture);
+            GUI.color = old;
+
+            GUILayout.BeginArea(listRect);
+            DrawBenchListPanel();
+            GUILayout.EndArea();
+
+            // if a bench is clicked: confirmation panel with dark background and border
+            if (_selectedPin != null)
+            {
+                float confirmW = 400f, confirmH = 110f;
+                float confirmX = Screen.width / 2f - confirmW / 2f;
+                float confirmY = Screen.height - confirmH - 20f;
+                Rect confirmRect = new Rect(confirmX, confirmY, confirmW, confirmH);
+
+                old = GUI.color;
+                GUI.color = new Color(0.8f, 0.7f, 0.3f, 0.9f);
+                GUI.DrawTexture(
+                    new Rect(
+                        confirmX - 2, confirmY - 2,
+                        confirmW + 4, confirmH + 4),
+                        Texture2D.whiteTexture);
+
+                GUI.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
+                GUI.DrawTexture(confirmRect, Texture2D.whiteTexture);
+                GUI.color = old;
+
+                GUILayout.BeginArea(confirmRect);
+                DrawTeleportConfirmPanel();
+                GUILayout.EndArea();
+            }
+            // for benches which don't have a pin location on map
+            else if (_selectedScene != null)
+            {
+                float confirmW = 400f, confirmH = 110f;
+                float confirmX = Screen.width / 2f - confirmW / 2f;
+                float confirmY = Screen.height - confirmH - 20f;
+                Rect confirmRect = new Rect(confirmX, confirmY, confirmW, confirmH);
+
+                old = GUI.color;
+                GUI.color = new Color(0.8f, 0.7f, 0.3f, 0.9f);
+                GUI.DrawTexture(confirmRect, Texture2D.whiteTexture);
+
+                GUI.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
+                GUI.DrawTexture(confirmRect, Texture2D.whiteTexture);
+                GUI.color = old;
+
+                GUILayout.BeginArea(confirmRect);
+                DrawTeleportConfirmPanelExtraLocations();
+                GUILayout.EndArea();
+            }
+        }
+
+        public void FastTravelUnlockNotification()
+        {
+            if (Bonfire.Instance.Status.UnlockedFastTravel) return;
+
+            if (PlayerData.instance.defeatedBellBeast)
+            {
+                GUI.color = new Color(0, 0, 0, 0.8f);
+                GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+                GUI.color = Color.yellow;
+
+                float w = 600f, h = 300f;
+                Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
+                GUI.ModalWindow(10000, modalRect, DrawFastTravelUnlockModalPopup, "Bench fast travel unlocked!");
+            }
+        }
+
+
+        // defines a bench location that has no map pin and must be added manually.
+        private class SpecialLocation
+        {
+            public string Scene;           // used for teleport (tempRespawnScene)
+            public string Marker;          // used for teleport (tempRespawnMarker)
+            public int RespawnType;        // used for teleport (tempRespawnType)
+            public string AreaName;        // area name
+            public string DefaultName;     // shown when custom names are off
+            public string CustomName;      // shown when custom names are on
+            public Func<bool> IsUnlocked;  // condition for whether to display this location
+        }
+
         // MapPin -> (location scene, location bench marker) tuple
         // Used in: UpdateBenchPins stores data by using MapPin object, this ensures each key being unique. 
         // For each pin, the scene and marker name are also stored. This is because in UpdateActiveLocationData,
@@ -33,10 +183,9 @@ namespace BonfireSilksong
         private bool _isCustomNameStyle = false;
         private PlayMakerFSM _currentBenchFSM;
         private MapPin _selectedPin = null;
+        private string _selectedScene = null;
         private string _selectedFullName;
         private Vector2 _scrollPos;
-
-        public bool FastTravelDisplay { get; private set; } = false;
 
         private static Color32 Rgb(byte r, byte g, byte b) => new Color32(r, g, b, 255);
         private static readonly Color32 _defaultMenuColor = Rgb(204, 191, 26);
@@ -191,7 +340,23 @@ namespace BonfireSilksong
                 {"Room_Diving_Bell_Abyss_Fixed", ("Diving Bell", "The Abyss")},
             };
 
-        private static readonly Dictionary<int, string> BenchMenuStyle = new Dictionary<int, string>
+        // bench locations without bench pins. 
+        private static readonly List<SpecialLocation> _specialLocations = new List<SpecialLocation>
+        {
+            new SpecialLocation
+            {
+                Scene = "Belltown_Room_Spare",
+                Marker = "RestBench",
+                RespawnType = 1,
+                AreaName = "Bellhart",
+                DefaultName = "Belltown_Room_Spare",
+                CustomName = "Bellhome",
+                IsUnlocked = () => PlayerData.instance.BelltownHouseUnlocked
+                                && PlayerData.instance.BelltownHouseVisited
+            },
+        };
+
+        private static readonly Dictionary<int, string> _benchMenuStyle = new Dictionary<int, string>
         {
             {0, "Basic + Default names"},
             {1, "Basic + Custom names"},
@@ -448,17 +613,6 @@ namespace BonfireSilksong
             }
         }
 
-        public void CloseFastTravelMenu()
-        {
-            _selectedPin = null;
-            FastTravelDisplay = false;
-
-            _benchPinScenes.Clear();
-            _benchActiveLocationData.Clear();
-
-            Bonfire.Instance.StartCoroutine(CloseInventoryMap());
-        }
-
         private void ChangeBenchMenuStyle()
         {
             int s = Bonfire.Instance.Status.BenchMenuStyle + 1;
@@ -468,96 +622,10 @@ namespace BonfireSilksong
             Bonfire.Instance.Status.BenchMenuStyle = s;
         }
 
-        public void DrawBenchFastTravelButton()
-        {
-            if (!Bonfire.Instance.Status.UnlockedFastTravel) return;
-
-            GUI.backgroundColor = new Color(0.8f, 0.5f, 0.2f);
-            GUILayout.BeginVertical("box");
-
-            bool hasAnyMap = PlayerData.instance.HasAnyMap;
-            bool hasBenchPins = PlayerData.instance.hasPinBench;
-            string text = "Fast travel";
-
-            if (hasAnyMap && hasBenchPins) { }
-            else if (hasAnyMap) text += "\n(Locked, need Bench Pins from Shakra)";
-            else if (hasBenchPins) text += "\n(Locked, need a map from Shakra)";
-            else text += "\n(Locked, need a map + Bench Pins from Shakra)";
-
-            if (GUILayout.Button(text, Styles._buttonStyle, GUILayout.Height(40f)))
-            {
-                GUI.backgroundColor = Color.white;
-                Bonfire.Log.LogDebug("Fast travel menu open button was clicked");
-
-                if (!hasAnyMap || !hasBenchPins) return;
-
-                if (!UpdateCurrentBenchFSM()) return;
-
-                SendOpenMapFSM();
-                FastTravelDisplay = true;
-
-                BlockInventoryInputs();
-
-                BonfireGUI.Instance.StartCoroutine(DelayedPinUpdate());
-            }
-
-            GUI.backgroundColor = Color.white;
-
-            GUILayout.EndVertical();
-        }
-
-        public void DrawBenchFastTravelUI()
-        {
-            if (!FastTravelDisplay) return;
-
-            // add color filter on top of map
-            GUI.color = new Color(0, 0, 0, 0.2f);
-            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
-            GUI.color = Color.white;
-
-            // bench list + dark, filled background to hide map elements underneath
-            float listW = 350f, listH = Screen.height * 0.7f;
-            Rect listRect = new Rect(20f, Screen.height / 2f - listH / 2f, listW, listH);
-
-            Color old = GUI.color;
-            GUI.color = new Color(0f, 0f, 0f, 1f);
-            GUI.DrawTexture(listRect, Texture2D.whiteTexture);
-            GUI.color = old;
-
-            GUILayout.BeginArea(listRect);
-            DrawBenchListPanel();
-            GUILayout.EndArea();
-
-            // if a bench is clicked: confirmation panel with dark background and border
-            if (_selectedPin != null)
-            {
-                float confirmW = 400f, confirmH = 110f;
-                float confirmX = Screen.width / 2f - confirmW / 2f;
-                float confirmY = Screen.height - confirmH - 20f;
-                Rect confirmRect = new Rect(confirmX, confirmY, confirmW, confirmH);
-
-                old = GUI.color;
-                GUI.color = new Color(0.8f, 0.7f, 0.3f, 0.9f);
-                GUI.DrawTexture(
-                    new Rect(
-                        confirmX - 2, confirmY - 2,
-                        confirmW + 4, confirmH + 4),
-                        Texture2D.whiteTexture);
-
-                GUI.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
-                GUI.DrawTexture(confirmRect, Texture2D.whiteTexture);
-                GUI.color = old;
-
-                GUILayout.BeginArea(confirmRect);
-                DrawTeleportConfirmPanel();
-                GUILayout.EndArea();
-            }
-        }
-
         private void DrawBenchListPanel()
         {
             int menuStyleIndex = Bonfire.Instance.Status.BenchMenuStyle;
-            string styleText = BenchMenuStyle[menuStyleIndex];
+            string styleText = _benchMenuStyle[menuStyleIndex];
 
             bool coloredStyle = menuStyleIndex == 2 || menuStyleIndex == 3;
             bool customNameStyle = menuStyleIndex == 1 || menuStyleIndex == 3;
@@ -593,7 +661,10 @@ namespace BonfireSilksong
 
                 foreach ((string mapArea, Color32 c) in _orderedBenchAreaNames)
                 {
-                    if (!_benchActiveLocationData.Keys.Contains(mapArea)) continue;
+                    bool hasPinLocations = _benchActiveLocationData.ContainsKey(mapArea);
+                    bool hasSpecialLocations = _specialLocations.Any(l => l.AreaName == mapArea && l.IsUnlocked());
+
+                    if (!hasPinLocations && !hasSpecialLocations) continue;
 
                     Color bgOld = GUI.backgroundColor;
                     Color textOld = GUI.color;
@@ -621,40 +692,45 @@ namespace BonfireSilksong
 
                     GUILayout.Space(4);
 
-                    foreach (var (customName, mapPin) in _benchActiveLocationData[mapArea])
+                    if (hasPinLocations)
                     {
-                        bool isSelected = _selectedPin == mapPin;
+                        foreach (var (customName, mapPin) in _benchActiveLocationData[mapArea])
+                        {
+                            bool isSelected = _selectedPin == mapPin;
 
-                        if (isSelected)
-                        {
-                            GUI.color = Color.white;
-                            GUI.backgroundColor = new Color(0.8f, 0.4f, 0f);
-                        }
-                        else
-                        {
+                            if (isSelected)
+                            {
+                                GUI.color = Color.white;
+                                GUI.backgroundColor = new Color(0.8f, 0.4f, 0f);
+                            }
+                            else
+                            {
+                                GUI.color = text;
+                            }
+
+                            GUIStyle buttonStyle = isSelected ?
+                                Styles._benchListButtonSelectedStyle : Styles._benchListButtonStyle;
+
+                            if (GUILayout.Button(customName, buttonStyle, GUILayout.Height(30f)))
+                            {
+                                _selectedPin = mapPin;
+                                _selectedScene = null;
+                                _selectedFullName = mapArea + ": " + customName;
+
+                                var gameMap = GameManager.instance.gameMap;
+                                Vector2 benchPos = BenchTeleport.GetBenchPinPositionInMapSpace(mapPin);
+                                Vector2 scaledPos = benchPos * gameMap.transform.localScale.x;
+                                gameMap.UpdateMapPosition(-scaledPos);
+                            }
+
+                            GUILayout.Space(2);
+
+                            GUI.backgroundColor = bg;
                             GUI.color = text;
                         }
-
-                        GUIStyle buttonStyle = isSelected ?
-                            Styles._benchListButtonSelectedStyle : Styles._benchListButtonStyle;
-
-                        if (GUILayout.Button(customName, buttonStyle, GUILayout.Height(30f)))
-                        {
-                            _selectedPin = mapPin;
-                            _selectedFullName = mapArea + ": " + customName;
-
-                            // pan map camera on top of this bench if possible; otherwise close as possible
-                            var gameMap = GameManager.instance.gameMap;
-                            Vector2 benchPos = BenchTeleport.GetBenchPinPositionInMapSpace(mapPin);
-                            Vector2 scaledPos = benchPos * gameMap.transform.localScale.x;
-                            gameMap.UpdateMapPosition(-scaledPos);
-                        }
-
-                        GUILayout.Space(2);
-
-                        GUI.backgroundColor = bg;
-                        GUI.color = text;
                     }
+
+                    DrawSpecialLocationsForArea(mapArea, bg, text);
 
                     GUI.backgroundColor = bgOld;
                     GUI.color = textOld;
@@ -702,21 +778,79 @@ namespace BonfireSilksong
             GUILayout.EndHorizontal();
         }
 
-        // bench fast travel unlock check
-        public void FastTravelUnlockNotification()
+        // extra bench locations logic. For benches without map pins e.g. Bellhome in Bellhart.
+
+        private void DrawSpecialLocationsForArea(string areaName, Color background, Color text)
         {
-            if (Bonfire.Instance.Status.UnlockedFastTravel) return;
-
-            if (PlayerData.instance.defeatedBellBeast)
+            foreach (var loc in _specialLocations)
             {
-                GUI.color = new Color(0, 0, 0, 0.8f);
-                GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
-                GUI.color = Color.yellow;
+                if (loc.AreaName != areaName || !loc.IsUnlocked()) continue;
 
-                float w = 600f, h = 300f;
-                Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
-                GUI.ModalWindow(10000, modalRect, DrawFastTravelUnlockModalPopup, "Bench fast travel unlocked!");
+                string customName = _isCustomNameStyle ? loc.CustomName : loc.DefaultName;
+                bool isSelected = _selectedScene == loc.Scene;
+
+                if (isSelected)
+                {
+                    GUI.color = Color.white;
+                    GUI.backgroundColor = new Color(0.8f, 0.4f, 0f);
+                }
+                else
+                {
+                    GUI.color = text;
+                }
+
+                GUIStyle buttonStyle = isSelected ?
+                    Styles._benchListButtonSelectedStyle : Styles._benchListButtonStyle;
+
+                if (GUILayout.Button(customName, buttonStyle, GUILayout.Height(30f)))
+                {
+                    _selectedPin = null;
+                    _selectedFullName = areaName + ": " + customName;
+                    _selectedScene = loc.Scene;
+                }
+
+                GUILayout.Space(2);
+
+                GUI.backgroundColor = background;
+                GUI.color = text;
             }
+        }
+
+        private void FillTeleportData(string sceneName)
+        {
+            var loc = _specialLocations.FirstOrDefault(l => l.Scene == sceneName);
+            if (loc == null) return;
+
+            PlayerData.instance.tempRespawnScene = loc.Scene;
+            PlayerData.instance.tempRespawnMarker = loc.Marker;
+            PlayerData.instance.tempRespawnType = loc.RespawnType;
+        }
+
+        private void DrawTeleportConfirmPanelExtraLocations()
+        {
+            GUILayout.Space(8);
+            GUILayout.Label("LOCATION", Styles._fastTravelConfirmHeaderStyle);
+            GUILayout.Label(_selectedFullName, Styles._fastTravelConfirmDestinationStyle);
+            GUILayout.Space(5);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+
+            GUI.backgroundColor = new Color(0.9f, 0.8f, 0.5f);
+            GUI.contentColor = Color.white;
+            if (GUILayout.Button("Travel", Styles._buttonStyle, GUILayout.Width(200f), GUILayout.Height(30f)))
+            {
+                FillTeleportData(_selectedScene);
+                _selectedScene = null;
+                CloseFastTravelMenu();
+
+                BenchTeleport.TeleportToBench();
+            }
+
+            GUI.backgroundColor = Color.white;
+            GUI.contentColor = Color.white;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
         }
 
         private void DrawFastTravelUnlockModalPopup(int windowId)
