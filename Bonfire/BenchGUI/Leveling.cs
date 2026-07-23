@@ -4,9 +4,31 @@ using UnityEngine;
 
 namespace BonfireSilksong
 {
-    // leveling system
+    /// <summary>
+    /// Leveling system.
+    /// </summary>
     public class Leveling
     {
+        public void ResetPendingLevelUp()
+        {
+            var s = Bonfire.Instance.Status;
+            var ls = LevelingSystem.Instance;
+
+            ls.StrengthIncrease = 0;
+            ls.DexterityIncrease = 0;
+            ls.IntelligenceIncrease = 0;
+            ls.ArtificeIncrease = 0;
+            ls.WisdomIncrease = 0;
+            ls.ResilienceIncrease = 0;
+            ls.LuckIncrease = 0;
+
+            s.PendingRosaries = 0;
+            s.PendingRosaryLevels = 0;
+            s.PendingRelicLevels = 0;
+
+            Bonfire.Instance.UpdateBindCostFSM();
+        }
+
         public void DrawLevelingUI()
         {
             var s = Bonfire.Instance.Status;
@@ -174,27 +196,6 @@ namespace BonfireSilksong
             var s = Bonfire.Instance.Status;
             return PlayerData.instance.atBench &&
                    (gotFreeLevel || (rosariesToLvlUp + s.PendingRosaries <= PlayerData.instance.geo));
-        }
-
-        // reset all pending (unapplied) stat allocations.
-        public void ResetPendingLevelUp()
-        {
-            var s = Bonfire.Instance.Status;
-            var ls = LevelingSystem.Instance;
-
-            ls.StrengthIncrease = 0;
-            ls.DexterityIncrease = 0;
-            ls.IntelligenceIncrease = 0;
-            ls.ArtificeIncrease = 0;
-            ls.WisdomIncrease = 0;
-            ls.ResilienceIncrease = 0;
-            ls.LuckIncrease = 0;
-
-            s.PendingRosaries = 0;
-            s.PendingRosaryLevels = 0;
-            s.PendingRelicLevels = 0;
-
-            Bonfire.Instance.UpdateBindCostFSM();
         }
 
         private void DrawStatButton(string statName, string displayValue, bool gotFreeLevel, PlayerStatus s,

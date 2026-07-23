@@ -4,28 +4,13 @@ using UnityEngine;
 
 namespace BonfireSilksong
 {
-    // extra settings menu
+    /// <summary>
+    /// Extra settings menu.
+    /// </summary>
     public class Settings
     {
         public readonly Dictionary<HealthManager, float> EnemyMaxHp = new Dictionary<HealthManager, float>();
         public readonly Dictionary<HealthManager, bool> EnemyIsBoss = new Dictionary<HealthManager, bool>();
-
-
-        private bool _pendingCrestUnlock = false;
-        private bool _pendingSettingsWindow = false;
-        private bool _pendingStatusReset = false;
-
-        private static Texture2D _tex;
-        private static Texture2D SolidTex()
-        {
-            if (_tex == null)
-            {
-                _tex = new Texture2D(1, 1);
-                _tex.SetPixel(0, 0, Color.white);
-                _tex.Apply();
-            }
-            return _tex;
-        }
 
         public void DrawExtraSettingsButton()
         {
@@ -54,95 +39,6 @@ namespace BonfireSilksong
             GUI.ModalWindow(10003, modalRect, DrawExtraSettingsModal, "Settings");
         }
 
-        private void DrawExtraSettingsModal(int windowId)
-        {
-            DrawShellShardSettingsUI();
-            GUILayout.Space(10);
-
-            DrawEnemyHPToggleUI();
-            GUILayout.Space(10);
-
-            DrawOtherSettingsUI();
-            GUILayout.Space(10);
-
-            DrawCrestUnlockButton();
-            GUILayout.Space(15);
-
-            DrawPlayerStatusResetButton();
-            GUILayout.Space(30);
-
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-
-            GUI.backgroundColor = Color.white;
-
-            if (GUILayout.Button(
-                    "Close window",
-                    Styles._crestUnlockButtonStyle,
-                    GUILayout.Width(160f),
-                    GUILayout.Height(35f)))
-            {
-                _pendingSettingsWindow = false;
-            }
-
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-        }
-
-        // toggle shell shard replenishment
-        private void DrawShellShardSettingsUI()
-        {
-            var s = Bonfire.Instance.Status;
-
-            GUILayout.BeginVertical("box");
-            GUILayout.Label("Shell shard replenishment");
-
-            GUI.backgroundColor = Color.white;
-            s.InfiniteShellShardsEnabled = GUILayout.Toggle(s.InfiniteShellShardsEnabled, "Infinite shards");
-
-            if (!s.InfiniteShellShardsEnabled)
-                s.InfiniteShardsBenchOnly = false;
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(15);
-
-            GUI.enabled = s.InfiniteShellShardsEnabled;
-            s.InfiniteShardsBenchOnly = GUILayout.Toggle(
-                s.InfiniteShardsBenchOnly,
-                "Shard refill to full only at benches");
-            GUI.enabled = true;
-
-            GUILayout.EndHorizontal();
-            GUILayout.EndVertical();
-        }
-
-        // toggle enemy HP bars
-        private void DrawEnemyHPToggleUI()
-        {
-            var s = Bonfire.Instance.Status;
-
-            GUILayout.BeginVertical("box");
-            GUILayout.Label("Enemy HP bars");
-
-            GUI.backgroundColor = Color.white;
-            s.EnemyHealthBarsEnabled = GUILayout.Toggle(
-                s.EnemyHealthBarsEnabled,
-                "Display enemy health bars (global hotkey is LeftControl + H)");
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(15);
-
-            GUI.enabled = s.EnemyHealthBarsEnabled;
-            s.EnemyHpBarColorProgression = GUILayout.Toggle(
-                s.EnemyHpBarColorProgression,
-                "Progressive HP bar values (green → yellow → red)");
-            GUI.enabled = true;
-
-            GUILayout.EndHorizontal();
-            GUILayout.EndVertical();
-        }
-
-        // actual hp bars on top of enemies using HealthManager data
         public void DrawEnemyHealthBars()
         {
             var s = Bonfire.Instance.Status;
@@ -185,6 +81,135 @@ namespace BonfireSilksong
             }
         }
 
+        public void DrawCrestUnlockUI()
+        {
+            if (!_pendingCrestUnlock) return;
+
+            GUI.color = new Color(0, 0, 0, 0.8f);
+            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            float w = 550f, h = 210f;
+            Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
+            GUI.ModalWindow(10002, modalRect, DrawCrestUnlockConfirmModal, "Crest unlocking");
+        }
+
+        public void DrawPlayerStatusResetUI()
+        {
+            if (!_pendingStatusReset) return;
+
+            GUI.color = new Color(0, 0, 0, 0.8f);
+            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.color = Color.red;
+
+            float w = 600f, h = 400f;
+            Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
+            GUI.ModalWindow(10003, modalRect, DrawPlayerStatusResetConfirmModal, "Reset mod configurations");
+        }
+
+
+        private bool _pendingCrestUnlock = false;
+        private bool _pendingSettingsWindow = false;
+        private bool _pendingStatusReset = false;
+
+        private static Texture2D _tex;
+        private static Texture2D SolidTex()
+        {
+            if (_tex == null)
+            {
+                _tex = new Texture2D(1, 1);
+                _tex.SetPixel(0, 0, Color.white);
+                _tex.Apply();
+            }
+            return _tex;
+        }
+
+        private void DrawExtraSettingsModal(int windowId)
+        {
+            DrawShellShardSettingsUI();
+            GUILayout.Space(10);
+
+            DrawEnemyHPToggleUI();
+            GUILayout.Space(10);
+
+            DrawOtherSettingsUI();
+            GUILayout.Space(10);
+
+            DrawCrestUnlockButton();
+            GUILayout.Space(15);
+
+            DrawPlayerStatusResetButton();
+            GUILayout.Space(30);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+
+            GUI.backgroundColor = Color.white;
+
+            if (GUILayout.Button(
+                    "Close window",
+                    Styles._crestUnlockButtonStyle,
+                    GUILayout.Width(160f),
+                    GUILayout.Height(35f)))
+            {
+                _pendingSettingsWindow = false;
+            }
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+        }
+
+        private void DrawShellShardSettingsUI()
+        {
+            var s = Bonfire.Instance.Status;
+
+            GUILayout.BeginVertical("box");
+            GUILayout.Label("Shell shard replenishment");
+
+            GUI.backgroundColor = Color.white;
+            s.InfiniteShellShardsEnabled = GUILayout.Toggle(s.InfiniteShellShardsEnabled, "Infinite shards");
+
+            if (!s.InfiniteShellShardsEnabled)
+                s.InfiniteShardsBenchOnly = false;
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(15);
+
+            GUI.enabled = s.InfiniteShellShardsEnabled;
+            s.InfiniteShardsBenchOnly = GUILayout.Toggle(
+                s.InfiniteShardsBenchOnly,
+                "Shard refill to full only at benches");
+            GUI.enabled = true;
+
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+        }
+
+        private void DrawEnemyHPToggleUI()
+        {
+            var s = Bonfire.Instance.Status;
+
+            GUILayout.BeginVertical("box");
+            GUILayout.Label("Enemy HP bars");
+
+            GUI.backgroundColor = Color.white;
+            s.EnemyHealthBarsEnabled = GUILayout.Toggle(
+                s.EnemyHealthBarsEnabled,
+                "Display enemy health bars (global hotkey is LeftControl + H)");
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(15);
+
+            GUI.enabled = s.EnemyHealthBarsEnabled;
+            s.EnemyHpBarColorProgression = GUILayout.Toggle(
+                s.EnemyHpBarColorProgression,
+                "Progressive HP bar values (green → yellow → red)");
+            GUI.enabled = true;
+
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+        }
+
         // other uncategorized features
         private void DrawOtherSettingsUI()
         {
@@ -200,7 +225,6 @@ namespace BonfireSilksong
             GUILayout.EndVertical();
         }
 
-        // crest unlock button
         private void DrawCrestUnlockButton()
         {
             if (Bonfire.Instance.Status.UnlockedAllCrests) return;
@@ -210,19 +234,6 @@ namespace BonfireSilksong
                 _pendingSettingsWindow = false;
                 _pendingCrestUnlock = true;
             }
-        }
-
-        public void DrawCrestUnlockUI()
-        {
-            if (!_pendingCrestUnlock) return;
-
-            GUI.color = new Color(0, 0, 0, 0.8f);
-            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
-            GUI.color = Color.white;
-
-            float w = 550f, h = 210f;
-            Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
-            GUI.ModalWindow(10002, modalRect, DrawCrestUnlockConfirmModal, "Crest unlocking");
         }
 
         private void DrawCrestUnlockConfirmModal(int windowId)
@@ -272,7 +283,6 @@ namespace BonfireSilksong
             GUILayout.EndHorizontal();
         }
 
-        // reset PlayerData button
         private void DrawPlayerStatusResetButton()
         {
             GUI.backgroundColor = Color.red;
@@ -281,19 +291,6 @@ namespace BonfireSilksong
                 _pendingSettingsWindow = false;
                 _pendingStatusReset = true;
             }
-        }
-
-        public void DrawPlayerStatusResetUI()
-        {
-            if (!_pendingStatusReset) return;
-
-            GUI.color = new Color(0, 0, 0, 0.8f);
-            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
-            GUI.color = Color.red;
-
-            float w = 600f, h = 400f;
-            Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
-            GUI.ModalWindow(10003, modalRect, DrawPlayerStatusResetConfirmModal, "Reset mod configurations");
         }
 
         private void DrawPlayerStatusResetConfirmModal(int windowId)

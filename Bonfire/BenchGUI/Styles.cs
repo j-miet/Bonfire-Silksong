@@ -2,7 +2,9 @@ using UnityEngine;
 
 namespace BonfireSilksong
 {
-    // GUI fonts and styles
+    /// <summary>
+    /// GUI fonts and styles.
+    /// </summary>
     public static class Styles
     {
         public static Font _trajanBold;
