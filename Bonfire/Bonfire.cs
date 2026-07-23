@@ -14,7 +14,10 @@ using UnityEngine.SceneManagement;
 
 namespace BonfireSilksong
 {
-    [BepInPlugin("hksilksong.mod.bonfire-silksong", "Bonfire-Silksong", "0.4.0")]
+    /// <summary>
+    /// Main logic for Bonfire-Silksong mod
+    /// </summary>
+    [BepInPlugin("hksilksong.mod.bonfire-silksong", "Bonfire-Silksong", "0.5.0")]
     public class Bonfire : BaseUnityPlugin
     {
         public PlayerStatus Status;
@@ -76,8 +79,8 @@ namespace BonfireSilksong
 
         /// <summary>
         /// Override bind cost gameplay value in FSM.
-        /// SilkSpool_BindCost_Getter handles the patching of getter value which is used for visually match the silk 
-        /// spool.
+        /// SilkSpool_BindCost_Getter handles the patching of getter value which is used for visually matching the silk 
+        /// spool with current silk available.
         /// </summary>
         public void UpdateBindCostFSM()
         {
@@ -122,7 +125,7 @@ namespace BonfireSilksong
         // this a guard flag: it stays true until GameManager.instance != null and it's profileID field has value > 1
         // which corresponds to a valid save slot (1-4). And every time the user quits to main menu, it flips back 
         // to true upon detecting invalid profileID. Then, when user continues from another save slot, it prevents 
-        // SaveSettings from using previous save's status config data to override status of current one.
+        // SaveSettings from using previous save's PlayerStatus data to override status for current slot.
         private bool _firstSave = true;
         private bool _invClosedCheck = false;
 
@@ -433,7 +436,7 @@ namespace BonfireSilksong
                     var ls = LevelingSystem.Instance;
                     var i = Instance;
                     var s = i.Status;
-                    var gui = BonfireGUI.Instance;
+                    var gui = BonfireGUI.Settings;
 
                     if (!gui.EnemyMaxHp.ContainsKey(__instance))
                     {
@@ -636,7 +639,7 @@ namespace BonfireSilksong
         {
             static void Postfix(HeroController __instance)
             {
-                var gui = BonfireGUI.Instance;
+                var gui = BonfireGUI.Settings;
                 var toRemove = new List<HealthManager>();
 
                 foreach (var e in gui.EnemyMaxHp.Keys)

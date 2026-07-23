@@ -4,6 +4,7 @@ using System.Reflection;
 
 using GlobalEnums;
 using HarmonyLib;
+using HutongGames.PlayMaker;
 using UnityEngine;
 
 namespace BonfireSilksong
@@ -108,7 +109,7 @@ namespace BonfireSilksong
                     respawnType = pd.antBenchTrapDefused ? 1 : 0;
                     break;
 
-                // Songclave bench in Act3: shrine is destroyed, bench moves outside
+                // Songclave bench in Act3: shrine is destroyed, update scene + marker outside
                 case "Bellshrine_Enclave":
                     if (pd.blackThreadWorld)
                     {
@@ -246,6 +247,11 @@ namespace BonfireSilksong
         // -- patched methods -- //
 
         // handle transition post-check: set spawn location to targeted bench
+        // -> There's a rare bug, which leaves hornet into floating/falling state after teleporting. 
+        // Haven't been able to replicate it consistently with current setup. Tested some alternate FSM state chains, 
+        // but ultimately decided to keep state "Set Spawn Location" + event "OVERRIDE" combo: this sets spawn location 
+        // as spawn point properly, but is most likely also the cause of floating if some internal timing is off more 
+        // than usual.
         [HarmonyPatch(typeof(HeroController), "FinishedEnteringScene")]
         class HeroController_FinishedEnteringScene
         {
@@ -326,6 +332,17 @@ namespace BonfireSilksong
 
                     Bonfire.Log.LogDebug($"Fallback marker = {found.name}");
                 }
+            }
+        }
+
+        // helper for checking bench state chains
+        [HarmonyPatch(typeof(FsmState), "OnEnter")]
+        class FsmState_OnEnter_Debug
+        {
+            static void Prefix(FsmState __instance)
+            {
+                if (__instance.Fsm?.Name != "Bench Control") return;
+                Bonfire.Log.LogDebug($"Bench Control entering state: {__instance.Name}");
             }
         }
     }
