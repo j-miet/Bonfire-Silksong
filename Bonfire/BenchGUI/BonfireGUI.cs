@@ -68,7 +68,7 @@ namespace BonfireSilksong
         private void Update()
         {
             // -- bench teleport --
-            // check if user presses "Inventory", "Quick Map" or "Map" buttons, and if so, closes travel menu
+            // check if user presses "Inventory", "Quick Map", "Map" or menu cancel keys, and if so, closes travel menu
             if (!Teleport.FastTravelDisplay) return;
 
             var inputActions = GameManager.instance?.inputHandler?.inputActions;
@@ -76,7 +76,8 @@ namespace BonfireSilksong
 
             if (inputActions.OpenInventoryMap.WasPressed ||
                 inputActions.QuickMap.WasPressed ||
-                inputActions.OpenInventory.WasPressed)
+                inputActions.OpenInventory.WasPressed ||
+                inputActions.MenuCancel)
             {
                 Teleport.CloseFastTravelMenu();
             }
