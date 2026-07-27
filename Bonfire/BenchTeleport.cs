@@ -10,7 +10,7 @@ using UnityEngine;
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Bench fast travel system
+    /// Bench fast travel API
     /// </summary>
     public class BenchTeleport : MonoBehaviour
     {
@@ -274,11 +274,11 @@ namespace BonfireSilksong
                     // properly update spawn location. This will also ensure the save slot displays image of correct 
                     // main/side area
                     benchFSM?.SetState("Set Spawn Location");
-                    benchFSM?.SendEvent("OVERRIDE");
+                    benchFSM?.SendEventSafe("OVERRIDE");
                     Bonfire.Log.LogDebug("Set spawn location");
                 }
 
-                __instance.proxyFSM.SendEvent("HeroCtrl-EnteringScene");
+                __instance.proxyFSM.SendEventSafe("HeroCtrl-EnteringScene");
 
                 GameManager.instance.SaveGame(null);
             }
