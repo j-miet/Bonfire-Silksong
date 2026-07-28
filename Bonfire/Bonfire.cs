@@ -17,7 +17,7 @@ namespace BonfireSilksong
     /// <summary>
     /// Main logic for Bonfire-Silksong mod
     /// </summary>
-    [BepInPlugin("hksilksong.mod.bonfire-silksong", "Bonfire-Silksong", "0.5.0")]
+    [BepInPlugin("hksilksong.mod.bonfire-silksong", "Bonfire-Silksong", "0.6.0")]
     public class Bonfire : BaseUnityPlugin
     {
         public PlayerStatus Status;
@@ -84,6 +84,12 @@ namespace BonfireSilksong
         /// </summary>
         public void UpdateBindCostFSM()
         {
+            // the "Silk Cost" variable below is responsible for many different silk functions and therefore must
+            // only run if player is in active binding state.
+            // Interestingly this issue arose only after testing Silk Soar: normal harpoon would work just fine
+            // even if cost was set well above it's usual of 1, but soaring would always check the updated cost. 
+            if (!GameManager.instance.hero_ctrl.cState.isBinding) return;
+
             if (HeroController.instance == null || LevelingSystem.Instance == null) return;
 
             int cost = LevelingSystem.Instance.BindCost(Status.IntelligenceStat);
@@ -171,6 +177,8 @@ namespace BonfireSilksong
 
         private void Update()
         {
+            UpdateBindCostFSM();
+
             // hotkeys
 
             // enemy hp bar toggle
@@ -225,8 +233,6 @@ namespace BonfireSilksong
 
             if (BonfireGUI.Instance == null)
                 gameObject.AddComponent<BonfireGUI>();
-
-            UpdateBindCostFSM();
         }
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -234,6 +240,8 @@ namespace BonfireSilksong
             SaveSettings();
             Init();
             LevelingSystem.Instance.RefreshRelicsObtained();
+
+            //Log.LogInfo("Current scene: " + GameManager.instance.GetSceneNameString());
 
             //Debug.VisitedScenes();
         }
