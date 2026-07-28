@@ -185,8 +185,6 @@ namespace BonfireSilksong
             HeroController.instance.CharmUpdate();
             EventRegister.SendEvent(EventRegisterEvents.HealthUpdate);
             EventRegister.SendEvent(EventRegisterEvents.UpdateBlueHealth);
-
-            Bonfire.Instance.UpdateBindCostFSM();
         }
 
         /// <summary>
@@ -239,8 +237,6 @@ namespace BonfireSilksong
 
             HeroController.instance.CharmUpdate();
             EventRegister.SendEvent(EventRegisterEvents.HealthUpdate);
-
-            Bonfire.Instance.UpdateBindCostFSM();
         }
 
         /// <summary>

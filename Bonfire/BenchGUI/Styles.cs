@@ -7,115 +7,116 @@ namespace BonfireSilksong
     /// </summary>
     public static class Styles
     {
-        public static Font _trajanBold;
-        public static Font _trajanNormal;
-        public static GUIStyle _levelHeaderStyle;
-        public static GUIStyle _labelStyle;
-        public static GUIStyle _buttonStyle;
-        public static GUIStyle _crestUnlockLabelStyle;
-        public static GUIStyle _crestUnlockButtonStyle;
-        public static GUIStyle _fastTravelUnlockLabelStyle;
-        public static GUIStyle _benchListAreaLabelStyle;
-        public static GUIStyle _benchListButtonStyle;
-        public static GUIStyle _benchListButtonSelectedStyle;
-        public static GUIStyle _fastTravelConfirmHeaderStyle;
-        public static GUIStyle _fastTravelConfirmDestinationStyle;
+        public static Font TrajanBold;
+        public static Font TrajanNormal;
+
+        public static GUIStyle LevelHeaderStyle;
+        public static GUIStyle LabelStyle;
+        public static GUIStyle ButtonStyle;
+        public static GUIStyle CrestUnlockLabelStyle;
+        public static GUIStyle CrestUnlockButtonStyle;
+        public static GUIStyle FastTravelUnlockLabelStyle;
+        public static GUIStyle BenchListAreaLabelStyle;
+        public static GUIStyle BenchListButtonStyle;
+        public static GUIStyle BenchListButtonSelectedStyle;
+        public static GUIStyle FastTravelConfirmHeaderStyle;
+        public static GUIStyle FastTravelConfirmDestinationStyle;
 
         public static void EnsureFonts()
         {
-            if (_trajanBold != null && _trajanNormal != null) return;
+            if (TrajanBold != null && TrajanNormal != null) return;
 
             foreach (Font font in Resources.FindObjectsOfTypeAll<Font>())
             {
                 if (font == null) continue;
-                if (font.name == "TrajanPro-Bold") _trajanBold = font;
-                if (font.name == "TrajanPro-Regular") _trajanNormal = font;
+                if (font.name == "TrajanPro-Bold") TrajanBold = font;
+                if (font.name == "TrajanPro-Regular") TrajanNormal = font;
             }
         }
 
         public static void EnsureStyles()
         {
-            if (_levelHeaderStyle == null)
+            if (LevelHeaderStyle == null)
             {
-                _levelHeaderStyle = new GUIStyle(GUI.skin.label)
+                LevelHeaderStyle = new GUIStyle(GUI.skin.label)
                 {
-                    font = _trajanNormal,
+                    font = TrajanNormal,
                     fontStyle = FontStyle.Bold,
                     fontSize = 17,
                     alignment = TextAnchor.MiddleCenter,
                 };
             }
 
-            if (_labelStyle == null)
+            if (LabelStyle == null)
             {
-                _labelStyle = new GUIStyle(GUI.skin.label)
+                LabelStyle = new GUIStyle(GUI.skin.label)
                 {
-                    font = _trajanNormal,
+                    font = TrajanNormal,
                     fontStyle = FontStyle.Bold,
                     fontSize = 15,
                     alignment = TextAnchor.MiddleCenter,
                 };
             }
 
-            if (_buttonStyle == null)
+            if (ButtonStyle == null)
             {
-                _buttonStyle = new GUIStyle(GUI.skin.button)
+                ButtonStyle = new GUIStyle(GUI.skin.button)
                 {
-                    font = _trajanBold,
+                    font = TrajanBold,
                     fontStyle = FontStyle.Normal,
                     fontSize = 15,
                     alignment = TextAnchor.MiddleCenter,
                 };
             }
 
-            if (_crestUnlockLabelStyle == null)
+            if (CrestUnlockLabelStyle == null)
             {
-                _crestUnlockLabelStyle = new GUIStyle(GUI.skin.label)
+                CrestUnlockLabelStyle = new GUIStyle(GUI.skin.label)
                 {
-                    font = _trajanBold,
+                    font = TrajanBold,
                     fontSize = 14,
                     alignment = TextAnchor.MiddleCenter,
                     wordWrap = true
                 };
             }
 
-            if (_crestUnlockButtonStyle == null)
+            if (CrestUnlockButtonStyle == null)
             {
-                _crestUnlockButtonStyle = new GUIStyle(GUI.skin.button)
+                CrestUnlockButtonStyle = new GUIStyle(GUI.skin.button)
                 {
-                    font = _trajanBold,
+                    font = TrajanBold,
                     fontStyle = FontStyle.Normal,
                     fontSize = 14,
                     alignment = TextAnchor.MiddleCenter
                 };
             }
 
-            if (_fastTravelUnlockLabelStyle == null)
+            if (FastTravelUnlockLabelStyle == null)
             {
-                _fastTravelUnlockLabelStyle = new GUIStyle(GUI.skin.label)
+                FastTravelUnlockLabelStyle = new GUIStyle(GUI.skin.label)
                 {
-                    font = _trajanBold,
+                    font = TrajanBold,
                     fontStyle = FontStyle.Bold,
                     fontSize = 14
                 };
             }
 
-            if (_benchListAreaLabelStyle == null)
+            if (BenchListAreaLabelStyle == null)
             {
-                _benchListAreaLabelStyle = new GUIStyle(GUI.skin.label)
+                BenchListAreaLabelStyle = new GUIStyle(GUI.skin.label)
                 {
-                    font = _trajanBold,
+                    font = TrajanBold,
                     fontSize = 16,
                     fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleLeft,
                 };
             }
 
-            if (_benchListButtonStyle == null)
+            if (BenchListButtonStyle == null)
             {
-                _benchListButtonStyle = new GUIStyle(GUI.skin.button)
+                BenchListButtonStyle = new GUIStyle(GUI.skin.button)
                 {
-                    font = _trajanBold,
+                    font = TrajanBold,
                     fontSize = 14,
                     fontStyle = FontStyle.Normal,
                     alignment = TextAnchor.MiddleLeft,
@@ -123,31 +124,31 @@ namespace BonfireSilksong
                 };
             }
 
-            if (_benchListButtonSelectedStyle == null)
+            if (BenchListButtonSelectedStyle == null)
             {
-                _benchListButtonSelectedStyle = new GUIStyle(GUI.skin.button)
+                BenchListButtonSelectedStyle = new GUIStyle(GUI.skin.button)
                 {
-                    font = _trajanBold,
+                    font = TrajanBold,
                     fontStyle = FontStyle.Normal,
                     fontSize = 15,
                     alignment = TextAnchor.MiddleLeft,
                 };
-                _benchListButtonSelectedStyle.normal.background = Texture2D.whiteTexture;
+                BenchListButtonSelectedStyle.normal.background = Texture2D.whiteTexture;
             }
 
-            if (_fastTravelConfirmHeaderStyle == null)
-                _fastTravelConfirmHeaderStyle = new GUIStyle(GUI.skin.label)
+            if (FastTravelConfirmHeaderStyle == null)
+                FastTravelConfirmHeaderStyle = new GUIStyle(GUI.skin.label)
                 {
-                    font = _trajanNormal,
+                    font = TrajanNormal,
                     fontSize = 11,
                     alignment = TextAnchor.MiddleCenter,
                     normal = { textColor = new Color(0.8f, 0.7f, 0.3f) }
                 };
 
-            if (_fastTravelConfirmDestinationStyle == null)
-                _fastTravelConfirmDestinationStyle = new GUIStyle(GUI.skin.label)
+            if (FastTravelConfirmDestinationStyle == null)
+                FastTravelConfirmDestinationStyle = new GUIStyle(GUI.skin.label)
                 {
-                    font = _trajanBold,
+                    font = TrajanBold,
                     fontSize = 16,
                     alignment = TextAnchor.MiddleCenter,
                     normal = { textColor = Color.white }

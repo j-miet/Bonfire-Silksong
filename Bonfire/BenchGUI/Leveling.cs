@@ -25,8 +25,6 @@ namespace BonfireSilksong
             s.PendingRosaries = 0;
             s.PendingRosaryLevels = 0;
             s.PendingRelicLevels = 0;
-
-            Bonfire.Instance.UpdateBindCostFSM();
         }
 
         public void DrawLevelingUI()
@@ -110,7 +108,7 @@ namespace BonfireSilksong
 
             // layout
             GUILayout.BeginArea(new Rect(20f, Screen.height / 4.25f, 530f, 750f));
-            GUILayout.Label("Leveling", Styles._levelHeaderStyle);
+            GUILayout.Label("Leveling", Styles.LevelHeaderStyle);
 
             // stats
             GUILayout.BeginHorizontal("box");
@@ -147,14 +145,14 @@ namespace BonfireSilksong
 
             GUILayout.EndHorizontal();
 
-            GUILayout.Label("Current Level: " + currentLvl, Styles._labelStyle);
-            GUILayout.Label("Rosaries to Level Up: " + rosariesToLvlUp, Styles._labelStyle);
+            GUILayout.Label("Current Level: " + currentLvl, Styles.LabelStyle);
+            GUILayout.Label("Rosaries to Level Up: " + rosariesToLvlUp, Styles.LabelStyle);
 
             // apply and cancel
             GUILayout.BeginHorizontal("box");
 
             GUI.backgroundColor = Color.green;
-            if (GUILayout.Button(applyText, Styles._buttonStyle, GUILayout.Height(40f), GUILayout.Width(258f))
+            if (GUILayout.Button(applyText, Styles.ButtonStyle, GUILayout.Height(40f), GUILayout.Width(258f))
                 && PlayerData.instance.atBench)
             {
                 LevelingSystem.Instance.ApplyLevel();
@@ -163,7 +161,7 @@ namespace BonfireSilksong
             GUILayout.FlexibleSpace();
 
             GUI.backgroundColor = Color.white;
-            if (GUILayout.Button("Cancel", Styles._buttonStyle, GUILayout.Height(40f), GUILayout.Width(258f))
+            if (GUILayout.Button("Cancel", Styles.ButtonStyle, GUILayout.Height(40f), GUILayout.Width(258f))
                 && PlayerData.instance.atBench)
             {
                 ResetPendingLevelUp();
@@ -178,7 +176,7 @@ namespace BonfireSilksong
             GUI.backgroundColor = Color.red;
             if (GUILayout.Button(
                     $"Respec ({s.RespecCost} " + $"{(s.RespecCost > 1 ? "Silkeaters" : "Silkeater")})",
-                    Styles._buttonStyle,
+                    Styles.ButtonStyle,
                     GUILayout.Height(40f),
                     GUILayout.Width(522f))
                 && PlayerData.instance.atBench)
@@ -203,7 +201,7 @@ namespace BonfireSilksong
         {
             if (GUILayout.Button(
                     $"{statName}: {displayValue}",
-                    Styles._buttonStyle,
+                    Styles.ButtonStyle,
                     GUILayout.Height(40f),
                     GUILayout.Width(160f))
                 && CanLevelUp(gotFreeLevel, rosariesToLvlUp)
@@ -215,7 +213,7 @@ namespace BonfireSilksong
 
         private void DrawStatLabel(string text)
         {
-            GUILayout.Label(text, Styles._labelStyle, GUILayout.Height(40f), GUILayout.Width(160f));
+            GUILayout.Label(text, Styles.LabelStyle, GUILayout.Height(40f), GUILayout.Width(160f));
         }
     }
 }
