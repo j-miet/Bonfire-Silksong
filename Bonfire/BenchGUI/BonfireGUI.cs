@@ -15,6 +15,8 @@ namespace BonfireSilksong
         public static Leveling Leveling;
 
 
+        private bool _benchCheck = false;
+
         private void Awake()
         {
             Instance = this;
@@ -44,6 +46,8 @@ namespace BonfireSilksong
 
             if (PlayerData.instance.atBench && !GameManager.instance.isPaused)
             {
+                _benchCheck = true;
+
                 GUI.enabled = true;
                 Styles.EnsureStyles();
 
@@ -61,8 +65,11 @@ namespace BonfireSilksong
 
             Settings.DrawEnemyHealthBars();  // hp bar display must not be tied to bench check
 
-            if (!PlayerData.instance.atBench)
+            if (!PlayerData.instance.atBench && _benchCheck)
+            {
                 Leveling.ResetPendingLevelUp();
+                _benchCheck = false;
+            }
         }
 
         private void Update()
@@ -100,7 +107,7 @@ namespace BonfireSilksong
         {
             Leveling.DrawLevelingUI();
             GUILayout.Space(10);
-            GUILayout.Label("Other", Styles._levelHeaderStyle);
+            GUILayout.Label("Other", Styles.LevelHeaderStyle);
 
             GUILayout.Space(5);
             Settings.DrawExtraSettingsButton();
