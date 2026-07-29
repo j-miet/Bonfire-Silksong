@@ -8,25 +8,24 @@ namespace BonfireSilksong
     /// <summary>
     /// Static fast travel system data.
     /// </summary>
-    public static class TeleportData
+    public class TeleportData
     {
         // defines a bench location that has no map pin and must be added manually.
         public class SpecialLocation
         {
-            public string Scene;           // used for teleport (tempRespawnScene)
-            public string Marker;          // used for teleport (tempRespawnMarker)
-            public int RespawnType;        // used for teleport (tempRespawnType)
+            public string Scene;           // PlayerData.tempRespawnScene
+            public string Marker;          // PlayerData.tempRespawnMarker
+            public int RespawnType;        // PlayerData.tempRespawnType
             public string AreaName;        // area name
             public string DefaultName;     // shown when custom names are off
             public string CustomName;      // shown when custom names are on
             public Func<bool> IsUnlocked;  // condition for whether to display this location
         }
 
-        public static Color32 Rgb(byte r, byte g, byte b) => new Color32(r, g, b, 255);
-        public static readonly Color32 _defaultMenuColor = Rgb(204, 191, 26);
+        public static readonly Color32 DefaultMenuColor = Rgb(204, 191, 26);
 
-        // custom order for area names, in-game fast travel bench list then displays them in same order
-        // _benchStaticLocations is the source of truth: if there isn't a valid map area under any of the
+        // Custom order for area names, in-game fast travel bench list then displays them in same order
+        // BenchStaticLocations is the source of truth: if there isn't a valid map area under any of the
         // scenes, it will be ignored and falls to "Other" category instead.
         public static readonly List<(string areaName, Color32 color)> OrderedBenchAreaNames
             = new List<(string, Color32)>
@@ -55,17 +54,17 @@ namespace BonfireSilksong
             ("The Cradle", Rgb(100, 106, 142)),
             ("Verdania", Rgb(96, 173, 120)),
             ("The Abyss", Rgb(94, 95, 94)),
-            ("Other", _defaultMenuColor), // default option for uncategorized benches, never remove this
+            ("Other", DefaultMenuColor), // default option for uncategorized benches, never remove this
         };
 
-        // Custom scene names for teleport locations
+        // Custom scene names for teleport locations with bench pins visible on map.
         // Key is the raw scene value from BenchTeleport.PrepareTeleportLocation
         //   => make sure to use final scene value for manually handled special cases!
         // Value is a tuple (custom name, map area). Custom name is optional: using empty string "" reverts back to
         // raw scene name. Map area is used in categorizing bench scenes.
         // If no key-value pair is found for specific scene, scene defaults to raw name and map area becomes "Other"
         //
-        // Some benches don't have pins; these are filled manually
+        // Some benches don't have pins; these are filled manually in SpecialLocations list.
         public static readonly Dictionary<string, (string customName, string areaName)> BenchStaticLocations
             = new Dictionary<string, (string, string)>
             {
@@ -152,7 +151,7 @@ namespace BonfireSilksong
                 {"Under_07b", ("Entrance Underworks", "The Citadel")},
                 {"Bellway_City", ("Bellway", "The Citadel")},
                 {"Song_Enclave", ("Songclave", "The Citadel")},
-                {"Bellshrine_Enclave", ("The First Shrine", "The Citadel")},
+                {"Bellshrine_Enclave", ("First Shrine", "The Citadel")},
                 {"Library_08", ("Vaultkeeper", "The Citadel")},
                 {"Library_10", ("Vaults South", "The Citadel")},
                 {"Cog_Bench", ("Cogwork Core", "The Citadel")},
@@ -175,9 +174,10 @@ namespace BonfireSilksong
                 {"Room_Diving_Bell_Abyss_Fixed", ("Diving Bell", "The Abyss")},
             };
 
-        // bench locations without bench pins. 
+        // bench locations without map pins.
         public static readonly List<SpecialLocation> SpecialLocations = new List<SpecialLocation>
         {
+            // Bellhome
             new SpecialLocation
             {
                 Scene = "Belltown_Room_Spare",
@@ -189,8 +189,33 @@ namespace BonfireSilksong
                 IsUnlocked = () => PlayerData.instance.BelltownHouseUnlocked
                                 && PlayerData.instance.BelltownHouseVisited
             },
+            // Widow
+            new SpecialLocation
+            {
+                Scene = "Belltown_Shrine",
+                Marker = "RestBench",
+                RespawnType = 1,
+                AreaName = "Bellhart",
+                DefaultName = "Belltown_Shrine",
+                CustomName = "Widow",
+                IsUnlocked = () => !PlayerData.instance.blackThreadWorld // disabled in Act 3
+                                && PlayerData.instance.hasNeedolin
+            },
+            // Surface climb
+            new SpecialLocation
+            {
+                Scene = "Cradle_Destroyed_Challenge_Bench",
+                Marker = "RestBench",
+                RespawnType = 1,
+                AreaName = "The Cradle",
+                DefaultName = "Cradle_Destroyed_Challenge_Bench",
+                CustomName = "Climb",
+                IsUnlocked = () => PlayerData.instance.blackThreadWorld
+                                && PlayerData.instance.hasSilkBossNeedle // available after picking Pale Nails
+            },
         };
 
+        // labels for bench menu styles
         public static readonly Dictionary<int, string> BenchMenuStyle = new Dictionary<int, string>
         {
             {0, "Basic + Default names"},
@@ -198,5 +223,8 @@ namespace BonfireSilksong
             {2, "Colored + Default names"},
             {3, "Colored + Custom names"}
         };
+
+
+        private static Color32 Rgb(byte r, byte g, byte b) => new Color32(r, g, b, 255);
     }
 }
