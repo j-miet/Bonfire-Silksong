@@ -27,7 +27,7 @@ namespace BonfireSilksong
 
         private void OnGUI()
         {
-            if (GameManager.instance == null && PlayerData.instance == null) return;
+            if (Bonfire.CheckIfNoGameManager()) return;
 
             Styles.EnsureFonts();
 
@@ -74,19 +74,22 @@ namespace BonfireSilksong
 
         private void Update()
         {
-            // -- bench teleport --
-            // check if user presses "Inventory", "Quick Map", "Map" or menu cancel keys, and if so, closes travel menu
-            if (!Teleport.FastTravelDisplay) return;
+            if (Bonfire.CheckIfNoGameManager()) return;
 
-            var inputActions = GameManager.instance?.inputHandler?.inputActions;
-            if (inputActions == null) return;
-
-            if (inputActions.OpenInventoryMap.WasPressed ||
-                inputActions.QuickMap.WasPressed ||
-                inputActions.OpenInventory.WasPressed ||
-                inputActions.MenuCancel)
+            // bench teleport: check if user presses "Inventory", "Quick Map", "Map" or menu cancel keys, and if so, 
+            // close fast travel menu
+            if (Teleport.FastTravelDisplay)
             {
-                Teleport.CloseFastTravelMenu();
+                var inputActions = GameManager.instance?.inputHandler?.inputActions;
+                if (inputActions == null) return;
+
+                if (inputActions.OpenInventoryMap.WasPressed ||
+                    inputActions.QuickMap.WasPressed ||
+                    inputActions.OpenInventory.WasPressed ||
+                    inputActions.MenuCancel)
+                {
+                    Teleport.CloseFastTravelMenu();
+                }
             }
         }
 
