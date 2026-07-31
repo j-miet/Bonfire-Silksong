@@ -331,6 +331,14 @@ namespace BonfireSilksong
                 var sr = pin.GetComponent<SpriteRenderer>();
                 if (sr?.sprite?.name != "pin_bench") continue;
 
+                // don't include locked benches (these have darker map pin color)
+                if (sr.sharedMaterial != null)
+                {
+                    Bonfire.Log.LogDebug($"Material: {sr.sharedMaterial.name}");
+                    Bonfire.Log.LogDebug($"Shader:   {sr.sharedMaterial.shader?.name}");
+                    if (sr.sharedMaterial.name.StartsWith("Inactive")) continue;
+                }
+
                 if (!BenchTeleport.PrepareTeleportLocation(pin))
                     continue;
 
@@ -694,8 +702,6 @@ namespace BonfireSilksong
             GUILayout.EndHorizontal();
         }
 
-        // -- patched methods -- 
-
         // these should prevent inputs which BlockInventoryInputs can't block in bench fast travel menu:
         // ESC/inventory pane navigation
         [HarmonyPatch(typeof(InventoryPaneInput), "Update")]
@@ -705,6 +711,7 @@ namespace BonfireSilksong
             {
                 if (BonfireGUI.Teleport != null && BonfireGUI.Teleport.FastTravelDisplay)
                     return false;
+
                 return true;
             }
         }
@@ -717,6 +724,7 @@ namespace BonfireSilksong
             {
                 if (BonfireGUI.Teleport != null && BonfireGUI.Teleport.FastTravelDisplay)
                     return false;
+
                 return true;
             }
         }
