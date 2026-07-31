@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -6,16 +7,14 @@ using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using GlobalEnums;
-using GlobalSettings;
 using HarmonyLib;
-using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Main logic for Bonfire-Silksong mod
+    /// Main class for Bonfire-Silksong mod
     /// </summary>
     [BepInPlugin("hksilksong.mod.bonfire-silksong", "Bonfire-Silksong", "0.6.0")]
     public class Bonfire : BaseUnityPlugin
@@ -78,42 +77,12 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// Override bind cost gameplay value in FSM.
-        /// SilkSpool_BindCost_Getter handles the patching of getter value which is used for visually matching the silk 
-        /// spool with current silk available.
-        /// </summary>
-        public void UpdateBindCostFSM()
-        {
-            // the "Silk Cost" variable below is responsible for many different silk functions and therefore must
-            // only run if player is in active binding state.
-            // Interestingly this issue arose only after testing Silk Soar: normal harpoon would work just fine
-            // even if cost was set well above it's usual of 1, but soaring would always check the updated cost. 
-            if (!GameManager.instance.hero_ctrl.cState.isBinding) return;
-
-            if (HeroController.instance == null || LevelingSystem.Instance == null) return;
-
-            int cost = LevelingSystem.Instance.BindCost(Status.IntelligenceStat);
-
-            foreach (var fsm in HeroController.instance.GetComponents<PlayMakerFSM>())
-            {
-                foreach (var variable in fsm.FsmVariables.IntVariables)
-                {
-                    if (variable.Name == "Silk Cost" || variable.Name == "Silk Cost Witch")
-                        variable.Value = cost;
-                }
-            }
-        }
-
-        /// <summary>
         /// Display cursor when player sits on a bench in order to access leveling GUI.
-        /// Can be used in enabling cursor outside menu screens, but also in map menu screen for fast travel
+        /// Can be used in enabling cursor outside menu screens, but also in map menu screen for fast travel.
+        /// If called in Update callbacks, use LateUpdate instead or game will still hide the cursor.
         /// </summary>
         public void ShowCursor()
         {
-            // when saving & exiting, sometimes ShowCursor might keep overriding default cursor behavior in main menu
-            // for several seconds, preventing mouse use. Checking IsGamePlayScene should fix this.
-            if (GameManager.instance == null || !GameManager.instance.IsGameplayScene()) return;
-
             if (HeroController.instance != null &&
                 HeroController.instance.cState != null &&
                 GameManager.instance != null)
@@ -127,11 +96,36 @@ namespace BonfireSilksong
                 Cursor.visible = GameManager.instance.isPaused;
         }
 
+        /// <summary>
+        /// When saving and exiting, sometimes the game inputs become unresponsive for several seconds in main menu 
+        /// before resuming normally. Checking if GameManager is null or if game is still in gameplay scene then 
+        /// preventing update loops might help a bit (maybe makes it less frequent?) but doesn't fix this entirely.
+        /// </summary>
+        public static bool CheckIfNoGameManager()
+        {
+            if (GameManager.instance == null || !GameManager.instance.IsGameplayScene())
+            {
+                Log.LogDebug("GameManager instance null or in gameplay scene");
+                return true;
+            }
 
-        // this a guard flag: it stays true until GameManager.instance != null and it's profileID field has value > 1
-        // which corresponds to a valid save slot (1-4). And every time the user quits to main menu, it flips back 
-        // to true upon detecting invalid profileID. Then, when user continues from another save slot, it prevents 
-        // SaveSettings from using previous save's PlayerStatus data to override status for current slot.
+            return false;
+        }
+
+        /// <summary>
+        /// Add blue masks from Resilience stat.
+        /// </summary>
+        public static void UpdateBlueHP()
+        {
+            Log.LogDebug("Called UpdateBlueHP");
+            Instance.StartCoroutine(AddBlueHealth());
+        }
+
+
+        // _firstSave guard flag: it stays true until GameManager.instance != null and its profileID field has value 
+        // greater than 1 which corresponds to a valid save slot (1-4). And every time the user quits to main menu, it 
+        // flips back  to true upon detecting invalid profileID. Then, when user continues from another save slot, it 
+        // prevents SaveSettings from using previous save's PlayerStatus data to override data for current slot.
         private bool _firstSave = true;
         private bool _invClosedCheck = false;
 
@@ -145,7 +139,9 @@ namespace BonfireSilksong
         private ConfigEntry<KeyboardShortcut> _enemyHpBarToggleHotkey;
         private bool _enemyHPBarsEnabled = false;
 
-        // -- Unity hooks -- //
+        private static bool _blueHpAddingInProgress = false;
+
+        // -- Unity callbacks -- //
 
         private void Awake()
         {
@@ -177,6 +173,8 @@ namespace BonfireSilksong
 
         private void Update()
         {
+            if (CheckIfNoGameManager()) return;
+
             UpdateBindCostFSM();
 
             // hotkeys
@@ -191,22 +189,22 @@ namespace BonfireSilksong
 
         private void LateUpdate()
         {
+            if (CheckIfNoGameManager()) return;
+
             if (PlayerData.instance == null) return;
 
             var pd = PlayerData.instance;
 
             if (pd.atBench)
             {
-                if (!pd.isInventoryOpen)
+                if (!pd.isInventoryOpen && !GameManager.instance.isPaused)
                 {
                     ShowCursor();
 
                     // this check refreshes blue masks after inventory is closed, otherwise they get wiped
                     if (_invClosedCheck)
                     {
-                        pd.healthBlue = LevelingSystem.Instance.ExtraMasks(Status.ResilienceStat);
-                        EventRegister.SendEvent(EventRegisterEvents.HealthUpdate);
-                        EventRegister.SendEvent(EventRegisterEvents.UpdateBlueHealth);
+                        UpdateBlueHP();
 
                         _invClosedCheck = false;
                     }
@@ -216,7 +214,7 @@ namespace BonfireSilksong
             }
         }
 
-        // mod initialization and scene updates //
+        // -- mod initialization and scene updates -- //
 
         private string SavePath()
         {
@@ -241,14 +239,113 @@ namespace BonfireSilksong
             Init();
             LevelingSystem.Instance.RefreshRelicsObtained();
 
-            //Log.LogInfo("Current scene: " + GameManager.instance.GetSceneNameString());
+            //Log.LogDebug("Current scene: " + GameManager.instance.GetSceneNameString());
 
             //Debug.VisitedScenes();
         }
 
         // -- helpers -- //
 
-        // rosary and shell shard value updates
+        // Override bind cost gameplay value in FSM.
+        // SilkSpool_BindCost_Getter handles the patching of getter value which is used for visually matching the silk 
+        // spool with current silk available.
+        private void UpdateBindCostFSM()
+        {
+            // the "Silk Cost" variable below is responsible for many different silk functions and therefore must
+            // only run if player is in active binding state.
+            // Interestingly this issue arose only after testing Silk Soar: normal harpoon would work just fine
+            // even if cost was set well above it's usual of 1, but soaring would always check the updated cost. 
+            if (!GameManager.instance.hero_ctrl.cState.isBinding) return;
+
+            if (HeroController.instance == null || LevelingSystem.Instance == null) return;
+
+            int cost = LevelingSystem.Instance.BindCost(Status.IntelligenceStat);
+
+            foreach (var fsm in HeroController.instance.GetComponents<PlayMakerFSM>())
+            {
+                foreach (var variable in fsm.FsmVariables.IntVariables)
+                {
+                    if (variable.Name == "Silk Cost" || variable.Name == "Silk Cost Witch")
+                        variable.Value = cost;
+                }
+            }
+        }
+
+        // helper for AddBlueHealth
+        private static bool BlueHpCheckInvOrMenu()
+        {
+            if (PlayerData.instance.isInventoryOpen || GameManager.instance.isPaused)
+            {
+                _blueHpAddingInProgress = false;
+                return true;
+            }
+
+            return false;
+        }
+
+        // handles blue health updates for Resilience stat by clearing existing masks then applies update count after.
+        // Includes multiple intermediary checks which exit the routine if either inventory or pause menu is opened. 
+        // It's important to immediately call this method again if this happens: this is already done in LateUpdate 
+        // callback
+        //
+        // Previously a much simpler logic was used: HeroController_UpdateBlueHealth patch would simply set PlayerData's
+        // healthBlue equal to Resilience stat mask amount. This would work just fine except the visuals lagged a 
+        // single mask behind. Thus all of the extra code logic is to fix that small but annoying issue + make sure the 
+        // masks are also properly preserved after menu interactions.
+        private static IEnumerator AddBlueHealth()
+        {
+            if (_blueHpAddingInProgress) yield break;
+            _blueHpAddingInProgress = true;
+
+            // removes existing blue hp before applying new values: closing the inventory automatically sets healthBlue 
+            // = 0 while closing pause menu doesn't so it's important to do it here manually. HeroCtrl-MaxHealth fsm 
+            // then removes mask visual. This way AddBlueHealth event calls below can just add the hp without worrying 
+            // about current blue mask state.
+            // For future updates: if there will be new ways to obtain blue masks which are added during bench visits 
+            // e.g. tools similar to Hollow Knight's lifeblood charms, then healthBlue = 0 would override these. In 
+            // that case, just introduce a new variable to track base game masks separately then set 
+            // healthBlue = base masks and keep current SendEvent logic for modded masks.
+            PlayerData.instance.healthBlue = 0;
+            HeroController.instance.proxyFSM.SendEvent("HeroCtrl-MaxHealth");
+            // HeroController.MaxHealth also calls this, but apparently it's not needed to reset blue mask state
+            //EventRegister.SendEvent(EventRegisterEvents.HeroHealedToMax);
+
+            yield return new WaitForSecondsRealtime(0.25f);
+            if (BlueHpCheckInvOrMenu()) yield break;
+
+            int masks = LevelingSystem.Instance.ExtraMasks(Instance.Status.ResilienceStat);
+
+            if (masks >= 1)
+            {
+                for (int i = 0; i < masks; i++)
+                {
+                    if (CheckIfNoGameManager()) yield break;
+
+                    if (BlueHpCheckInvOrMenu()) yield break;
+
+                    EventRegister.SendEvent(EventRegisterEvents.AddBlueHealth);
+                    yield return new WaitForSecondsRealtime(0.25f);
+
+                    if (HeroController.instance.IsInLifebloodState)
+                    {
+                        HeroController.instance.HitMaxBlueHealthBurst();
+                        yield return new WaitForSecondsRealtime(0.25f);
+
+                        _blueHpAddingInProgress = false;
+
+                        yield break;
+                    }
+                }
+            }
+
+            if (BlueHpCheckInvOrMenu()) yield break;
+
+            yield return new WaitForSecondsRealtime(0.25f);
+
+            _blueHpAddingInProgress = false;
+        }
+
+        // rosary and shell shard drop quantities from enemies
         private int GetRosaries(string size, HealthManager enemy)
         {
             FieldInfo fi = enemy.GetType().GetField(size + "GeoDrops", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -295,37 +392,7 @@ namespace BonfireSilksong
             return a || b;
         }
 
-        // -- Harmony patches -- //
-
-        // if player unlocks all crests, the beast crest (internally "Warrior") prevents fighting Savage
-        // Beastfly boss, thus preventing getting the second encounter and its mask shard reward.
-        // This fix intercepts the check when player enters the chapel of the beast gate: normally it would
-        // check if player already has the crest (in this case always true) and set door open/closed. Luckily there's
-        // a helper flag for boss kill called 'defeatedBoneFlyerGiant' which can then be used for tracking this state
-        // -> thus if player leaves the chapel after killing the boss, the door closes permanently. This is no longer
-        // an issue because there's no crest to collect anyway if it was already unlocked.
-        // [Note] there's also PlayerData.instance.chapelClosed_beast, but game will override its value before door 
-        // state logic, making it useless for this particular issue
-        [HarmonyPatch(typeof(PlayerDataBoolTest), "OnEnter")]
-        class Patch_PlayerDataBoolTest
-        {
-            static bool Prefix(PlayerDataBoolTest __instance)
-            {
-                if (__instance.boolName.Value == "chapelClosed_beast"
-                    && Gameplay.WarriorCrest.IsUnlocked
-                    && !PlayerData.instance.defeatedBoneFlyerGiant)
-                {
-                    // FSM event to keep the chapel gate open. It has other values: "CLOSE" which means its closed
-                    // when scene loads and "DO CLOSE" which plays the door closing animation
-                    __instance.Fsm.Event("OPEN");
-                    __instance.Finish();
-
-                    return false; // return false to skip default OnEnter behavior
-                }
-
-                return true;
-            }
-        }
+        // -- patched methods -- //
 
         // force config data saving when charms are updated
         // as leveling up and respeccing needs these, it's important to call CharmUpdate inside them in LevelingSystem
@@ -339,101 +406,7 @@ namespace BonfireSilksong
             }
         }
 
-        // reduce fleatopia game score requirements by 50% (odd values are rounded down)
-        [HarmonyPatch(typeof(PlayerData), "FleaGamesIsJugglingChampion", MethodType.Getter)]
-        class PlayerData_FleaGamesIsJugglingChampion
-        {
-            static void Postfix(PlayerData __instance, ref bool __result)
-            {
-                if (!Instance.Status.ReduceFleaGamesScoreLimit) return;
-                __result = __instance.fleaGames_juggling_highscore > 15;
-            }
-        }
-
-        [HarmonyPatch(typeof(PlayerData), "FleaGamesIsJugglingSethChampion", MethodType.Getter)]
-        class PlayerData_FleaGamesIsJugglingSethChampion
-        {
-            static void Postfix(PlayerData __instance, ref bool __result)
-            {
-                if (!Instance.Status.ReduceFleaGamesScoreLimit) return;
-                __result = __instance.fleaGames_juggling_highscore > 27;
-            }
-        }
-
-        [HarmonyPatch(typeof(PlayerData), "FleaGamesIsBouncingChampion", MethodType.Getter)]
-        class PlayerData_FleaGamesIsBouncingChampion
-        {
-            static void Postfix(PlayerData __instance, ref bool __result)
-            {
-                if (!Instance.Status.ReduceFleaGamesScoreLimit) return;
-                __result = __instance.fleaGames_bouncing_highscore > 21;
-            }
-        }
-
-        [HarmonyPatch(typeof(PlayerData), "FleaGamesIsBouncingSethChampion", MethodType.Getter)]
-        class PlayerData_FleaGamesIsBouncingSethChampion
-        {
-            static void Postfix(PlayerData __instance, ref bool __result)
-            {
-                if (!Instance.Status.ReduceFleaGamesScoreLimit) return;
-                __result = __instance.fleaGames_bouncing_highscore > 34;
-            }
-        }
-
-        [HarmonyPatch(typeof(PlayerData), "FleaGamesIsDodgingChampion", MethodType.Getter)]
-        class PlayerData_FleaGamesIsDodgingChampion
-        {
-            static void Postfix(PlayerData __instance, ref bool __result)
-            {
-                if (!Instance.Status.ReduceFleaGamesScoreLimit) return;
-                __result = __instance.fleaGames_dodging_highscore > 32;
-            }
-        }
-
-        [HarmonyPatch(typeof(PlayerData), "FleaGamesIsDodgingSethChampion", MethodType.Getter)]
-        class PlayerData_FleaGamesIsDodgingSethChampion
-        {
-            static void Postfix(PlayerData __instance, ref bool __result)
-            {
-                if (!Instance.Status.ReduceFleaGamesScoreLimit) return;
-                __result = __instance.fleaGames_dodging_highscore > 45;
-            }
-        }
-
-        // shell shards replenishment
-        [HarmonyPatch(typeof(CurrencyManager), "ProcessAddCurrency")]
-        class CurrencyManager_ProcessAddCurrency
-        {
-            static void Postfix(CurrencyType type)
-            {
-                if (type != CurrencyType.Shard)
-                    return;
-                if (!Instance.Status.InfiniteShellShardsEnabled)
-                    return;
-                if (Instance.Status.InfiniteShardsBenchOnly && !PlayerData.instance.atBench)
-                    return;
-
-                PlayerData.instance.ShellShards = Gameplay.GetCurrencyCap(CurrencyType.Shard);
-            }
-        }
-
-        [HarmonyPatch(typeof(CurrencyManager), "ProcessTakeCurrency")]
-        class CurrencyManager_ProcessTakeCurrency
-        {
-            static void Postfix(CurrencyType type)
-            {
-                if (type != CurrencyType.Shard)
-                    return;
-                if (!Instance.Status.InfiniteShellShardsEnabled)
-                    return;
-                if (Instance.Status.InfiniteShardsBenchOnly && !PlayerData.instance.atBench)
-                    return;
-
-                PlayerData.instance.ShellShards = Gameplay.GetCurrencyCap(CurrencyType.Shard);
-            }
-        }
-
-        // enemy hp bar generation and rosary/shell drop scaling
+        // rosary/shell drop scaling from luck stat. Also fills enemy hp bar data for bench GUI.
         [HarmonyPatch(typeof(HealthManager), "OnEnable")]
         class HealthManager_OnEnable
         {
@@ -468,38 +441,18 @@ namespace BonfireSilksong
                     __instance.SetGeoMedium(ls.IncreaseRosaries(i.GetRosaries("medium", __instance), s.LuckStat));
                     __instance.SetGeoLarge(ls.IncreaseRosaries(i.GetRosaries("large", __instance), s.LuckStat));
 
-                    // also scale shell shards using same formula (if player doesn't want to use infinite shell shards)
                     __instance.SetShellShards(ls.IncreaseRosaries(i.GetShellShards(__instance), s.LuckStat));
                 }
             }
         }
 
-        // update lifeblood masks
-        //
-        // TODO **Fix this** when modding API gets added or if another solution is found
-        //
-        // (THIS BUG IS PURELY VISUAL)
-        // lifeblood/plasmium masks work internally just fine, but the visual is weird: it always displays one extra
-        // mask worth of damage on first hit only, then works normally. For example:
-        // - player has 6 blue masks from resiliency stat
-        // - player takes a hit dealing 2 masks of damage
-        // - visual goes from 6 -> 2 - 1 = 3, but internally blue masks go from 6 -> 4 as expected
-        // - afterwards everything works as expected, only just visual keeps displaying {current_blue_hp - 1}
-        // So taking any damage will subtract the same amount, but of course visual will always display that one
-        // extra offset of damage. So eventually if you reach 1 blue mask, the hp bar displays none but you can still
-        // absorb a single mask of damage before actual masks are removed
+        // update lifeblood masks when sitting down on a bench
         [HarmonyPatch(typeof(HeroController), "UpdateBlueHealth")]
         class HeroController_UpdateBlueHealth
         {
             static void Postfix(HeroController __instance)
             {
-                if (__instance.IsInLifebloodState) return;
-
-                var ls = LevelingSystem.Instance;
-                var s = Instance.Status;
-                var pd = PlayerData.instance;
-
-                pd.healthBlue = ls.ExtraMasks(s.ResilienceStat);
+                UpdateBlueHP();
             }
         }
 
@@ -554,7 +507,7 @@ namespace BonfireSilksong
             }
         }
 
-        // damage blocking based on resiliency stat
+        // damage blocking based on Resilience stat
         [HarmonyPatch(typeof(HeroController), "TakeDamage")]
         class HealthManager_TakeDamage
         {
@@ -772,7 +725,7 @@ namespace BonfireSilksong
             }
         }
 
-        // silk skill, needle and needle strike damage
+        // silk skill, tool and needle base damage
         [HarmonyPatch(typeof(HealthManager), "Hit")]
         class HealthManager_Hit
         {
