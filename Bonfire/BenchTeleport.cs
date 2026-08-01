@@ -4,15 +4,14 @@ using System.Reflection;
 
 using GlobalEnums;
 using HarmonyLib;
-using HutongGames.PlayMaker;
 using UnityEngine;
 
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Bench fast travel API
+    /// Bench fast travel API.
     /// </summary>
-    public class BenchTeleport : MonoBehaviour
+    public class BenchTeleport
     {
         internal static bool IsBenchTeleporting;
 
@@ -96,17 +95,12 @@ namespace BonfireSilksong
                 }
             }
 
-            // special cases
+            // special cases i.e. scene/marker/type needs to be updated manually.
             switch (targetScene)
             {
-                // slab room with two benches (where hornet gets her items back if captured)
+                // slab room with two benches (where hornet gets her items back if captured): the lower bench
                 case "Slab_16_bench":
                     respawnMarker = "RestBench (1)";
-                    break;
-
-                // hunter's march trap bench
-                case "Ant_17":
-                    respawnType = pd.antBenchTrapDefused ? 1 : 0;
                     break;
 
                 // Songclave bench in Act3: shrine is destroyed, update scene + marker outside
@@ -131,8 +125,9 @@ namespace BonfireSilksong
                     break;
 
                 // after visiting abyss with fixed diving bell, abyss fast travel becomes normal: at this point there
-                // should no longer be anything that can break game progression so player can freely teleport in and out
-                // of abyss
+                // should no longer be anything that can break game progression so player can freely teleport in 
+                // and out of abyss.
+                // also change bench location from broken bell to fixed one
                 case "Abyss_03_bell_fixed":
                     if (!Bonfire.Instance.Status.VisitedAbyssSecondTime)
                         Bonfire.Instance.Status.VisitedAbyssSecondTime = true;
@@ -142,17 +137,7 @@ namespace BonfireSilksong
                     break;
             }
 
-            // additional abyss checks to prevent progress softlocks:
-            // 1. first time visit and trying to teleport out is prevented. Must complete the ascent normally. However
-            // can tp between abyss benches normally.
-            if (PlayerData.instance.respawnScene.Contains("Abyss_")
-                && !targetScene.Contains("Abyss_")
-                && !PlayerData.instance.completedAbyssAscent)
-                return false;
-
-            // 2. finished ascent and trying to teleport to abyss without using the fixed diving bell is prevented
-            if (targetScene.Contains("Abyss_")
-                && !Bonfire.Instance.Status.VisitedAbyssSecondTime)
+            if (!AbyssChecks(targetScene))
                 return false;
 
             if (string.IsNullOrEmpty(respawnScene) ||
@@ -173,6 +158,26 @@ namespace BonfireSilksong
             pd.tempRespawnScene = respawnScene;
             pd.tempRespawnMarker = respawnMarker;
             pd.tempRespawnType = respawnType;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Additional checks for target scenes in The Abyss to prevent progress softlocks.
+        /// </summary>
+        public static bool AbyssChecks(string targetScene)
+        {
+            // 1. first time visit and trying to teleport out is prevented. Must complete the ascent normally. However
+            // can tp between abyss benches normally.
+            if (PlayerData.instance.respawnScene.Contains("Abyss_")
+                && !targetScene.Contains("Abyss_")
+                && !PlayerData.instance.completedAbyssAscent)
+                return false;
+
+            // 2. finished ascent and trying to teleport to abyss without using the fixed diving bell is prevented
+            if (targetScene.Contains("Abyss_")
+                && !Bonfire.Instance.Status.VisitedAbyssSecondTime)
+                return false;
 
             return true;
         }
@@ -241,10 +246,11 @@ namespace BonfireSilksong
             if (Bonfire.Instance == null || !Bonfire.Instance.Status.UnlockedFastTravel)
                 return false;
 
+            if (GameManager.instance == null || GameManager.instance.IsMemoryScene())
+                return false;
+
             return PlayerData.instance.atBench;
         }
-
-        // -- patched methods -- //
 
         // handle transition post-check: set spawn location to targeted bench
         // -> There's a rare bug, which leaves hornet into floating/falling state after teleporting. 
@@ -332,17 +338,6 @@ namespace BonfireSilksong
 
                     Bonfire.Log.LogDebug($"Fallback marker = {found.name}");
                 }
-            }
-        }
-
-        // helper for checking bench state chains
-        [HarmonyPatch(typeof(FsmState), "OnEnter")]
-        class FsmState_OnEnter_Debug
-        {
-            static void Prefix(FsmState __instance)
-            {
-                if (__instance.Fsm?.Name != "Bench Control") return;
-                Bonfire.Log.LogDebug($"Bench Control entering state: {__instance.Name}");
             }
         }
     }

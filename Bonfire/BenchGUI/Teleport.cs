@@ -10,7 +10,7 @@ using UnityEngine;
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Bench teleport.
+    /// Bench teleport GUI.
     /// </summary>
     public class Teleport
     {
@@ -475,8 +475,10 @@ namespace BonfireSilksong
                 foreach ((string mapArea, Color32 c) in TeleportData.OrderedBenchAreaNames)
                 {
                     bool hasPinLocations = _benchActiveLocationData.ContainsKey(mapArea);
-                    bool hasSpecialLocations = TeleportData.SpecialLocations
-                        .Any(l => l.AreaName == mapArea && l.IsUnlocked());
+                    bool hasSpecialLocations = TeleportData.SpecialLocations.Any(l =>
+                        l.AreaName == mapArea &&
+                        l.IsUnlocked() &&
+                        BenchTeleport.AbyssChecks(l.Scene));
 
                     if (!hasPinLocations && !hasSpecialLocations) continue;
 
