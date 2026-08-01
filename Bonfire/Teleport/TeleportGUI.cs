@@ -34,7 +34,7 @@ namespace BonfireSilksong
             else if (hasBenchPins) text += "\n(Locked, need a map from Shakra)";
             else text += "\n(Locked, need a map + Bench Pins from Shakra)";
 
-            if (GUILayout.Button(text, Styles.ButtonStyle, GUILayout.Height(40f)))
+            if (GUILayout.Button(text, GUIStyles.ButtonStyle, GUILayout.Height(40f)))
             {
                 GUI.backgroundColor = Color.white;
                 Bonfire.Log.LogDebug("Fast travel menu open button was clicked");
@@ -447,7 +447,7 @@ namespace BonfireSilksong
             GUI.backgroundColor = Color.white;
 
             GUILayout.BeginHorizontal("box");
-            if (GUILayout.Button($"Style: {styleText}", Styles.ButtonStyle, GUILayout.Height(30f)))
+            if (GUILayout.Button($"Style: {styleText}", GUIStyles.ButtonStyle, GUILayout.Height(30f)))
             {
                 ChangeBenchMenuStyle();
 
@@ -460,7 +460,7 @@ namespace BonfireSilksong
             GUILayout.EndHorizontal();
             GUILayout.Space(15);
 
-            GUILayout.Label("Bench locations", Styles.LabelStyle);
+            GUILayout.Label("Bench locations", GUIStyles.LabelStyle);
             GUILayout.Space(10);
 
             if (_benchPinScenes.Count == 0)
@@ -504,7 +504,7 @@ namespace BonfireSilksong
 
                     GUI.backgroundColor = bg;
                     GUI.color = textLabel;
-                    GUILayout.Label(mapArea, Styles.BenchListAreaLabelStyle);
+                    GUILayout.Label(mapArea, GUIStyles.BenchListAreaLabelStyle);
 
                     GUILayout.Space(4);
 
@@ -525,7 +525,7 @@ namespace BonfireSilksong
                             }
 
                             GUIStyle buttonStyle = isSelected ?
-                                Styles.BenchListButtonSelectedStyle : Styles.BenchListButtonStyle;
+                                GUIStyles.BenchListButtonSelectedStyle : GUIStyles.BenchListButtonStyle;
 
                             if (GUILayout.Button(customName, buttonStyle, GUILayout.Height(30f)))
                             {
@@ -560,7 +560,7 @@ namespace BonfireSilksong
 
             GUI.backgroundColor = Color.red;
             GUILayout.BeginHorizontal("box");
-            if (GUILayout.Button("Close teleport menu", Styles.ButtonStyle, GUILayout.Height(40f)))
+            if (GUILayout.Button("Close teleport menu", GUIStyles.ButtonStyle, GUILayout.Height(40f)))
             {
                 CloseFastTravelMenu();
             }
@@ -570,8 +570,8 @@ namespace BonfireSilksong
         private void DrawTeleportConfirmPanel()
         {
             GUILayout.Space(8);
-            GUILayout.Label("LOCATION", Styles.FastTravelConfirmHeaderStyle);
-            GUILayout.Label(_selectedFullName, Styles.FastTravelConfirmDestinationStyle);
+            GUILayout.Label("LOCATION", GUIStyles.FastTravelConfirmHeaderStyle);
+            GUILayout.Label(_selectedFullName, GUIStyles.FastTravelConfirmDestinationStyle);
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
@@ -579,7 +579,7 @@ namespace BonfireSilksong
 
             GUI.backgroundColor = new Color(0.9f, 0.8f, 0.5f);
             GUI.contentColor = Color.white;
-            if (GUILayout.Button("Travel", Styles.ButtonStyle, GUILayout.Width(200f), GUILayout.Height(30f)))
+            if (GUILayout.Button("Travel", GUIStyles.ButtonStyle, GUILayout.Width(200f), GUILayout.Height(30f)))
             {
                 BenchTeleport.PrepareTeleportLocation(_selectedPin);
 
@@ -614,7 +614,7 @@ namespace BonfireSilksong
                 }
 
                 GUIStyle buttonStyle = isSelected ?
-                    Styles.BenchListButtonSelectedStyle : Styles.BenchListButtonStyle;
+                    GUIStyles.BenchListButtonSelectedStyle : GUIStyles.BenchListButtonStyle;
 
                 // special locations are highlighted with a custom symbol
                 if (GUILayout.Button(customName + " ★", buttonStyle, GUILayout.Height(30f)))
@@ -644,8 +644,8 @@ namespace BonfireSilksong
         private void DrawTeleportConfirmPanelExtraLocations()
         {
             GUILayout.Space(8);
-            GUILayout.Label("LOCATION", Styles.FastTravelConfirmHeaderStyle);
-            GUILayout.Label(_selectedFullName, Styles.FastTravelConfirmDestinationStyle);
+            GUILayout.Label("LOCATION", GUIStyles.FastTravelConfirmHeaderStyle);
+            GUILayout.Label(_selectedFullName, GUIStyles.FastTravelConfirmDestinationStyle);
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
@@ -653,7 +653,7 @@ namespace BonfireSilksong
 
             GUI.backgroundColor = new Color(0.9f, 0.8f, 0.5f);
             GUI.contentColor = Color.white;
-            if (GUILayout.Button("Travel", Styles.ButtonStyle, GUILayout.Width(200f), GUILayout.Height(30f)))
+            if (GUILayout.Button("Travel", GUIStyles.ButtonStyle, GUILayout.Width(200f), GUILayout.Height(30f)))
             {
                 FillTeleportData(_selectedScene);
 
@@ -672,7 +672,7 @@ namespace BonfireSilksong
             GUILayout.Label(
                 "You have freed the Bell Beast and " +
                 "unlocked the bench fast travel system!",
-                Styles.CrestUnlockLabelStyle
+                GUIStyles.CrestUnlockLabelStyle
             );
 
             GUILayout.Space(5);
@@ -683,7 +683,7 @@ namespace BonfireSilksong
                 "- Sit down on any bench and click the new \"Fast Travel\" button.\n" +
                 "- Select any bench from the list\n" +
                 "- Then click the \"Travel\" button bottom-middle to teleport.\n",
-                Styles.FastTravelUnlockLabelStyle
+                GUIStyles.FastTravelUnlockLabelStyle
             );
 
             GUILayout.Space(10);
@@ -692,7 +692,7 @@ namespace BonfireSilksong
             GUILayout.FlexibleSpace();
             if (GUILayout.Button(
                     "Close",
-                    Styles.CrestUnlockButtonStyle,
+                    GUIStyles.CrestUnlockButtonStyle,
                     GUILayout.Width(100f),
                     GUILayout.Height(40f)))
             {

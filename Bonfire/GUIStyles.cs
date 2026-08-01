@@ -5,7 +5,7 @@ namespace BonfireSilksong
     /// <summary>
     /// GUI fonts and styles.
     /// </summary>
-    public static class Styles
+    public static class GUIStyles
     {
         public static Font TrajanBold;
         public static Font TrajanNormal;

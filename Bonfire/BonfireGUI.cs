@@ -10,9 +10,9 @@ namespace BonfireSilksong
     public class BonfireGUI : MonoBehaviour
     {
         public static BonfireGUI Instance;
-        public static Settings Settings;
-        public static Teleport Teleport;
-        public static Leveling Leveling;
+        public static SettingsGUI Settings;
+        public static TeleportGUI Teleport;
+        public static LevelingGUI Leveling;
 
 
         private bool _benchCheck = false;
@@ -20,16 +20,16 @@ namespace BonfireSilksong
         private void Awake()
         {
             Instance = this;
-            Settings = new Settings();
-            Teleport = new Teleport();
-            Leveling = new Leveling();
+            Settings = new SettingsGUI();
+            Teleport = new TeleportGUI();
+            Leveling = new LevelingGUI();
         }
 
         private void OnGUI()
         {
             if (Bonfire.CheckIfNoGameManager()) return;
 
-            Styles.EnsureFonts();
+            GUIStyles.EnsureFonts();
 
             if (Teleport.FastTravelDisplay)
             {
@@ -49,7 +49,7 @@ namespace BonfireSilksong
                 _benchCheck = true;
 
                 GUI.enabled = true;
-                Styles.EnsureStyles();
+                GUIStyles.EnsureStyles();
 
                 GUI.backgroundColor = Color.white;
                 GUI.contentColor = Color.white;
@@ -59,6 +59,7 @@ namespace BonfireSilksong
             }
 
             Teleport.FastTravelUnlockNotification();
+
             Settings.DrawExtraSettingsUI();
             Settings.DrawCrestUnlockUI();
             Settings.DrawPlayerStatusResetUI();
@@ -67,7 +68,7 @@ namespace BonfireSilksong
 
             if (!PlayerData.instance.atBench && _benchCheck)
             {
-                Leveling.ResetPendingLevelUp();
+                LevelingSystem.Instance.ResetPendingLevelUp();
                 _benchCheck = false;
             }
         }
@@ -110,7 +111,7 @@ namespace BonfireSilksong
         {
             Leveling.DrawLevelingUI();
             GUILayout.Space(10);
-            GUILayout.Label("Other", Styles.LevelHeaderStyle);
+            GUILayout.Label("Other", GUIStyles.LevelHeaderStyle);
 
             GUILayout.Space(5);
             Settings.DrawExtraSettingsButton();

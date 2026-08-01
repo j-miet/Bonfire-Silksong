@@ -17,7 +17,7 @@ namespace BonfireSilksong
             GUI.backgroundColor = Color.white;
             GUILayout.BeginVertical("box");
 
-            if (GUILayout.Button("Extra Settings", Styles.ButtonStyle, GUILayout.Height(40f)))
+            if (GUILayout.Button("Extra Settings", GUIStyles.ButtonStyle, GUILayout.Height(40f)))
             {
                 _pendingCrestUnlock = false;
                 _pendingSettingsWindow = true;
@@ -148,7 +148,7 @@ namespace BonfireSilksong
 
             if (GUILayout.Button(
                     "Close window",
-                    Styles.CrestUnlockButtonStyle,
+                    GUIStyles.CrestUnlockButtonStyle,
                     GUILayout.Width(160f),
                     GUILayout.Height(35f)))
             {
@@ -241,9 +241,9 @@ namespace BonfireSilksong
             GUILayout.Space(10);
             GUILayout.Label(
                 "Unlocking all crests is permanent and cannot be undone\n",
-                Styles.CrestUnlockLabelStyle
+                GUIStyles.CrestUnlockLabelStyle
             );
-            GUILayout.Label("Are you sure?", Styles.CrestUnlockLabelStyle);
+            GUILayout.Label("Are you sure?", GUIStyles.CrestUnlockLabelStyle);
 
             GUILayout.Space(15);
             GUILayout.BeginHorizontal();
@@ -251,7 +251,7 @@ namespace BonfireSilksong
             GUILayout.FlexibleSpace();
             if (GUILayout.Button(
                     "Yes\nUnlock all crests",
-                    Styles.CrestUnlockButtonStyle,
+                    GUIStyles.CrestUnlockButtonStyle,
                     GUILayout.Width(200f),
                     GUILayout.Height(50f)))
             {
@@ -271,7 +271,7 @@ namespace BonfireSilksong
             GUILayout.Space(30);
             if (GUILayout.Button(
                     "No\nLeave my crests alone",
-                    Styles.CrestUnlockButtonStyle,
+                    GUIStyles.CrestUnlockButtonStyle,
                     GUILayout.Width(200f),
                     GUILayout.Height(50f)))
             {
@@ -306,12 +306,12 @@ namespace BonfireSilksong
                 "\n" +
                 "You should only use this feature if you're done with your current playthrough and " +
                 "want to wipe all the progress for a fresh start.",
-                Styles.CrestUnlockLabelStyle
+                GUIStyles.CrestUnlockLabelStyle
             );
             GUILayout.Space(10);
             GUILayout.Label(
                 $"Reset mod configurations for save slot {GameManager.instance.profileID}?",
-                Styles.CrestUnlockLabelStyle);
+                GUIStyles.CrestUnlockLabelStyle);
 
             GUILayout.Space(25);
             GUILayout.BeginHorizontal();
@@ -319,7 +319,7 @@ namespace BonfireSilksong
             GUILayout.FlexibleSpace();
             if (GUILayout.Button(
                     "Yes\nReset config data",
-                    Styles.CrestUnlockButtonStyle,
+                    GUIStyles.CrestUnlockButtonStyle,
                     GUILayout.Width(200f),
                     GUILayout.Height(50f)))
             {
@@ -333,7 +333,7 @@ namespace BonfireSilksong
             GUILayout.Space(30);
             if (GUILayout.Button(
                     "No\nKeep current data",
-                    Styles.CrestUnlockButtonStyle,
+                    GUIStyles.CrestUnlockButtonStyle,
                     GUILayout.Width(200f),
                     GUILayout.Height(50f)))
             {
