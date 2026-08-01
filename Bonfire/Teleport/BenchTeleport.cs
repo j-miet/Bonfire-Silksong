@@ -4,6 +4,7 @@ using System.Reflection;
 
 using GlobalEnums;
 using HarmonyLib;
+using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace BonfireSilksong
@@ -285,6 +286,9 @@ namespace BonfireSilksong
                 }
 
                 __instance.proxyFSM.SendEventSafe("HeroCtrl-EnteringScene");
+
+                // without this,
+                Bonfire.Instance.StartCoroutine(LevelingSystem.CallDelayedUpdateBlueHP());
 
                 GameManager.instance.SaveGame(null);
             }
