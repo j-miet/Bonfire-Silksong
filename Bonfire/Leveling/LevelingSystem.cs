@@ -5,6 +5,13 @@ using UnityEngine;
 
 namespace BonfireSilksong
 {
+    /// <summary>
+    /// Leveling system logic. 
+    /// 1. All Bonfire.instance.PlayerStatus write operations should also be done here.
+    /// 2. All methods should be instanced: accessing leveling system through a single shared LevelingSystem.Instance 
+    /// makes code clearer without mixing instanced/static calls, even if it technically violates OOP principles where 
+    /// non-instance methods should be always static.
+    /// </summary>
     public class LevelingSystem : MonoBehaviour
     {
         public int StrengthIncrease = 0;
@@ -25,7 +32,7 @@ namespace BonfireSilksong
 
         // strength: needle damage
         public int NeedleDamage(int totalStr) =>
-            (int)Math.Round((5 + 4 * PlayerData.instance.nailUpgrades) * Math.Pow(1.25, Math.Log(totalStr + 1, 2.0)));
+            (int)Math.Round((5 + 4 * PlayerData.instance.nailUpgrades) * Math.Pow(1.2, Math.Log(totalStr + 1, 2.0)));
 
         // dexterity: needle attack speed
         public float AttackSpeed(int totalDex) =>
@@ -98,6 +105,13 @@ namespace BonfireSilksong
             (int)(droppedRosaries * (1f + (totalLck / 20f)));
 
         // -- stat formulas end here -- //
+
+        public bool CanLevelUp(bool gotFreeLevel, int rosariesToLvlUp)
+        {
+            var s = Bonfire.Instance.Status;
+            return PlayerData.instance.atBench &&
+                   (gotFreeLevel || (rosariesToLvlUp + s.PendingRosaries <= PlayerData.instance.geo));
+        }
 
         /// <summary>
         /// Increments the pending allocation for a single stat.
@@ -183,8 +197,7 @@ namespace BonfireSilksong
             LuckIncrease = 0;
 
             HeroController.instance.CharmUpdate();
-            EventRegister.SendEvent(EventRegisterEvents.HealthUpdate);
-            EventRegister.SendEvent(EventRegisterEvents.UpdateBlueHealth);
+            Bonfire.UpdateBlueHP();
         }
 
         /// <summary>
@@ -236,11 +249,60 @@ namespace BonfireSilksong
             s.RespecCost++;
 
             HeroController.instance.CharmUpdate();
-            EventRegister.SendEvent(EventRegisterEvents.HealthUpdate);
+            Bonfire.UpdateBlueHP();
         }
 
         /// <summary>
-        /// Returns average damage blocking chance from current resiliency stat value
+        /// Reset pending stat levels.
+        /// </summary>
+        public void ResetPendingLevelUp()
+        {
+            var s = Bonfire.Instance.Status;
+            var ls = Instance;
+
+            ls.StrengthIncrease = 0;
+            ls.DexterityIncrease = 0;
+            ls.IntelligenceIncrease = 0;
+            ls.ArtificeIncrease = 0;
+            ls.WisdomIncrease = 0;
+            ls.ResilienceIncrease = 0;
+            ls.LuckIncrease = 0;
+
+            s.PendingRosaries = 0;
+            s.PendingRosaryLevels = 0;
+            s.PendingRelicLevels = 0;
+        }
+
+        public int GetCurrentLevel()
+        {
+            var s = Bonfire.Instance.Status;
+
+            return s.StrengthStat + s.DexterityStat + s.IntelligenceStat
+                    + s.ArtificeStat + s.ResilienceStat + s.WisdomStat + s.LuckStat
+                    + s.PendingRelicLevels
+                    + s.PendingRosaryLevels
+                    + 1; // base level
+        }
+
+        public int GetAvailableRelicLevels()
+        {
+            var s = Bonfire.Instance.Status;
+            return CachedRelicsObtained - s.ConsumedRelicLevels + s.RespecRelicLevels - s.PendingRelicLevels;
+        }
+
+        public int DisplayPendingRosaryLevel()
+        {
+            var s = Bonfire.Instance.Status;
+            return s.TotalRosaryLevels + s.PendingRosaryLevels;
+        }
+
+        public int GetLevelUpRosaryRequirement(int rosaryLevels)
+        {
+            return (int)(Math.Pow(rosaryLevels, 2.0) + (10 * rosaryLevels) + 50.0);
+        }
+
+        /// <summary>
+        /// Returns average damage blocking chance from current Resilience stat value.
         /// </summary>
         public float AverageBlockChance(int totalRes)
         {
@@ -253,7 +315,7 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// Helper for caching obtained relics data; otherwise bench ui would re-calculate this every single frame
+        /// Helper for caching obtained relics data; otherwise bench ui would re-calculate this every single frame.
         /// To access cached data, use CachedRelicsObtained getter.
         /// </summary>
         public void RefreshRelicsObtained()
@@ -263,8 +325,8 @@ namespace BonfireSilksong
         public int CachedRelicsObtained => _cachedRelicsObtained;
 
 
-        private static LevelingSystem _instance;
         private int _cachedRelicsObtained = 0;
+        private static LevelingSystem _instance;
 
         private void Awake()
         {

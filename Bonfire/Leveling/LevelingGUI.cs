@@ -1,49 +1,24 @@
-using System;
-
 using UnityEngine;
 
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Leveling system.
+    /// Leveling system GUI.
     /// </summary>
-    public class Leveling
+    public class LevelingGUI
     {
-        public void ResetPendingLevelUp()
-        {
-            var s = Bonfire.Instance.Status;
-            var ls = LevelingSystem.Instance;
-
-            ls.StrengthIncrease = 0;
-            ls.DexterityIncrease = 0;
-            ls.IntelligenceIncrease = 0;
-            ls.ArtificeIncrease = 0;
-            ls.WisdomIncrease = 0;
-            ls.ResilienceIncrease = 0;
-            ls.LuckIncrease = 0;
-
-            s.PendingRosaries = 0;
-            s.PendingRosaryLevels = 0;
-            s.PendingRelicLevels = 0;
-        }
-
         public void DrawLevelingUI()
         {
             var s = Bonfire.Instance.Status;
             var ls = LevelingSystem.Instance;
 
-            int availableRelicLevels = ls.CachedRelicsObtained - s.ConsumedRelicLevels
-                                     + s.RespecRelicLevels - s.PendingRelicLevels;
+            int availableRelicLevels = ls.GetAvailableRelicLevels();
             bool gotFreeLevel = availableRelicLevels > 0;
 
-            int rosaryLevels = s.TotalRosaryLevels + s.PendingRosaryLevels;
-            int rosariesToLvlUp = (int)(Math.Pow(rosaryLevels, 2.0) + (10 * rosaryLevels) + 50.0);
+            int rosaryLevel = ls.DisplayPendingRosaryLevel();
+            int rosariesToLvlUp = ls.GetLevelUpRosaryRequirement(rosaryLevel);
 
-            int currentLvl = s.StrengthStat + s.DexterityStat + s.IntelligenceStat
-                        + s.ArtificeStat + s.ResilienceStat + s.WisdomStat + s.LuckStat
-                        + s.PendingRelicLevels
-                        + s.PendingRosaryLevels
-                        + 1; // base level is 1
+            int currentLvl = ls.GetCurrentLevel();
 
             // preview strings
             string totalStr = (s.StrengthStat + ls.StrengthIncrease).ToString();
@@ -155,7 +130,7 @@ namespace BonfireSilksong
             if (GUILayout.Button(applyText, Styles.ButtonStyle, GUILayout.Height(40f), GUILayout.Width(258f))
                 && PlayerData.instance.atBench)
             {
-                LevelingSystem.Instance.ApplyLevel();
+                ls.ApplyLevel();
             }
 
             GUILayout.FlexibleSpace();
@@ -164,7 +139,7 @@ namespace BonfireSilksong
             if (GUILayout.Button("Cancel", Styles.ButtonStyle, GUILayout.Height(40f), GUILayout.Width(258f))
                 && PlayerData.instance.atBench)
             {
-                ResetPendingLevelUp();
+                ls.ResetPendingLevelUp();
             }
 
             GUILayout.EndHorizontal();
@@ -181,20 +156,13 @@ namespace BonfireSilksong
                     GUILayout.Width(522f))
                 && PlayerData.instance.atBench)
             {
-                LevelingSystem.Instance.Respec();
+                ls.Respec();
             }
 
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
         }
 
-
-        private bool CanLevelUp(bool gotFreeLevel, int rosariesToLvlUp)
-        {
-            var s = Bonfire.Instance.Status;
-            return PlayerData.instance.atBench &&
-                   (gotFreeLevel || (rosariesToLvlUp + s.PendingRosaries <= PlayerData.instance.geo));
-        }
 
         private void DrawStatButton(string statName, string displayValue, bool gotFreeLevel, PlayerStatus s,
                                    int rosariesToLvlUp)
@@ -204,7 +172,7 @@ namespace BonfireSilksong
                     Styles.ButtonStyle,
                     GUILayout.Height(40f),
                     GUILayout.Width(160f))
-                && CanLevelUp(gotFreeLevel, rosariesToLvlUp)
+                && LevelingSystem.Instance.CanLevelUp(gotFreeLevel, rosariesToLvlUp)
                 && PlayerData.instance.atBench)
             {
                 LevelingSystem.Instance.IncreaseStat(statName, s, rosariesToLvlUp);
