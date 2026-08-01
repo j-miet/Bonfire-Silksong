@@ -16,7 +16,7 @@ namespace BonfireSilksong
     /// <summary>
     /// Main class for Bonfire-Silksong mod
     /// </summary>
-    [BepInPlugin("hksilksong.mod.bonfire-silksong", "Bonfire-Silksong", "0.6.0")]
+    [BepInPlugin("hksilksong.mod.bonfire-silksong", "Bonfire-Silksong", "0.7.0")]
     public class Bonfire : BaseUnityPlugin
     {
         public PlayerStatus Status;
@@ -222,6 +222,7 @@ namespace BonfireSilksong
             return Path.Combine(Paths.ConfigPath, $"Bonfire-Silksong_Save{saveProfile}.json");
         }
 
+        // if class uses Unity callbacks e.g. Awake, Update, OnGUI etc. they must be added here.
         private void Init()
         {
             if (PlayerData.instance == null) return;
@@ -450,7 +451,7 @@ namespace BonfireSilksong
         [HarmonyPatch(typeof(HeroController), "UpdateBlueHealth")]
         class HeroController_UpdateBlueHealth
         {
-            static void Postfix(HeroController __instance)
+            static void Postfix()
             {
                 UpdateBlueHP();
             }
@@ -511,7 +512,7 @@ namespace BonfireSilksong
         [HarmonyPatch(typeof(HeroController), "TakeDamage")]
         class HealthManager_TakeDamage
         {
-            static void Prefix(HeroController __instance, GameObject go, ref int damageAmount, HazardType hazardType)
+            static void Prefix(HeroController __instance, HazardType hazardType)
             {
                 if (__instance.cState.evading || __instance.cState.invulnerable) return;
 
@@ -598,7 +599,7 @@ namespace BonfireSilksong
         [HarmonyPatch(typeof(HeroController), "Update")]
         class HeroController_Update
         {
-            static void Postfix(HeroController __instance)
+            static void Postfix()
             {
                 var gui = BonfireGUI.Settings;
                 var toRemove = new List<HealthManager>();
@@ -673,6 +674,35 @@ namespace BonfireSilksong
                     }
                 }
                 catch { }
+            }
+        }
+
+        // Wisdom stat: remove Wispfire Lantern cost after enough points are spent.
+        // First check if player has 0 silk: if yes, add one silk to spawn a wisp. Then refund this in TakeSilk
+        // method.
+        // This will naturally work as a weaker Weavelight tool: every time the game attempts to spawn a wisp and 
+        // player has no silk, it will one for free assuming they have enough points in Wisdom.
+        [HarmonyPatch(typeof(HeroWispLantern), "SpawnWispsRoutine")]
+        class HeroWispLantern_SpawnWispsRoutine
+        {
+            static void Prefix()
+            {
+                var hc = HeroController.instance;
+
+                if (Instance.Status.WisdomStat >= 30 && hc.playerData.silk <= 0)
+                    hc.AddSilk(1, heroEffect: false);
+            }
+        }
+
+        [HarmonyPatch(typeof(HeroController), "TakeSilk", new[] { typeof(int), typeof(SilkSpool.SilkTakeSource) })]
+        class HeroController_TakeSilk
+        {
+            static void PostFix(HeroController __instance, int amount, SilkSpool.SilkTakeSource source)
+            {
+                if (source == SilkSpool.SilkTakeSource.Wisp && Instance.Status.WisdomStat >= 30)
+                {
+                    __instance.AddSilk(amount, heroEffect: false);
+                }
             }
         }
 
