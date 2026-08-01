@@ -15,10 +15,10 @@ namespace BonfireSilksong
             int availableRelicLevels = ls.GetAvailableRelicLevels();
             bool gotFreeLevel = availableRelicLevels > 0;
 
-            int rosaryLevel = ls.DisplayPendingRosaryLevel();
-            int rosariesToLvlUp = ls.GetLevelUpRosaryRequirement(rosaryLevel);
+            int rosaryLevel = LevelingSystem.DisplayPendingRosaryLevel();
+            int rosariesToLvlUp = LevelingSystem.GetLevelUpRosaryRequirement(rosaryLevel);
 
-            int currentLvl = ls.GetCurrentLevel();
+            int currentLvl = LevelingSystem.GetCurrentLevel();
 
             // preview strings
             string totalStr = (s.StrengthStat + ls.StrengthIncrease).ToString();
@@ -30,36 +30,37 @@ namespace BonfireSilksong
             string totalLck = (s.LuckStat + ls.LuckIncrease).ToString();
 
             // stat calculations
-            string needleDamage = ls.NeedleDamage(s.StrengthStat + ls.StrengthIncrease).ToString();
+            string needleDamage = LevelingSystem.NeedleDamage(s.StrengthStat + ls.StrengthIncrease).ToString();
 
-            string attackSpeed = ls.AttackSpeed(s.DexterityStat + ls.DexterityIncrease).ToString();
-            string critDamage = ls.CritDamage(s.DexterityStat + ls.DexterityIncrease, 100).ToString();
+            string attackSpeed = LevelingSystem.AttackSpeed(s.DexterityStat + ls.DexterityIncrease).ToString();
+            string critDamage = LevelingSystem.CritDamage(s.DexterityStat + ls.DexterityIncrease, 100).ToString();
 
-            string spellDamage = ls.SpellDamage(100, s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
-            string bindCost = ls.BindCost(s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
+            string spellDamage = LevelingSystem.SpellDamage(
+                100, s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
+            string bindCost = LevelingSystem.BindCost(s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
 
-            string toolDamage = ls.ToolDamage(100, s.ArtificeStat + ls.ArtificeIncrease).ToString();
+            string toolDamage = LevelingSystem.ToolDamage(100, s.ArtificeStat + ls.ArtificeIncrease).ToString();
             string toolRegenInterval = "-";
             if (s.ArtificeStat + ls.ArtificeIncrease > 0)
             {
-                int toolRegen = ls.ToolRegenInterval(s.ArtificeStat + ls.ArtificeIncrease);
+                int toolRegen = LevelingSystem.ToolRegenInterval(s.ArtificeStat + ls.ArtificeIncrease);
                 toolRegenInterval = toolRegen > 0 ? toolRegen.ToString() + " s" : "-";
             }
 
-            string extraMasks = ls.ExtraMasks(s.ResilienceStat + ls.ResilienceIncrease).ToString();
+            string extraMasks = LevelingSystem.ExtraMasks(s.ResilienceStat + ls.ResilienceIncrease).ToString();
             string blockChance = s.ResilienceStat + ls.ResilienceIncrease > 0
-                ? ls.AverageBlockChance(s.ResilienceStat + ls.ResilienceIncrease).ToString("F0")
+                ? LevelingSystem.AverageBlockChance(s.ResilienceStat + ls.ResilienceIncrease).ToString("F0")
                 : "0";
 
-            string extraSilk = ls.ExtraSilk(s.WisdomStat + ls.WisdomIncrease, 1).ToString();
+            string extraSilk = LevelingSystem.ExtraSilk(s.WisdomStat + ls.WisdomIncrease, 1).ToString();
             string silkRegenInterval = "-";
             if (s.WisdomStat + ls.WisdomIncrease > 0)
             {
-                int silkRegen = ls.SilkRegenInterval(s.WisdomStat + ls.WisdomIncrease);
+                int silkRegen = LevelingSystem.SilkRegenInterval(s.WisdomStat + ls.WisdomIncrease);
                 silkRegenInterval = silkRegen > 0 ? silkRegen.ToString() + " s" : "-";
             }
 
-            string critChance = ls.CritChance(s.LuckStat + ls.LuckIncrease).ToString();
+            string critChance = LevelingSystem.CritChance(s.LuckStat + ls.LuckIncrease).ToString();
             string rosaryIncrease = (5 * (s.LuckStat + ls.LuckIncrease)).ToString();
 
             // apply button label
@@ -172,7 +173,7 @@ namespace BonfireSilksong
                     GUIStyles.ButtonStyle,
                     GUILayout.Height(40f),
                     GUILayout.Width(160f))
-                && LevelingSystem.Instance.CanLevelUp(gotFreeLevel, rosariesToLvlUp)
+                && LevelingSystem.CanLevelUp(gotFreeLevel, rosariesToLvlUp)
                 && PlayerData.instance.atBench)
             {
                 LevelingSystem.Instance.IncreaseStat(statName, s, rosariesToLvlUp);
