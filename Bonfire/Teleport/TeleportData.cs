@@ -6,9 +6,9 @@ using UnityEngine;
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Static fast travel system data.
+    /// Static data for Teleport class.
     /// </summary>
-    public class TeleportData
+    public static class TeleportData
     {
         // defines a bench location that has no map pin and must be added manually.
         public class SpecialLocation
@@ -17,7 +17,7 @@ namespace BonfireSilksong
             public string Marker;          // PlayerData.tempRespawnMarker
             public int RespawnType;        // PlayerData.tempRespawnType
             public string AreaName;        // area name
-            public string DefaultName;     // shown when custom names are off
+            public string DefaultName;     // shown when custom names are off; use Scene here unless it's too long
             public string CustomName;      // shown when custom names are on
             public Func<bool> IsUnlocked;  // condition for whether to display this location
         }
@@ -189,7 +189,7 @@ namespace BonfireSilksong
                 IsUnlocked = () => PlayerData.instance.BelltownHouseUnlocked
                                 && PlayerData.instance.BelltownHouseVisited
             },
-            // Widow
+            // Widow arena bellshrine
             new SpecialLocation
             {
                 Scene = "Belltown_Shrine",

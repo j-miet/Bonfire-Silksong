@@ -12,7 +12,7 @@ namespace BonfireSilksong
     /// <summary>
     /// Bench teleport GUI.
     /// </summary>
-    public class Teleport
+    public class TeleportGUI
     {
         public bool FastTravelDisplay { get; private set; } = false;
 
