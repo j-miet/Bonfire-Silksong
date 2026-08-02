@@ -6,7 +6,9 @@ using System.Reflection;
 
 using GlobalEnums;
 using HarmonyLib;
+using HutongGames.PlayMaker;
 using UnityEngine;
+using TeamCherry.SharedUtils;
 
 namespace BonfireSilksong
 {
@@ -235,23 +237,42 @@ namespace BonfireSilksong
         // spool with current silk available.
         public static void UpdateBindCostFSM()
         {
-            // the "Silk Cost" variable below is responsible for many different silk functions and therefore must
-            // only run if player is in active binding state.
-            // Interestingly this issue arose only after testing Silk Soar: normal harpoon would work just fine
-            // even if cost was set well above it's usual of 1, but soaring would always check the updated cost. 
-            if (!GameManager.instance.hero_ctrl.cState.isBinding) return;
+            // _bindCostInit is just to prevent calling Fsm event search loop continuously: _bindCostInit starts 
+            // false, which forces loop to run once and initialize "Silk Cost" and "Silk Cost Witch" int values when 
+            // loading into a save. Afterwards it should only repeat this if player is currently binding. And finally: 
+            // going back to main menu should reset init value so that init may be repeated after each "save & exit 
+            // into load into game" sequence. 
+            // Is this absolutely necessary? No, probably doesn't even affect game performance to be honest, but 
+            // just a good habit to prevent a pointless execution loop because UpdateBindCostFSM is called on each
+            // frame.
+            if (GameManager.instance.GameState == GameState.MAIN_MENU)
+            {
+                _bindCostInit = false;
+                return;
+            }
+
+            if (!GameManager.instance.hero_ctrl.cState.isBinding && _bindCostInit) return;
 
             if (HeroController.instance == null || Instance == null) return;
 
+            FsmInt silkCost;
+            FsmInt silkCostWitch;
             int cost = BindCost(Bonfire.Instance.Status.IntelligenceStat);
 
             foreach (var fsm in HeroController.instance.GetComponents<PlayMakerFSM>())
             {
-                foreach (var variable in fsm.FsmVariables.IntVariables)
-                {
-                    if (variable.Name == "Silk Cost" || variable.Name == "Silk Cost Witch")
-                        variable.Value = cost;
-                }
+                if (fsm.FsmName != "Bind") continue;
+
+                silkCost = fsm.FsmVariables.GetFsmInt("Silk Cost");
+                silkCostWitch = fsm.FsmVariables.GetFsmInt("Silk Cost Witch");
+
+                if (silkCost != null)
+                    silkCost.Value = cost;
+
+                if (silkCostWitch != null)
+                    silkCostWitch.Value = cost;
+
+                _bindCostInit = true;
             }
         }
 
@@ -388,12 +409,7 @@ namespace BonfireSilksong
 
         private static LevelingSystem _instance;
         private static bool _blueHpAddingInProgress = false;
-
-        private static readonly FieldInfo IsHeroDamageField = typeof(DamageEnemies)
-            .GetField("isHeroDamage", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private static readonly FieldInfo SourceIsHeroField = typeof(DamageEnemies)
-            .GetField("sourceIsHero", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static bool _bindCostInit = false;
 
         private void Awake()
         {
@@ -542,8 +558,10 @@ namespace BonfireSilksong
         // on the enemy, DamageEnemies_DoDamage needs to explicitly check if damage was inflicted by player.
         private static bool IsHeroDamage(DamageEnemies instance)
         {
-            bool a = (bool)(IsHeroDamageField?.GetValue(instance) ?? false);
-            bool b = (bool)(SourceIsHeroField?.GetValue(instance) ?? false);
+            bool a = (bool)(typeof(DamageEnemies)
+                .GetField("isHeroDamage", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(instance) ?? false);
+            bool b = (bool)(typeof(DamageEnemies)
+                .GetField("sourceIsHero", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(instance) ?? false);
             return a || b;
         }
 
@@ -827,7 +845,7 @@ namespace BonfireSilksong
             }
         }
 
-        // Wisdom stat: remove Wispfire Lantern cost after enough points are spent.
+        // Wisdom stat: remove Wispfire Lantern cost and reduce spawn & attack delay after stat level is high enough.
         // First check if player has 0 silk: if yes, add one silk to spawn a wisp. Then refund this in TakeSilk
         // method.
         // This will naturally work as a weaker Weavelight tool: every time the game attempts to spawn a wisp and 
@@ -839,7 +857,7 @@ namespace BonfireSilksong
             {
                 var hc = HeroController.instance;
 
-                if (Bonfire.Instance.Status.WisdomStat >= 30 && hc.playerData.silk <= 0)
+                if (Bonfire.Instance.Status.WisdomStat >= 20 && hc.playerData.silk <= 0)
                     hc.AddSilk(1, heroEffect: false);
             }
         }
@@ -847,12 +865,57 @@ namespace BonfireSilksong
         [HarmonyPatch(typeof(HeroController), "TakeSilk", new[] { typeof(int), typeof(SilkSpool.SilkTakeSource) })]
         class HeroController_TakeSilk
         {
-            static void PostFix(HeroController __instance, int amount, SilkSpool.SilkTakeSource source)
+            static void Postfix(HeroController __instance, int amount, SilkSpool.SilkTakeSource source)
             {
-                if (source == SilkSpool.SilkTakeSource.Wisp && Bonfire.Instance.Status.WisdomStat >= 30)
+                if (source == SilkSpool.SilkTakeSource.Wisp && Bonfire.Instance.Status.WisdomStat >= 20)
                 {
                     __instance.AddSilk(amount, heroEffect: false);
+                    Bonfire.Log.LogDebug("Refunded silk after spawning a wisp");
                 }
+            }
+        }
+
+        [HarmonyPatch(typeof(HeroWispLantern), "OnSceneLoaded")]
+        class HeroWispLantern_OnSceneLoaded
+        {
+            static void Prefix(HeroWispLantern __instance)
+            {
+                FieldInfo WispSpawnStartDelay = typeof(HeroWispLantern)
+                    .GetField("wispSpawnStartDelay", BindingFlags.Instance | BindingFlags.NonPublic);
+
+                FieldInfo WispSpawnCooldown = typeof(HeroWispLantern)
+                    .GetField("wispSpawnCooldown", BindingFlags.Instance | BindingFlags.NonPublic);
+
+                MinMaxFloat mmfDelay = (MinMaxFloat)WispSpawnStartDelay?.GetValue(__instance);
+                MinMaxFloat mmfCd = (MinMaxFloat)WispSpawnCooldown?.GetValue(__instance);
+
+                Bonfire.Log.LogDebug("Wispfire Lantern:");
+                Bonfire.Log.LogDebug("- Delay start: " + mmfDelay.Start);
+                Bonfire.Log.LogDebug("- Delay End " + mmfDelay.End);
+                Bonfire.Log.LogDebug("- Cd start: " + mmfCd.Start);
+                Bonfire.Log.LogDebug("- Cd End: " + mmfCd.End);
+
+                // start & end use same value: delay default is 0.3f, cooldown default is 4f (4 seconds)
+                float delayNew = 0.3f;
+                float cdNew = 4f;
+
+                if (Bonfire.Instance.Status.WisdomStat >= 20 &&
+                    Bonfire.Instance.Status.WisdomStat < 30)
+                {
+                    delayNew = 0.15f;
+                    cdNew = 2f;
+                }
+                else if (Bonfire.Instance.Status.WisdomStat >= 30)
+                {
+                    delayNew = 0.1f;
+                    cdNew = 1f;
+                }
+
+                mmfDelay.Start = mmfDelay.End = delayNew;
+                mmfCd.Start = mmfCd.End = cdNew;
+
+                WispSpawnStartDelay.SetValue(__instance, mmfDelay);
+                WispSpawnCooldown.SetValue(__instance, mmfCd);
             }
         }
 
