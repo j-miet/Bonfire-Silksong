@@ -259,9 +259,10 @@ namespace BonfireSilksong
                 _pendingCrestUnlock = false;
                 Bonfire.Instance.Status.UnlockedAllCrests = true;
 
+                Bonfire.Log.LogDebug("[SettingsGUI] Unlocking all crests");
                 foreach (var crest in Resources.FindObjectsOfTypeAll<ToolCrest>())
                 {
-                    Bonfire.Log.LogDebug("Unlocked Crest name: " + crest.name); // "Warrior" = beast crest
+                    Bonfire.Log.LogDebug("Crest name: " + crest.name);
                     crest.Unlock();
                 }
 

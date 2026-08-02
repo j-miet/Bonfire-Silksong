@@ -7,7 +7,6 @@ using UnityEngine;
 
 namespace BonfireSilksong
 {
-
     /// <summary>
     /// Reusable debug logging methods. Anything that's potentially useful in the future is kept here e.g. if/when
     /// future DLCs change stuff.
@@ -19,7 +18,7 @@ namespace BonfireSilksong
         /// </summary>
         public static void BeastChapelDoorState()
         {
-            Log.LogDebug("== Beast chapel door state ==");
+            Log.LogDebug("[Debug] Beast chapel door state");
             var obj = GameObject.Find("Chapel Door Control");
 
             Log.LogDebug(obj == null ? "Door not found" : $"Found {obj.name}");
@@ -35,10 +34,10 @@ namespace BonfireSilksong
 
                 foreach (var action in state.Actions)
                 {
-                    Log.LogDebug($"  - Action: {action.GetType().FullName}");
+                    Log.LogDebug($" - Action: {action.GetType().FullName}");
                     if (action is PlayerDataBoolTest test)
                     {
-                        Log.LogDebug($"Testing {test.boolName.Value}");
+                        Log.LogDebug($"boolName {test.boolName.Value}");
                         Log.LogDebug($"True -> {test.isTrue?.Name}");
                         Log.LogDebug($"False -> {test.isFalse?.Name}");
                     }
@@ -60,6 +59,7 @@ namespace BonfireSilksong
         /// </summary>
         public static void BenchFSM(Transform spawnPoint)
         {
+            Bonfire.Log.LogDebug("[Debug] Bench Control");
             if (spawnPoint == null) return;
 
             var benchFSM = FSMUtility.LocateFSM(spawnPoint.gameObject, "Bench Control");
@@ -69,10 +69,10 @@ namespace BonfireSilksong
                 return;
             }
 
-            Bonfire.Log.LogDebug("== 'Bench Control' FSM States ==");
+            Bonfire.Log.LogDebug("'Bench Control' FSM States");
             foreach (var state in benchFSM.FsmStates)
             {
-                Bonfire.Log.LogDebug($"State: {state.Name}");
+                Bonfire.Log.LogDebug($"- State: {state.Name}");
                 foreach (var transition in state.Transitions)
                     Bonfire.Log.LogDebug($"  - Event: {transition.EventName} => {transition.ToState}");
             }
@@ -83,12 +83,13 @@ namespace BonfireSilksong
         /// </summary>
         public static void BlueHpVariableFSM()
         {
+            Bonfire.Log.LogDebug("[Debug] Blue Health variables");
             var gameCameras = GameCameras.instance.gameObject;
             foreach (var fsm in gameCameras.GetComponentsInChildren<PlayMakerFSM>(includeInactive: true))
             {
                 if (fsm.FsmName != "Blue Health Control") continue;
 
-                Log.LogDebug("== Blue Health variables ==");
+                Log.LogDebug("Variables:");
                 foreach (var v in fsm.FsmVariables.IntVariables)
                     Log.LogDebug($"  int: {v.Name} = {v.Value}");
                 foreach (var v in fsm.FsmVariables.FloatVariables)
@@ -103,7 +104,7 @@ namespace BonfireSilksong
         /// </summary>
         public static void AllGlobalFSMEvents()
         {
-            Log.LogDebug("== FSM events ==");
+            Log.LogDebug("[Debug ] FSM global events");
             foreach (var e in FsmEvent.globalEvents)
                 Log.LogDebug(e);
         }
@@ -113,8 +114,8 @@ namespace BonfireSilksong
         /// </summary>
         public static void CollectablesAndTools()
         {
-            Log.LogDebug("== Collectables and tools ==");
-            Log.LogDebug("-- Collectable --");
+            Log.LogDebug("[Debug] Collectables and tools");
+            Log.LogDebug("-- CollectableItem --");
             foreach (var item in Resources.FindObjectsOfTypeAll<CollectableItem>())
                 Log.LogDebug(item.name);
 
@@ -131,7 +132,7 @@ namespace BonfireSilksong
             var enemies = Resources.FindObjectsOfTypeAll<HealthManager>();
             if (enemies.Length > 0)
             {
-                Log.LogDebug("== Enemy drops ==");
+                Log.LogDebug("[Debug] Enemy drops");
                 foreach (var field in enemies[0].GetType().GetFields(
                     BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
                 {
@@ -148,7 +149,7 @@ namespace BonfireSilksong
         /// </summary>
         public static void FSMVariables()
         {
-            Log.LogDebug("== FSM variables ==");
+            Log.LogDebug("[Debug] HeroController FSM variables");
             foreach (var fsm in HeroController.instance.GetComponents<PlayMakerFSM>())
             {
                 Log.LogDebug($"FSM: {fsm.FsmName}");
@@ -162,27 +163,11 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// Log attack speed values.
-        /// </summary>
-        public static void AttackSpeed()
-        {
-            Log.LogDebug("== Attack speed data ==");
-
-            var config = HeroController.instance?.Config;
-            if (config == null) return;
-
-            Log.LogDebug("Attack duration: " + config.AttackDuration);
-            Log.LogDebug("Attack cooldown time: " + config.AttackCooldownTime);
-            Log.LogDebug("Quick attack speed mult: " + config.QuickAttackSpeedMult);
-            Log.LogDebug("Quick attack cooldown time: " + config.QuickAttackCooldownTime);
-        }
-
-        /// <summary>
         /// Log all names of visited scenes in save file.
         /// </summary>
         public static void VisitedScenes()
         {
-            Log.LogDebug("== Visited scenes ==");
+            Log.LogDebug("[Debug] Visited scenes");
             foreach (var s in PlayerData.instance.scenesVisited)
                 Log.LogDebug("Scene: " + s);
         }

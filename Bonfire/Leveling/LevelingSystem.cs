@@ -546,7 +546,7 @@ namespace BonfireSilksong
         // player spams inventory and/or pause on and off repeatedly.
         private static IEnumerator RefreshResilienceBlueHealth()
         {
-            Bonfire.Log.LogInfo("blue hp refresh");
+            Bonfire.Log.LogDebug("[LevelingSystem] blue hp refresh");
             yield return new WaitForSecondsRealtime(0.25f);
 
             if (_blueHpAddingInProgress) yield break;
@@ -556,7 +556,7 @@ namespace BonfireSilksong
             {
                 if (SatDownAtBench)
                 {
-                    Bonfire.Log.LogInfo("SatDownAtBench is true, call refresh again");
+                    Bonfire.Log.LogDebug("SatDownAtBench is true, call refresh again");
                     SatDownAtBench = false;
                     Instance.StartCoroutine(RefreshResilienceBlueHealth());
                 }
@@ -866,6 +866,7 @@ namespace BonfireSilksong
         {
             static void Postfix()
             {
+                Bonfire.Log.LogDebug("[LevelingSystem] Update hp data, check silk + tool regen");
                 var gui = BonfireGUI.Settings;
                 var toRemove = new List<HealthManager>();
 
@@ -898,7 +899,7 @@ namespace BonfireSilksong
                     }
                     else
                     {
-                        Bonfire.Log.LogDebug("[LevelingSystem] Checking silk regen conditions");
+                        Bonfire.Log.LogDebug("Checking silk regen conditions");
                         int silkRegenInterval = SilkRegenInterval(Bonfire.Instance.Status.WisdomStat);
                         if (silkRegenInterval <= 0)
                         {
@@ -919,7 +920,7 @@ namespace BonfireSilksong
                     }
                     else
                     {
-                        Bonfire.Log.LogDebug("[LevelingSystem] Checking tool regen conditions");
+                        Bonfire.Log.LogDebug("Checking tool regen conditions");
                         int toolRegenInterval = ToolRegenInterval(Bonfire.Instance.Status.ArtificeStat);
                         if (toolRegenInterval <= 0)
                         {
@@ -967,7 +968,7 @@ namespace BonfireSilksong
                 if (source == SilkSpool.SilkTakeSource.Wisp && Bonfire.Instance.Status.WisdomStat >= 20)
                 {
                     __instance.AddSilk(amount, heroEffect: false);
-                    Bonfire.Log.LogDebug("[LevelingSystem] Refunded silk after spawning a wisp");
+                    Bonfire.Log.LogDebug("[LevelingSystem] Refunded silk after Wispfire Lantern use");
                 }
             }
         }

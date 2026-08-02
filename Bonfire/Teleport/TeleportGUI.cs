@@ -37,7 +37,7 @@ namespace BonfireSilksong
             if (GUILayout.Button(text, GUIStyles.ButtonStyle, GUILayout.Height(40f)))
             {
                 GUI.backgroundColor = Color.white;
-                Bonfire.Log.LogDebug("Fast travel menu open button was clicked");
+                Bonfire.Log.LogDebug("[TeleportGUI] Fast travel menu open button was clicked");
 
                 if (!hasAnyMap || !hasBenchPins) return;
 
@@ -206,7 +206,7 @@ namespace BonfireSilksong
         // bench location data parser, updated data is inserted into BenchActiveLocationData.
         private void UpdateActiveLocationData()
         {
-            Bonfire.Log.LogDebug("== Bench location data ==");
+            Bonfire.Log.LogDebug("[TeleportGUI] Bench location data for active benches");
 
             string customName;
             string areaName;
@@ -296,8 +296,10 @@ namespace BonfireSilksong
                                     r.gameObject.activeInHierarchy &&
                                     r.name == PlayerData.instance.respawnMarkerName);
 
-            Bonfire.Log.LogDebug("Start scene name: " + PlayerData.instance.respawnScene);
-            Bonfire.Log.LogDebug("Start marker name: " + PlayerData.instance.respawnMarkerName);
+            Bonfire.Log.LogDebug(
+                "[TeleportGUI] Updating Bench FSM" +
+                "\nStart scene name: " + PlayerData.instance.respawnScene +
+                "\nStart marker name: " + PlayerData.instance.respawnMarkerName);
 
             if (markers == null) return false;
 
@@ -313,6 +315,7 @@ namespace BonfireSilksong
         // find all bench pins, update BenchPinScenes and BenchActiveLocationData
         private void UpdateBenchPins()
         {
+            Bonfire.Log.LogDebug("[TeleportGUI] Updating bench pins");
             _benchPinScenes.Clear();
             var gameMap = GameManager.instance?.gameMap;
             if (gameMap == null) return;
@@ -351,7 +354,7 @@ namespace BonfireSilksong
             UpdateActiveLocationData(); // must only call this after filling _benchPinScenes!
 
             Bonfire.Log.LogDebug($"Found {_benchPinScenes.Count} bench pins");
-            Bonfire.Log.LogDebug("GUI: bench pin respawn scenes:");
+            Bonfire.Log.LogDebug("All bench pin respawn scenes:");
             foreach (var p in _benchPinScenes)
                 Bonfire.Log.LogDebug(p.Value);
         }
@@ -437,6 +440,7 @@ namespace BonfireSilksong
 
         private void DrawBenchListPanel()
         {
+            Bonfire.Log.LogDebug("[TeleportGUI] Drawing bench list");
             int menuStyleIndex = Bonfire.Instance.Status.BenchMenuStyle;
             string styleText = TeleportData.BenchMenuStyle[menuStyleIndex];
 
@@ -510,6 +514,7 @@ namespace BonfireSilksong
 
                     if (hasPinLocations)
                     {
+                        Bonfire.Log.LogDebug("Draw active bench locations");
                         foreach (var (customName, mapPin) in _benchActiveLocationData[mapArea])
                         {
                             bool isSelected = _selectedPin == mapPin;
@@ -596,6 +601,7 @@ namespace BonfireSilksong
 
         private void DrawSpecialLocationsForArea(string areaName, Color background, Color text)
         {
+            Bonfire.Log.LogDebug("Draw static bench locations");
             foreach (var loc in TeleportData.SpecialLocations)
             {
                 if (loc.AreaName != areaName || !loc.IsUnlocked()) continue;

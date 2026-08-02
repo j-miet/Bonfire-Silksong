@@ -46,7 +46,7 @@ namespace BonfireSilksong
             // In this case targetScene is very useful as it will always be the most unique descriptor available.
             string targetScene = parentScene.Name;
 
-            Bonfire.Log.LogDebug($"Teleport target scene: {targetScene}");
+            Bonfire.Log.LogDebug($"[BenchTeleport] Teleport target scene: {targetScene}");
 
             Dictionary<string, SceneTeleportMap.SceneInfo> teleportMap = SceneTeleportMap.GetTeleportMap();
             if (teleportMap == null)
@@ -197,7 +197,7 @@ namespace BonfireSilksong
             NeedFirstFadeInField.SetValue(gm, true);
             gm.hero_ctrl.cState.dead = true;
 
-            Bonfire.Log.LogDebug("Calling ReadyForRespawn...");
+            Bonfire.Log.LogDebug("[BenchTeleport] Calling ReadyForRespawn to teleport");
 
             gm.ReadyForRespawn(false);
         }
@@ -282,7 +282,7 @@ namespace BonfireSilksong
                     // main/side area
                     benchFSM?.SetState("Set Spawn Location");
                     benchFSM?.SendEventSafe("OVERRIDE");
-                    Bonfire.Log.LogDebug("Set spawn location");
+                    Bonfire.Log.LogDebug("[BenchTeleport] Set spawn location");
                 }
 
                 __instance.proxyFSM.SendEventSafe("HeroCtrl-EnteringScene");
@@ -311,7 +311,7 @@ namespace BonfireSilksong
                 string scene = __instance.playerData.tempRespawnScene;
                 string marker = __instance.playerData.tempRespawnMarker;
 
-                Bonfire.Log.LogDebug($"EnterHero: scene={scene}, marker={marker}");
+                Bonfire.Log.LogDebug($"[BenchTeleport] EnterHero: scene={scene}, marker={marker}");
 
                 List<RespawnMarker> markers = RespawnMarker.Markers
                     .Where(r =>
