@@ -12,6 +12,8 @@ namespace BonfireSilksong
             var s = Bonfire.Instance.Status;
             var ls = LevelingSystem.Instance;
 
+            ls.CheckStatLevels();
+
             int availableRelicLevels = ls.GetAvailableRelicLevels();
             bool gotFreeLevel = availableRelicLevels > 0;
 

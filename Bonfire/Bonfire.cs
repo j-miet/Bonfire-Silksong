@@ -3,6 +3,7 @@ using System.IO;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using GlobalEnums;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -25,7 +26,7 @@ namespace BonfireSilksong
             if (GameManager.instance == null) return;
 
             int saveProfile = GameManager.instance.profileID;
-            Log.LogDebug("SaveSettings: save slot " + saveProfile);
+            Log.LogDebug("[Bonfire] SaveSettings: save slot " + saveProfile);
 
             if (saveProfile < 1)
             {
@@ -53,7 +54,7 @@ namespace BonfireSilksong
             }
 
             int saveProfile = GameManager.instance.profileID;
-            Log.LogDebug("LoadSettings: save slot " + saveProfile);
+            Log.LogDebug("[Bonfire] LoadSettings: save slot " + saveProfile);
 
             if (saveProfile < 1)
             {
@@ -94,14 +95,17 @@ namespace BonfireSilksong
 
         /// <summary>
         /// When saving and exiting, sometimes the game inputs become unresponsive for several seconds in main menu 
-        /// before resuming normally. Checking if GameManager is null or if game is still in gameplay scene then 
-        /// preventing update loops might help a bit (maybe makes it less frequent?) but doesn't fix this entirely.
+        /// before resuming normally. Checking if GameManager is null/game is still in gameplay scene/game is in main 
+        /// menu screen then preventing update loops might help a bit (maybe makes it less frequent?) but doesn't fix 
+        /// this entirely.
         /// </summary>
         public static bool CheckIfNoGameManager()
         {
-            if (GameManager.instance == null || !GameManager.instance.IsGameplayScene())
+            if (GameManager.instance.GameState == GameState.MAIN_MENU ||
+                GameManager.instance == null ||
+                !GameManager.instance.IsGameplayScene())
             {
-                Log.LogDebug("GameManager instance null or in gameplay scene");
+                Log.LogDebug("[Bonfire] GameManager instance null or in gameplay scene, or GameState is main menu");
                 return true;
             }
 
@@ -119,6 +123,7 @@ namespace BonfireSilksong
         private bool _enemyHPBarsEnabled = false;
 
         private bool _invClosedCheck = false;
+        private bool _satDown = false;
 
         // -- Unity callbacks -- //
 
@@ -152,13 +157,35 @@ namespace BonfireSilksong
 
         private void Update()
         {
+            LevelingSystem.ResetInitFlags();
+
             if (CheckIfNoGameManager()) return;
 
             LevelingSystem.UpdateBindCostFSM();
 
-            // hotkeys
+            // update when player sits down on a bench and flip it only after standing up
+            // useful for blue hp updates where an additional flag needs to cancel previous update if player should
+            // sit down again while previous loop is still processing
+            if (PlayerData.instance.atBench && !_satDown)
+            {
+                Log.LogDebug("[Bonfire] Bench sat down check");
+                _satDown = true;
+                LevelingSystem.SatDownAtBench = true;
 
-            // enemy hp bar toggle
+                // this causes BlueHpCheckInvOrMenu check to be ignored on first blue hp update call which happens
+                // right after loading into a save.
+                if (!LevelingSystem.BlueHpInit)
+                {
+                    LevelingSystem.SatDownAtBench = false;
+                }
+            }
+            else if (!PlayerData.instance.atBench)
+            {
+                _satDown = false;
+                LevelingSystem.SatDownAtBench = false;
+            }
+
+            // enemy hp bar toggle hotkey
             if (_enemyHpBarToggleHotkey.Value.IsDown())
             {
                 _enemyHPBarsEnabled = !_enemyHPBarsEnabled;
@@ -219,7 +246,7 @@ namespace BonfireSilksong
             Init();
             LevelingSystem.Instance.RefreshRelicsObtained();
 
-            //Log.LogDebug("Current scene: " + GameManager.instance.GetSceneNameString());
+            //Log.LogDebug("[Bonfire] Current scene: " + GameManager.instance.GetSceneNameString());
 
             //Debug.VisitedScenes();
         }

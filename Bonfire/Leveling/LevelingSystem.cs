@@ -29,6 +29,8 @@ namespace BonfireSilksong
         public int WisdomIncrease = 0;
         public int LuckIncrease = 0;
 
+        public static bool SatDownAtBench = false;
+        public static bool BlueHpInit = false;
         public static LevelingSystem Instance
         {
             get => _instance;
@@ -47,6 +49,8 @@ namespace BonfireSilksong
             else if (stat == "Resilience") ResilienceIncrease++;
             else if (stat == "Wisdom") WisdomIncrease++;
             else LuckIncrease++;
+
+            if (!CheckStatLevels()) return;
 
             int relicsObtained = CachedRelicsObtained;
             if (relicsObtained < 0)
@@ -100,7 +104,7 @@ namespace BonfireSilksong
             s.LuckStat += LuckIncrease;
 
             Bonfire.Log.LogDebug(
-                "Level up applied: "
+                "[LevelingSystem] Level up applied: "
                 + StrengthIncrease + " Strength, "
                 + DexterityIncrease + " Dexterity, "
                 + IntelligenceIncrease + " Intelligence, "
@@ -195,6 +199,73 @@ namespace BonfireSilksong
             s.PendingRelicLevels = 0;
         }
 
+        /// <summary>
+        /// Checks stat level range and prevents leveling beyond stat cap of 99.
+        /// </summary>
+        public bool CheckStatLevels()
+        {
+            var s = Bonfire.Instance.Status;
+            bool valid = true;
+
+            if (s.StrengthStat < 0) s.StrengthStat = 0;
+            else if (s.StrengthStat > 99) s.StrengthStat = 99;
+            else if (s.StrengthStat + StrengthIncrease > 99)
+            {
+                StrengthIncrease--;
+                valid = false;
+            }
+
+            if (s.DexterityStat < 0) s.DexterityStat = 0;
+            else if (s.DexterityStat > 99) s.DexterityStat = 99;
+            else if (s.DexterityStat + DexterityIncrease > 99)
+            {
+                DexterityIncrease--;
+                valid = false;
+            }
+
+            if (s.IntelligenceStat < 0) s.IntelligenceStat = 0;
+            else if (s.IntelligenceStat > 99) s.IntelligenceStat = 99;
+            else if (s.IntelligenceStat + IntelligenceIncrease > 99)
+            {
+                IntelligenceIncrease--;
+                valid = false;
+            }
+
+            if (s.ArtificeStat < 0) s.ArtificeStat = 0;
+            else if (s.ArtificeStat > 99) s.ArtificeStat = 99;
+            else if (s.ArtificeStat + ArtificeIncrease > 99)
+            {
+                ArtificeIncrease--;
+                valid = false;
+            }
+
+            if (s.ResilienceStat < 0) s.ResilienceStat = 0;
+            else if (s.ResilienceStat > 99) s.ResilienceStat = 99;
+            else if (s.ResilienceStat + ResilienceIncrease > 99)
+            {
+                ResilienceIncrease--;
+                valid = false;
+            }
+
+            if (s.WisdomStat < 0) s.WisdomStat = 0;
+            else if (s.WisdomStat > 99) s.WisdomStat = 99;
+            else if (s.WisdomStat + WisdomIncrease > 99)
+            {
+                WisdomIncrease--;
+                valid = false;
+            }
+
+            if (s.LuckStat < 0) s.LuckStat = 0;
+            else if (s.LuckStat > 99) s.LuckStat = 99;
+            else if (s.LuckStat + LuckIncrease > 99)
+            {
+                LuckIncrease--;
+                valid = false;
+            }
+
+            return valid;
+        }
+
         public int GetAvailableRelicLevels()
         {
             var s = Bonfire.Instance.Status;
@@ -216,8 +287,17 @@ namespace BonfireSilksong
         /// </summary>
         public static void UpdateBlueHP()
         {
-            Bonfire.Log.LogDebug("Called UpdateBlueHP");
+            Bonfire.Log.LogDebug("[LevelingSystem] Called UpdateBlueHP");
             Instance.StartCoroutine(RefreshResilienceBlueHealth());
+        }
+
+        public static void ResetInitFlags()
+        {
+            if (GameManager.instance.GameState == GameState.MAIN_MENU)
+            {
+                _bindCostInit = false;
+                BlueHpInit = false;
+            }
         }
 
         /// <summary>
@@ -227,8 +307,10 @@ namespace BonfireSilksong
         /// </summary>
         public static IEnumerator CallDelayedUpdateBlueHP()
         {
-            yield return new WaitUntil(() => PlayerData.instance.atBench);
-            yield return new WaitForSecondsRealtime(0.5f);
+            //GameManager.instance.GameState == GameState.PLAYING;
+
+            yield return new WaitUntil(() => GameManager.instance.GameState == GameState.PLAYING);
+            yield return new WaitForSecondsRealtime(0.25f);
             UpdateBlueHP();
         }
 
@@ -245,11 +327,6 @@ namespace BonfireSilksong
             // Is this absolutely necessary? No, probably doesn't even affect game performance to be honest, but 
             // just a good habit to prevent a pointless execution loop because UpdateBindCostFSM is called on each
             // frame.
-            if (GameManager.instance.GameState == GameState.MAIN_MENU)
-            {
-                _bindCostInit = false;
-                return;
-            }
 
             if (!GameManager.instance.hero_ctrl.cState.isBinding && _bindCostInit) return;
 
@@ -401,10 +478,10 @@ namespace BonfireSilksong
         private int _cachedRelicsObtained = 0;
 
         private int _critRoll = 0;
-        public bool _crit = false;
+        private bool _crit = false;
         private float _silkRegenTime = 0f;
         private float _toolRegenTime = 0f;
-        public int _hitsSinceShielded = 0;
+        private int _hitsSinceShielded = 0;
         private bool _blockNextHit = false;
 
         private static LevelingSystem _instance;
@@ -447,7 +524,8 @@ namespace BonfireSilksong
         private static bool BlueHpCheckInvOrMenu()
         {
             if (PlayerData.instance.isInventoryOpen ||
-                GameManager.instance.isPaused)
+                GameManager.instance.isPaused ||
+                SatDownAtBench)
             {
                 _blueHpAddingInProgress = false;
                 return true;
@@ -468,10 +546,23 @@ namespace BonfireSilksong
         // player spams inventory and/or pause on and off repeatedly.
         private static IEnumerator RefreshResilienceBlueHealth()
         {
+            Bonfire.Log.LogInfo("blue hp refresh");
             yield return new WaitForSecondsRealtime(0.25f);
 
             if (_blueHpAddingInProgress) yield break;
             _blueHpAddingInProgress = true;
+
+            if (BlueHpCheckInvOrMenu())
+            {
+                if (SatDownAtBench)
+                {
+                    Bonfire.Log.LogInfo("SatDownAtBench is true, call refresh again");
+                    SatDownAtBench = false;
+                    Instance.StartCoroutine(RefreshResilienceBlueHealth());
+                }
+                yield break;
+            }
+            SatDownAtBench = false;
 
             // removes existing blue hp before applying new values: closing the inventory automatically sets healthBlue 
             // = 0 while closing pause menu doesn't so it's important to do it here manually. HeroCtrl-MaxHealth fsm 
@@ -487,8 +578,9 @@ namespace BonfireSilksong
             // HeroController.MaxHealth also sends EventRegister.SendEvent(EventRegisterEvents.HeroHealedToMax), but 
             // apparently it's not needed to reset blue mask state
 
-            yield return new WaitForSecondsRealtime(0.25f);
             if (BlueHpCheckInvOrMenu()) yield break;
+
+            yield return new WaitForSecondsRealtime(0.25f);
 
             int masks = ExtraMasks(Bonfire.Instance.Status.ResilienceStat);
 
@@ -516,8 +608,6 @@ namespace BonfireSilksong
             }
 
             if (BlueHpCheckInvOrMenu()) yield break;
-
-            yield return new WaitForSecondsRealtime(0.1f);
 
             _blueHpAddingInProgress = false;
         }
@@ -596,13 +686,13 @@ namespace BonfireSilksong
                         gui.EnemyIsBoss.Add(__instance, BossSceneController.Instance != null);
                     }
 
-                    Bonfire.Log.LogDebug("[Vanilla] rosary and shell shard values:");
+                    Bonfire.Log.LogDebug("[LevelingSystem] <Vanilla> rosary and shell shard values:");
                     Bonfire.Log.LogDebug($"small={GetRosaries("small", __instance)}");
                     Bonfire.Log.LogDebug($"medium={GetRosaries("medium", __instance)}");
                     Bonfire.Log.LogDebug($"large={GetRosaries("large", __instance)}");
                     Bonfire.Log.LogDebug($"shards={GetShellShards(__instance)}");
 
-                    Bonfire.Log.LogDebug("[Bonfire] rosary and shell shard values:");
+                    Bonfire.Log.LogDebug("[LevelingSystem] <Modded> rosary and shell shard values:");
                     Bonfire.Log.LogDebug($"small={IncreaseRosaries(GetRosaries("small", __instance), s.LuckStat)}");
                     Bonfire.Log.LogDebug($"medium={IncreaseRosaries(GetRosaries("medium", __instance), s.LuckStat)}");
                     Bonfire.Log.LogDebug($"large={IncreaseRosaries(GetRosaries("large", __instance), s.LuckStat)}");
@@ -623,6 +713,12 @@ namespace BonfireSilksong
         {
             static void Postfix()
             {
+                if (!BlueHpInit)
+                {
+                    BlueHpInit = true;
+                    return;
+                }
+
                 UpdateBlueHP();
             }
         }
@@ -686,7 +782,7 @@ namespace BonfireSilksong
             {
                 if (__instance.cState.evading || __instance.cState.invulnerable) return;
 
-                Bonfire.Log.LogDebug("Took damage from hazard type: " + hazardType);
+                Bonfire.Log.LogDebug("[LevelingSystem] Took damage from hazard type: " + hazardType);
 
                 if (hazardType != HazardType.ENEMY) return; // only block enemy attacks
 
@@ -802,6 +898,7 @@ namespace BonfireSilksong
                     }
                     else
                     {
+                        Bonfire.Log.LogDebug("[LevelingSystem] Checking silk regen conditions");
                         int silkRegenInterval = SilkRegenInterval(Bonfire.Instance.Status.WisdomStat);
                         if (silkRegenInterval <= 0)
                         {
@@ -822,7 +919,7 @@ namespace BonfireSilksong
                     }
                     else
                     {
-                        Bonfire.Log.LogDebug("Checking tool regen conditions");
+                        Bonfire.Log.LogDebug("[LevelingSystem] Checking tool regen conditions");
                         int toolRegenInterval = ToolRegenInterval(Bonfire.Instance.Status.ArtificeStat);
                         if (toolRegenInterval <= 0)
                         {
@@ -870,7 +967,7 @@ namespace BonfireSilksong
                 if (source == SilkSpool.SilkTakeSource.Wisp && Bonfire.Instance.Status.WisdomStat >= 20)
                 {
                     __instance.AddSilk(amount, heroEffect: false);
-                    Bonfire.Log.LogDebug("Refunded silk after spawning a wisp");
+                    Bonfire.Log.LogDebug("[LevelingSystem] Refunded silk after spawning a wisp");
                 }
             }
         }
@@ -889,7 +986,7 @@ namespace BonfireSilksong
                 MinMaxFloat mmfDelay = (MinMaxFloat)WispSpawnStartDelay?.GetValue(__instance);
                 MinMaxFloat mmfCd = (MinMaxFloat)WispSpawnCooldown?.GetValue(__instance);
 
-                Bonfire.Log.LogDebug("Wispfire Lantern:");
+                Bonfire.Log.LogDebug("[LevelingSystem] Wispfire Lantern:");
                 Bonfire.Log.LogDebug("- Delay start: " + mmfDelay.Start);
                 Bonfire.Log.LogDebug("- Delay End " + mmfDelay.End);
                 Bonfire.Log.LogDebug("- Cd start: " + mmfCd.Start);
@@ -944,7 +1041,7 @@ namespace BonfireSilksong
 
                 int critRoll = Instance._critRoll;
 
-                Bonfire.Log.LogDebug($"Crit chance: {critChance}. Rolled {critRoll}.");
+                Bonfire.Log.LogDebug($"[LevelingSystem] Crit chance: {critChance}. Rolled {critRoll}.");
 
                 Instance._crit = critRoll <= critChance;
             }
@@ -980,7 +1077,7 @@ namespace BonfireSilksong
                 string sourceName = hitInstance.Source.name;
                 var tool = hitInstance.RepresentingTool;
 
-                Bonfire.Log.LogDebug("Recorded a hit => Hit source: " + sourceName);
+                Bonfire.Log.LogDebug("[LevelingSystem] Recorded a hit => Hit source: " + sourceName);
                 Bonfire.Log.LogDebug("Tool instance: " + tool?.name ?? "null");
 
                 if (tool != null && tool.Type == ToolItemType.Skill)
@@ -989,20 +1086,20 @@ namespace BonfireSilksong
                     // the "Type == ToolItemType.Skill" should already target only the silk skills, but in case exact 
                     // names are needed for hitInstance.RepresentingTool.name, these are:
                     //   Silk Spear, Thread Sphere, Parry, Silk Charge, Silk Bomb, Silk Boss Needle
-                    Bonfire.Log.LogDebug($"[Vanilla] Silk Skill: {tool}. Damage: {hitInstance.DamageDealt}");
+                    Bonfire.Log.LogDebug($"<Vanilla> Silk Skill: {tool}. Damage: {hitInstance.DamageDealt}");
 
                     hitInstance.DamageDealt = SpellDamage(hitInstance.DamageDealt, s.IntelligenceStat);
 
-                    Bonfire.Log.LogDebug($"[Bonfire] Silk Skill: {tool}. Damage: {hitInstance.DamageDealt}");
+                    Bonfire.Log.LogDebug($"<Modded> Silk Skill: {tool}. Damage: {hitInstance.DamageDealt}");
                 }
                 else if (tool != null && (tool.Type == ToolItemType.Red || tool.Type == ToolItemType.Blue))
                 {
                     // -- red and blue tools --
-                    Bonfire.Log.LogDebug($"[Vanilla] Tool: {tool}. Damage: {hitInstance.DamageDealt}");
+                    Bonfire.Log.LogDebug($"<Vanilla> Tool: {tool}. Damage: {hitInstance.DamageDealt}");
 
                     hitInstance.DamageDealt = ToolDamage(hitInstance.DamageDealt, s.ArtificeStat);
 
-                    Bonfire.Log.LogDebug($"[Bonfire] Tool: {tool}. Damage: {hitInstance.DamageDealt}");
+                    Bonfire.Log.LogDebug($"<Modded> Tool: {tool}. Damage: {hitInstance.DamageDealt}");
                 }
                 else if (sourceName.Contains("Slash") || sourceName == "Needle Damage")
                 {
@@ -1013,17 +1110,17 @@ namespace BonfireSilksong
                     // 2. Hollow Knight's mod used "lash", but this would also include something like "Splash Surface" 
                     // which gets recorded if player hits water surface
                     // 3. Finally, the "Needle Damage" check is probably not needed, but there's no harm in including it
-                    Bonfire.Log.LogDebug($"[Vanilla] Damage for {sourceName} = {hitInstance.DamageDealt}");
+                    Bonfire.Log.LogDebug($"<Vanilla> Damage for {sourceName} = {hitInstance.DamageDealt}");
 
                     hitInstance.DamageDealt = NeedleDamage(s.StrengthStat);
 
-                    Bonfire.Log.LogDebug($"[Bonfire] Damage for {sourceName} = {hitInstance.DamageDealt}");
+                    Bonfire.Log.LogDebug($"<Bonfire> Damage for {sourceName} = {hitInstance.DamageDealt}");
 
                     if (Instance._crit)
                     {
                         hitInstance.DamageDealt = CritDamage(s.DexterityStat, hitInstance.DamageDealt);
 
-                        Bonfire.Log.LogDebug($"[Crit] Damage for {sourceName} = {hitInstance.DamageDealt}");
+                        Bonfire.Log.LogDebug($"Crit Damage for {sourceName} = {hitInstance.DamageDealt}");
 
                         HeroController.instance.GetComponent<SpriteFlash>().FlashGrimmflame();
                         Instance._crit = false;
