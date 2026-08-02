@@ -61,6 +61,10 @@
       <HintPath>$(ManagedRefs)\UnityEngine.TextRenderingModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="TeamCherry.SharedUtils">
+      <HintPath>$(ManagedRefs)\TeamCherry.SharedUtils.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
 </Project>
