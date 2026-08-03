@@ -13,7 +13,7 @@ namespace BonfireSilksong
     /// <summary>
     /// Main class for Bonfire-Silksong mod
     /// </summary>
-    [BepInPlugin("hksilksong.mod.bonfire-silksong", "Bonfire-Silksong", "0.7.0")]
+    [BepInPlugin("hksilksong.mod.bonfire-silksong", "Bonfire-Silksong", "0.8.0")]
     public class Bonfire : BaseUnityPlugin
     {
         public PlayerStatus Status;
@@ -163,27 +163,7 @@ namespace BonfireSilksong
 
             LevelingSystem.UpdateBindCostFSM();
 
-            // update when player sits down on a bench and flip it only after standing up
-            // useful for blue hp updates where an additional flag needs to cancel previous update if player should
-            // sit down again while previous loop is still processing
-            if (PlayerData.instance.atBench && !_satDown)
-            {
-                Log.LogDebug("[Bonfire] Bench sat down check");
-                _satDown = true;
-                LevelingSystem.SatDownAtBench = true;
-
-                // this causes BlueHpCheckInvOrMenu check to be ignored on first blue hp update call which happens
-                // right after loading into a save.
-                if (!LevelingSystem.BlueHpInit)
-                {
-                    LevelingSystem.SatDownAtBench = false;
-                }
-            }
-            else if (!PlayerData.instance.atBench)
-            {
-                _satDown = false;
-                LevelingSystem.SatDownAtBench = false;
-            }
+            AtBenchCheck();
 
             // enemy hp bar toggle hotkey
             if (_enemyHpBarToggleHotkey.Value.IsDown())
@@ -251,5 +231,31 @@ namespace BonfireSilksong
             //Debug.VisitedScenes();
         }
 
+        // -- other --
+
+        // update when player sits down on a bench and flip it only after standing up.
+        // useful for blue hp updates where an additional flag needs to cancel previous update if player ends up
+        // sitting down again while previous loop is still processing
+        private void AtBenchCheck()
+        {
+            if (PlayerData.instance.atBench && !_satDown)
+            {
+                Log.LogDebug("[Bonfire] Bench sat down check");
+                _satDown = true;
+                LevelingSystem.SatDownAtBench = true;
+
+                // this causes BlueHpCheckInvOrMenu check to be ignored on first blue hp update call which happens
+                // right after loading into a save.
+                if (!LevelingSystem.BlueHpInit)
+                {
+                    LevelingSystem.SatDownAtBench = false;
+                }
+            }
+            else if (!PlayerData.instance.atBench)
+            {
+                _satDown = false;
+                LevelingSystem.SatDownAtBench = false;
+            }
+        }
     }
 }

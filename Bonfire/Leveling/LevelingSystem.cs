@@ -13,11 +13,7 @@ using TeamCherry.SharedUtils;
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Leveling system logic. 
-    /// 1. All Bonfire.instance.PlayerStatus write operations should also be done here.
-    /// 2. All methods should be instanced: accessing leveling system through a single shared LevelingSystem.Instance 
-    /// makes code clearer without mixing instanced/static calls, even if it technically violates OOP principles where 
-    /// non-instance methods should be always static.
+    /// Leveling system logic. All Bonfire.instance.PlayerStatus write operations should also be done here.
     /// </summary>
     public class LevelingSystem : MonoBehaviour
     {
@@ -145,6 +141,8 @@ namespace BonfireSilksong
 
             s.RespecRelicLevels = 0;
             s.RespecRelicLevels += relicLevelsSpent;
+            if (s.RespecRelicLevels > CachedRelicsObtained)
+                s.RespecRelicLevels = CachedRelicsObtained;
 
             PlayerData.instance.AddGeo(s.TotalSpentRosaries);
             HeroController.instance.AddGeo(s.TotalSpentRosaries);
@@ -520,7 +518,7 @@ namespace BonfireSilksong
             return total;
         }
 
-        // helper for UpdateBlueHP
+        // helper for RefreshResilienceBlueHealth
         private static bool BlueHpCheckInvOrMenu()
         {
             if (PlayerData.instance.isInventoryOpen ||
@@ -597,7 +595,7 @@ namespace BonfireSilksong
 
                     if (HeroController.instance.IsInLifebloodState)
                     {
-                        HeroController.instance.HitMaxBlueHealthBurst();
+                        HeroController.instance.EnterLifebloodStateQuick();
                         yield return new WaitForSecondsRealtime(0.25f);
 
                         _blueHpAddingInProgress = false;
@@ -656,7 +654,7 @@ namespace BonfireSilksong
         }
 
         // force config data saving when charms are updated
-        // as leveling up and respeccing needs these, it's important to call CharmUpdate inside them in LevelingSystem
+        // as leveling up and respeccing needs these, it's important to call CharmUpdate inside them
         [HarmonyPatch(typeof(HeroController), "CharmUpdate")]
         class HeroController_CharmUpdate
         {
