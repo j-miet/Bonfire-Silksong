@@ -60,12 +60,12 @@ namespace BonfireSilksong
 
             // add color filter on top of map
             GUI.color = new Color(0, 0, 0, 0.2f);
-            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
             // bench list + dark, filled background to hide map elements underneath
-            float listW = 350f, listH = Screen.height * 0.7f;
-            Rect listRect = new Rect(20f, Screen.height / 2f - listH / 2f, listW, listH);
+            float listW = 350f, listH = BonfireGUI.Height * 0.7f;
+            Rect listRect = new Rect(20f, BonfireGUI.Height / 2f - listH / 2f, listW, listH);
 
             Color old = GUI.color;
             GUI.color = new Color(0f, 0f, 0f, 1f);
@@ -80,8 +80,8 @@ namespace BonfireSilksong
             if (_selectedPin != null)
             {
                 float confirmW = 400f, confirmH = 110f;
-                float confirmX = Screen.width / 2f - confirmW / 2f;
-                float confirmY = Screen.height - confirmH - 20f;
+                float confirmX = BonfireGUI.Width / 2f - confirmW / 2f;
+                float confirmY = BonfireGUI.Height - confirmH - 20f;
                 Rect confirmRect = new Rect(confirmX, confirmY, confirmW, confirmH);
 
                 old = GUI.color;
@@ -104,8 +104,8 @@ namespace BonfireSilksong
             else if (_selectedScene != null)
             {
                 float confirmW = 400f, confirmH = 110f;
-                float confirmX = Screen.width / 2f - confirmW / 2f;
-                float confirmY = Screen.height - confirmH - 20f;
+                float confirmX = BonfireGUI.Width / 2f - confirmW / 2f;
+                float confirmY = BonfireGUI.Height - confirmH - 20f;
                 Rect confirmRect = new Rect(confirmX, confirmY, confirmW, confirmH);
 
                 old = GUI.color;
@@ -133,11 +133,11 @@ namespace BonfireSilksong
             if (PlayerData.instance.defeatedBellBeast)
             {
                 GUI.color = new Color(0, 0, 0, 0.8f);
-                GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
                 GUI.color = Color.yellow;
 
                 float w = 600f, h = 300f;
-                Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
+                Rect modalRect = new Rect(BonfireGUI.Width / 2f - w / 2f, BonfireGUI.Height / 2f - h / 2f, w, h);
                 GUI.ModalWindow(10000, modalRect, DrawFastTravelUnlockModalPopup, "Bench fast travel unlocked!");
             }
         }

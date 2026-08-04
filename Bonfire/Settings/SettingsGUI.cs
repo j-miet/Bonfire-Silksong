@@ -28,14 +28,23 @@ namespace BonfireSilksong
 
         public void DrawExtraSettingsUI()
         {
+            if (GameManager.instance.isPaused)
+            {
+                _pendingSettingsWindow = false;
+                _pendingCrestUnlock = false;
+                _pendingStatusReset = false;
+            }
+
             if (!_pendingSettingsWindow) return;
 
             GUI.color = new Color(0, 0, 0, 0.8f);
-            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
             float w = 550f, h = 420f;
-            Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
+            Rect modalRect = new Rect(
+                BonfireGUI.Width / 2f - w / 2f, BonfireGUI.Height / 2f - h / 2f,
+                w, h);
             GUI.ModalWindow(10003, modalRect, DrawExtraSettingsModal, "Settings");
         }
 
@@ -50,7 +59,7 @@ namespace BonfireSilksong
                 HealthManager hm = kvp.Key;
                 if (hm == null) continue;
 
-                Vector3 screenPos = UnityEngine.Camera.main.WorldToScreenPoint(hm.transform.position);
+                Vector3 screenPos = Camera.main.WorldToScreenPoint(hm.transform.position);
                 if (screenPos.z < 0) continue;
 
                 float maxHp = kvp.Value;
@@ -63,7 +72,7 @@ namespace BonfireSilksong
                 float width = isBoss ? 300f : 120f;
                 float height = isBoss ? 20f : 10f;
                 float x = screenPos.x - width / 2f;
-                float y = Screen.height - screenPos.y - 20f;
+                float y = BonfireGUI.Height - screenPos.y - 20f;
 
                 GUI.color = new Color(0f, 0f, 0f, 0.7f);
                 GUI.DrawTexture(new Rect(x, y, width, height), SolidTex());
@@ -86,11 +95,13 @@ namespace BonfireSilksong
             if (!_pendingCrestUnlock) return;
 
             GUI.color = new Color(0, 0, 0, 0.8f);
-            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
             float w = 550f, h = 210f;
-            Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
+            Rect modalRect = new Rect(
+                BonfireGUI.Width / 2f - w / 2f, BonfireGUI.Height / 2f - h / 2f,
+                w, h);
             GUI.ModalWindow(10002, modalRect, DrawCrestUnlockConfirmModal, "Crest unlocking");
         }
 
@@ -99,11 +110,13 @@ namespace BonfireSilksong
             if (!_pendingStatusReset) return;
 
             GUI.color = new Color(0, 0, 0, 0.8f);
-            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
             GUI.color = Color.red;
 
             float w = 600f, h = 400f;
-            Rect modalRect = new Rect(Screen.width / 2f - w / 2f, Screen.height / 2f - h / 2f, w, h);
+            Rect modalRect = new Rect(
+                BonfireGUI.Width / 2f - w / 2f, BonfireGUI.Height / 2f - h / 2f,
+                w, h);
             GUI.ModalWindow(10003, modalRect, DrawPlayerStatusResetConfirmModal, "Reset mod configurations");
         }
 

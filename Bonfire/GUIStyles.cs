@@ -21,6 +21,10 @@ namespace BonfireSilksong
         public static GUIStyle BenchListButtonSelectedStyle;
         public static GUIStyle FastTravelConfirmHeaderStyle;
         public static GUIStyle FastTravelConfirmDestinationStyle;
+        public static GUIStyle LvlInfoHeaderPrimaryStyle;
+        public static GUIStyle LvlInfoHeaderSecondaryStyle;
+        public static GUIStyle LvlInfoLabelStyle;
+        public static GUIStyle LvlInfoLabelDisabledStyle;
 
         public static void EnsureFonts()
         {
@@ -153,6 +157,49 @@ namespace BonfireSilksong
                     alignment = TextAnchor.MiddleCenter,
                     normal = { textColor = Color.white }
                 };
+
+            if (LvlInfoHeaderPrimaryStyle == null)
+            {
+                LvlInfoHeaderPrimaryStyle = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 17,
+                    normal = { textColor = new Color(0.8f, 0.7f, 0.3f) }
+                };
+            }
+
+            if (LvlInfoHeaderSecondaryStyle == null)
+            {
+                LvlInfoHeaderSecondaryStyle = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 17,
+                    normal = { textColor = new Color(0.1f, 0.4f, 0.8f) }
+                };
+            }
+
+            if (LvlInfoLabelStyle == null)
+            {
+                LvlInfoLabelStyle = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 14,
+                };
+            }
+
+            if (LvlInfoLabelDisabledStyle == null)
+            {
+                LvlInfoLabelDisabledStyle = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 14,
+                    normal = { textColor = Color.gray },
+                };
+            }
         }
     }
 }
