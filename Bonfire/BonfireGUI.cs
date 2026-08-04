@@ -14,8 +14,16 @@ namespace BonfireSilksong
         public static TeleportGUI Teleport;
         public static LevelingGUI Leveling;
 
+        // all GUI resolution logic should use these instead of Screen.width/Screen.height EXCEPT the scaling itself
+        // inside OnGUI callback. This way GUI.Matrix can properly apply its scaling and keep user interfaces 
+        // functional on lower/higher resolutions.
+        // It's important that GUI is designed on 1920x1080 resolution: everything so far has been done
+        // under this assumption and changing it now would a lot of code rewriting.
+        public static float Width => 1920f;
+        public static float Height => 1080f;
 
         private bool _benchCheck = false;
+        private const bool _applyScaleMatrix = true; // should always stay true unless scaling causes issues
 
         private void Awake()
         {
@@ -27,7 +35,19 @@ namespace BonfireSilksong
 
         private void OnGUI()
         {
-            if (Bonfire.CheckIfNoGameManager()) return;
+            Matrix4x4 oldMatrix = GUI.matrix;
+            if (_applyScaleMatrix)
+            {
+                // this must use Screen.width and Screen.height and keep 1920x1080 resolution as base
+                float scale = Mathf.Min(Screen.width / 1920f, Screen.height / 1080f);
+                GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1));
+            }
+
+            if (Bonfire.CheckIfNoGameManager())
+            {
+                GUI.matrix = oldMatrix;
+                return;
+            }
 
             GUIStyles.EnsureFonts();
 
@@ -38,11 +58,14 @@ namespace BonfireSilksong
             }
 
             // then check if game state is playing, paused or in inventory
-            // if none of them is true, avoid running to prevent lag in main menu
+            // if none of them is true, avoid GUI generation to prevent fps drop in main menu
             if (!(GameManager.instance.GameState == GameState.PLAYING ||
                   GameManager.instance.GameState == GameState.PAUSED) ||
                 InInventory())
+            {
+                GUI.matrix = oldMatrix;
                 return;
+            }
 
             if (PlayerData.instance.atBench && !GameManager.instance.isPaused)
             {
@@ -71,6 +94,8 @@ namespace BonfireSilksong
                 LevelingSystem.Instance.ResetPendingLevelUp();
                 _benchCheck = false;
             }
+
+            GUI.matrix = oldMatrix;
         }
 
         private void Update()
@@ -110,7 +135,8 @@ namespace BonfireSilksong
         private void DrawBenchUI()
         {
             Leveling.DrawLevelingUI();
-            GUILayout.Space(10);
+
+            Leveling.DrawOtherUIBeginArena();
             GUILayout.Label("Other", GUIStyles.LevelHeaderStyle);
 
             GUILayout.Space(5);
