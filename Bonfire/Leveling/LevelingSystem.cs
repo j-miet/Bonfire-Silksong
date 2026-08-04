@@ -33,6 +33,15 @@ namespace BonfireSilksong
             private set => _instance = value;
         }
 
+        // stat requirements for secondary effects + their check methods. 
+        // int getters are for direct values e.g. for GUI, bool getters for logic checks
+        public static int WisdomMilestone_1 => 20;
+        public static int WisdomMilestone_2 => 30;
+        public static bool CheckWisdomMilestone_1 =>
+            Bonfire.Instance.Status.WisdomStat + Instance.WisdomIncrease >= WisdomMilestone_1;
+        public static bool CheckWisdomMilestone_2 =>
+            Bonfire.Instance.Status.WisdomStat + Instance.WisdomIncrease >= WisdomMilestone_2;
+
         /// <summary>
         /// Increments the pending allocation for a single stat.
         /// </summary>
@@ -262,6 +271,38 @@ namespace BonfireSilksong
             }
 
             return valid;
+        }
+
+        // TODO implement milestones
+        public (int current, int total) GetStatSecondaryStatus(string statName)
+        {
+            switch (statName.ToLower())
+            {
+                case "strength":
+                    return (0, 3);
+                case "dexterity":
+                    return (0, 3);
+                case "intelligence":
+                    return (0, 3);
+                case "artifice":
+                    return (0, 3);
+                case "resilience":
+                    return (0, 3);
+                case "wisdom":
+                    {
+                        if (CheckWisdomMilestone_2)
+                            return (2, 3);
+                        if (CheckWisdomMilestone_1)
+                            return (1, 3);
+
+                        return (0, 3);
+                    }
+                case "luck":
+                    return (0, 3);
+                default:
+                    Bonfire.Log.LogDebug($"Could not find secondary status for stat {statName}");
+                    return (0, 0);
+            }
         }
 
         public int GetAvailableRelicLevels()
@@ -953,7 +994,7 @@ namespace BonfireSilksong
             {
                 var hc = HeroController.instance;
 
-                if (Bonfire.Instance.Status.WisdomStat >= 20 && hc.playerData.silk <= 0)
+                if (CheckWisdomMilestone_1 && hc.playerData.silk <= 0)
                     hc.AddSilk(1, heroEffect: false);
             }
         }
@@ -963,7 +1004,7 @@ namespace BonfireSilksong
         {
             static void Postfix(HeroController __instance, int amount, SilkSpool.SilkTakeSource source)
             {
-                if (source == SilkSpool.SilkTakeSource.Wisp && Bonfire.Instance.Status.WisdomStat >= 20)
+                if (source == SilkSpool.SilkTakeSource.Wisp && CheckWisdomMilestone_1)
                 {
                     __instance.AddSilk(amount, heroEffect: false);
                     Bonfire.Log.LogDebug("[LevelingSystem] Refunded silk after Wispfire Lantern use");
@@ -995,16 +1036,15 @@ namespace BonfireSilksong
                 float delayNew = 0.3f;
                 float cdNew = 4f;
 
-                if (Bonfire.Instance.Status.WisdomStat >= 20 &&
-                    Bonfire.Instance.Status.WisdomStat < 30)
-                {
-                    delayNew = 0.15f;
-                    cdNew = 2f;
-                }
-                else if (Bonfire.Instance.Status.WisdomStat >= 30)
+                if (CheckWisdomMilestone_2)
                 {
                     delayNew = 0.1f;
                     cdNew = 1f;
+                }
+                else if (CheckWisdomMilestone_1)
+                {
+                    delayNew = 0.15f;
+                    cdNew = 2f;
                 }
 
                 mmfDelay.Start = mmfDelay.End = delayNew;
