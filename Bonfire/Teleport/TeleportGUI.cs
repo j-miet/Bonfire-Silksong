@@ -586,6 +586,8 @@ namespace BonfireSilksong
             GUI.contentColor = Color.white;
             if (GUILayout.Button("Travel", GUIStyles.ButtonStyle, GUILayout.Width(200f), GUILayout.Height(30f)))
             {
+                DeliveryQuestItem.TakeHit(100); // destroy all courier quest items
+
                 BenchTeleport.PrepareTeleportLocation(_selectedPin);
 
                 Bonfire.Instance.StartCoroutine(StartTeleport());
@@ -661,6 +663,8 @@ namespace BonfireSilksong
             GUI.contentColor = Color.white;
             if (GUILayout.Button("Travel", GUIStyles.ButtonStyle, GUILayout.Width(200f), GUILayout.Height(30f)))
             {
+                DeliveryQuestItem.TakeHit(100);
+
                 FillTeleportData(_selectedScene);
 
                 Bonfire.Instance.StartCoroutine(StartTeleport());

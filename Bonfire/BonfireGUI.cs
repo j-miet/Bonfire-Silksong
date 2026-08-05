@@ -36,17 +36,13 @@ namespace BonfireSilksong
         private void OnGUI()
         {
             Matrix4x4 oldMatrix = GUI.matrix;
+            if (Bonfire.CheckIfNoGameManager()) return;
+
             if (_applyScaleMatrix)
             {
                 // this must use Screen.width and Screen.height and keep 1920x1080 resolution as base
                 float scale = Mathf.Min(Screen.width / 1920f, Screen.height / 1080f);
                 GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1));
-            }
-
-            if (Bonfire.CheckIfNoGameManager())
-            {
-                GUI.matrix = oldMatrix;
-                return;
             }
 
             GUIStyles.EnsureFonts();
@@ -136,7 +132,7 @@ namespace BonfireSilksong
         {
             Leveling.DrawLevelingUI();
 
-            Leveling.DrawOtherUIBeginArena();
+            Leveling.DrawOtherUIBeginArea();
             GUILayout.Label("Other", GUIStyles.LevelHeaderStyle);
 
             GUILayout.Space(5);
@@ -146,7 +142,7 @@ namespace BonfireSilksong
             Teleport.DrawBenchFastTravelButton();
 
             GUILayout.Space(5);
-            GUILayout.EndArea();
+            GUILayout.EndArea(); // close DrawOtherUIBeginArea component
         }
     }
 }

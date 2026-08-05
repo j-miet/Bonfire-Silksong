@@ -5,7 +5,7 @@ namespace BonfireSilksong
     [Serializable]
     public class PlayerStatus
     {
-        // leveling system values
+        // leveling system
         public int StrengthStat = 0;
         public int DexterityStat = 0;
         public int IntelligenceStat = 0;
@@ -24,13 +24,17 @@ namespace BonfireSilksong
         public int PendingRelicLevels = 0;
         public int RespecCost = 1;
 
-        // other
-        public bool InfiniteShellShardsEnabled = false; // obtaining/using shards replenishes them to full
-        public bool InfiniteShardsBenchOnly = false; // shards replenish to full, but only when sitting on a bench
+        // leveling GUI
+        public int LevelingInfoStyle = 0;
 
+        // settings
         public bool EnemyHealthBarsEnabled = false;
         public bool EnemyHpBarColorProgression = false;
 
+        public bool DeliveryQuestsRemoveTimer = false;
+        public bool DeliveryQuestsRemoveDamage = false;
+
+        public bool RefillShardsAtBench = false;
         public bool ReduceFleaGamesScoreLimit = false;
 
         public bool UnlockedAllCrests = false;

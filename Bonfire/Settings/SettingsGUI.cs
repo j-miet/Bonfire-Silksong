@@ -28,7 +28,7 @@ namespace BonfireSilksong
 
         public void DrawExtraSettingsUI()
         {
-            if (GameManager.instance.isPaused)
+            if (GameManager.instance.isPaused || !PlayerData.instance.atBench)
             {
                 _pendingSettingsWindow = false;
                 _pendingCrestUnlock = false;
@@ -41,7 +41,7 @@ namespace BonfireSilksong
             GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            float w = 550f, h = 420f;
+            float w = 550f, h = 480f;
             Rect modalRect = new Rect(
                 BonfireGUI.Width / 2f - w / 2f, BonfireGUI.Height / 2f - h / 2f,
                 w, h);
@@ -139,13 +139,7 @@ namespace BonfireSilksong
 
         private void DrawExtraSettingsModal(int windowId)
         {
-            DrawShellShardSettingsUI();
-            GUILayout.Space(10);
-
-            DrawEnemyHPToggleUI();
-            GUILayout.Space(10);
-
-            DrawOtherSettingsUI();
+            DrawToggleSettings();
             GUILayout.Space(10);
 
             DrawCrestUnlockButton();
@@ -172,40 +166,14 @@ namespace BonfireSilksong
             GUILayout.EndHorizontal();
         }
 
-        private void DrawShellShardSettingsUI()
+        private void DrawToggleSettings()
         {
             var s = Bonfire.Instance.Status;
-
-            GUILayout.BeginVertical("box");
-            GUILayout.Label("Shell shard replenishment");
 
             GUI.backgroundColor = Color.white;
-            s.InfiniteShellShardsEnabled = GUILayout.Toggle(s.InfiniteShellShardsEnabled, "Infinite shards");
-
-            if (!s.InfiniteShellShardsEnabled)
-                s.InfiniteShardsBenchOnly = false;
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(15);
-
-            GUI.enabled = s.InfiniteShellShardsEnabled;
-            s.InfiniteShardsBenchOnly = GUILayout.Toggle(
-                s.InfiniteShardsBenchOnly,
-                "Shard refill to full only at benches");
-            GUI.enabled = true;
-
-            GUILayout.EndHorizontal();
-            GUILayout.EndVertical();
-        }
-
-        private void DrawEnemyHPToggleUI()
-        {
-            var s = Bonfire.Instance.Status;
-
             GUILayout.BeginVertical("box");
             GUILayout.Label("Enemy HP bars");
 
-            GUI.backgroundColor = Color.white;
             s.EnemyHealthBarsEnabled = GUILayout.Toggle(
                 s.EnemyHealthBarsEnabled,
                 "Display enemy health bars (global hotkey is LeftControl + H)");
@@ -221,16 +189,30 @@ namespace BonfireSilksong
 
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
-        }
-
-        // other uncategorized features
-        private void DrawOtherSettingsUI()
-        {
-            var s = Bonfire.Instance.Status;
+            GUILayout.Space(10);
 
             GUILayout.BeginVertical("box");
+            GUILayout.Label("Delivery Quests");
 
-            GUI.backgroundColor = Color.white;
+            s.DeliveryQuestsRemoveDamage = GUILayout.Toggle(
+                s.DeliveryQuestsRemoveDamage,
+                "Remove damage penalties from delivery quests.");
+
+            s.DeliveryQuestsRemoveTimer = GUILayout.Toggle(
+                s.DeliveryQuestsRemoveTimer,
+                "Remove timers from delivery quests.");
+
+            GUILayout.EndVertical();
+            GUILayout.Space(10);
+
+            GUILayout.BeginVertical("box");
+            GUILayout.Label("Other");
+
+            s.RefillShardsAtBench = GUILayout.Toggle(
+                s.RefillShardsAtBench,
+                "Refill shell shards to full at bench");
+            GUILayout.Space(5);
+
             s.ReduceFleaGamesScoreLimit = GUILayout.Toggle(
                 s.ReduceFleaGamesScoreLimit,
                 "Reduce Fleatopia game score requirements by 50% (visuals still show original score)");
@@ -276,7 +258,8 @@ namespace BonfireSilksong
                 foreach (var crest in Resources.FindObjectsOfTypeAll<ToolCrest>())
                 {
                     Bonfire.Log.LogDebug("Crest name: " + crest.name);
-                    crest.Unlock();
+                    if (!crest.IsUnlocked)
+                        crest.Unlock();
                 }
 
                 Bonfire.Instance.SaveSettings();

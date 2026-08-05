@@ -9,34 +9,28 @@ namespace BonfireSilksong
     /// </summary>
     public class Settings
     {
-        // if player uses unlock all crest feature, the beast crest unlock prevents fighting Savage Beastfly boss, thus 
-        // preventing getting the second encounter and its mask shard reward.
-        // This fix intercepts the check when player enters the chapel of the beast gate: normally it would
-        // check if player already has the crest (in this case always true) and set door open/closed. Luckily there's
-        // a helper flag for boss kill called 'defeatedBoneFlyerGiant' which can be then used for tracking this state
-        // -> thus if player leaves the chapel after killing the boss, the door closes permanently. This is no longer
-        // an issue because there's no crest to collect anyway if it was already unlocked.
-        // [Note] there's also PlayerData.instance.chapelClosed_beast, but game will override its value before door 
-        // state logic, making it useless for this particular issue
-        [HarmonyPatch(typeof(PlayerDataBoolTest), "OnEnter")]
-        class Patch_PlayerDataBoolTest
+        // shell shards replenishment to full when visiting a bench
+        [HarmonyPatch(typeof(CurrencyManager), "ProcessAddCurrency")]
+        class CurrencyManager_ProcessAddCurrency
         {
-            static bool Prefix(PlayerDataBoolTest __instance)
+            static void Postfix(CurrencyType type)
             {
-                if (Bonfire.Instance.Status.UnlockedAllCrests
-                    && __instance.boolName.Value == "chapelClosed_beast"
-                    && Gameplay.WarriorCrest.IsUnlocked
-                    && !PlayerData.instance.defeatedBoneFlyerGiant)
-                {
-                    // FSM event to keep the chapel gate open. It has other values: "CLOSE" which means its closed
-                    // when scene loads and "DO CLOSE" which triggers the door closing animation
-                    __instance.Fsm.Event("OPEN");
-                    __instance.Finish();
+                if (Bonfire.Instance.Status.RefillShardsAtBench && !PlayerData.instance.atBench) return;
+                if (type != CurrencyType.Shard) return;
 
-                    return false; // return false to skip default OnEnter behavior
-                }
+                PlayerData.instance.ShellShards = Gameplay.GetCurrencyCap(CurrencyType.Shard);
+            }
+        }
 
-                return true;
+        [HarmonyPatch(typeof(CurrencyManager), "ProcessTakeCurrency")]
+        class CurrencyManager_ProcessTakeCurrency
+        {
+            static void Postfix(CurrencyType type)
+            {
+                if (Bonfire.Instance.Status.RefillShardsAtBench && !PlayerData.instance.atBench) return;
+                if (type != CurrencyType.Shard) return;
+
+                PlayerData.instance.ShellShards = Gameplay.GetCurrencyCap(CurrencyType.Shard);
             }
         }
 
@@ -101,30 +95,64 @@ namespace BonfireSilksong
             }
         }
 
-        // shell shards replenishment
-        [HarmonyPatch(typeof(CurrencyManager), "ProcessAddCurrency")]
-        class CurrencyManager_ProcessAddCurrency
+        // remove damage penalties and/or timers from courier delivery quests
+        [HarmonyPatch(typeof(DeliveryQuestItem), "TakeHitForItem", new[] {
+            typeof(DeliveryQuestItem.ActiveItem),
+            typeof(bool),
+            typeof(int)
+        })]
+        class DeliveryQuestItem_TakeHitForItem
         {
-            static void Postfix(CurrencyType type)
+            static bool Prefix()
             {
-                if (!Bonfire.Instance.Status.InfiniteShellShardsEnabled) return;
-                if (type != CurrencyType.Shard) return;
-                if (Bonfire.Instance.Status.InfiniteShardsBenchOnly && !PlayerData.instance.atBench) return;
+                // this will ensure bench teleporting breaks all delivery quest items
+                if (PlayerData.instance.atBench) return true;
 
-                PlayerData.instance.ShellShards = Gameplay.GetCurrencyCap(CurrencyType.Shard);
+                if (!Bonfire.Instance.Status.DeliveryQuestsRemoveDamage) return true;
+
+                return false;
             }
         }
 
-        [HarmonyPatch(typeof(CurrencyManager), "ProcessTakeCurrency")]
-        class CurrencyManager_ProcessTakeCurrency
+        [HarmonyPatch(typeof(HeroController), "TickDeliveryItems")]
+        class HeroController_TickDeliveryItems
         {
-            static void Postfix(CurrencyType type)
+            static bool Prefix()
             {
-                if (!Bonfire.Instance.Status.InfiniteShellShardsEnabled) return;
-                if (type != CurrencyType.Shard) return;
-                if (Bonfire.Instance.Status.InfiniteShardsBenchOnly && !PlayerData.instance.atBench) return;
+                if (!Bonfire.Instance.Status.DeliveryQuestsRemoveTimer) return true;
 
-                PlayerData.instance.ShellShards = Gameplay.GetCurrencyCap(CurrencyType.Shard);
+                return false;
+            }
+        }
+
+        // if player uses unlock all crest feature, the beast crest unlock prevents fighting Savage Beastfly boss, thus 
+        // preventing getting the second encounter and its mask shard reward.
+        // This fix intercepts the check when player enters the chapel of the beast gate: normally it would
+        // check if player already has the crest (in this case always true) and set door open/closed. Luckily there's
+        // a helper flag for boss kill called 'defeatedBoneFlyerGiant' which can be then used for tracking this state
+        // -> thus if player leaves the chapel after killing the boss, the door closes permanently. This is no longer
+        // an issue because there's no crest to collect anyway if it was already unlocked.
+        // [Note] there's also PlayerData.instance.chapelClosed_beast, but game will override its value before door 
+        // state logic, making it useless for this particular issue
+        [HarmonyPatch(typeof(PlayerDataBoolTest), "OnEnter")]
+        class Patch_PlayerDataBoolTest
+        {
+            static bool Prefix(PlayerDataBoolTest __instance)
+            {
+                if (Bonfire.Instance.Status.UnlockedAllCrests
+                    && __instance.boolName.Value == "chapelClosed_beast"
+                    && Gameplay.WarriorCrest.IsUnlocked
+                    && !PlayerData.instance.defeatedBoneFlyerGiant)
+                {
+                    // FSM event to keep the chapel gate open. It has other values: "CLOSE" which means its closed
+                    // when scene loads and "DO CLOSE" which triggers the door closing animation
+                    __instance.Fsm.Event("OPEN");
+                    __instance.Finish();
+
+                    return false; // return false to skip default OnEnter behavior
+                }
+
+                return true;
             }
         }
     }
