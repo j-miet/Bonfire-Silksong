@@ -9,7 +9,7 @@ using UnityEngine;
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Leveling system logic. All Bonfire.instance.PlayerStatus write operations should also be done here.
+    /// Leveling system logic.
     /// </summary>
     public class LevelingSystem : MonoBehaviour
     {
@@ -30,7 +30,8 @@ namespace BonfireSilksong
         }
 
         // stat requirements for secondary effects + their check methods. 
-        // int getters are for direct values e.g. for GUI, bool getters for logic checks
+        // int getters are for direct values e.g. GUI display, bool getters for logic checks.
+        // must be 'static' to allow Harmony patchers access them.
         public static int WisdomMilestone_1 => 20;
         public static int WisdomMilestone_2 => 30;
         public static bool CheckWisdomMilestone_1 =>
