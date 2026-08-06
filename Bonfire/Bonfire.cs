@@ -101,8 +101,8 @@ namespace BonfireSilksong
         /// </summary>
         public static bool CheckIfNoGameManager()
         {
-            if (GameManager.instance.GameState == GameState.MAIN_MENU ||
-                GameManager.instance == null ||
+            if (GameManager.instance == null ||
+                GameManager.instance.GameState == GameState.MAIN_MENU ||
                 !GameManager.instance.IsGameplayScene())
             {
                 Log.LogDebug("[Bonfire] GameManager instance null or in gameplay scene, or GameState is main menu");
@@ -224,7 +224,7 @@ namespace BonfireSilksong
         {
             SaveSettings();
             Init();
-            LevelingSystem.Instance.RefreshRelicsObtained();
+            LevelingSystem.Instance.RefreshRelicsDeposited();
 
             //Log.LogDebug("[Bonfire] Current scene: " + GameManager.instance.GetSceneNameString());
 

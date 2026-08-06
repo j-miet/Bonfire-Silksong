@@ -74,7 +74,7 @@ namespace BonfireSilksong
         {
             static void Postfix()
             {
-                LevelingSystem.Instance.RefreshRelicsObtained();
+                LevelingSystem.Instance.RefreshRelicsDeposited();
                 Bonfire.Instance.SaveSettings();
             }
         }

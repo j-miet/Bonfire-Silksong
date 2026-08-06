@@ -54,15 +54,14 @@ namespace BonfireSilksong
 
             if (!CheckStatLevels()) return;
 
-            int relicsObtained = CachedRelicsObtained;
+            int relicsObtained = _cachedRelicsDeposited;
             if (relicsObtained < 0)
             {
                 Bonfire.Log.LogError("Failed to fetch relic data");
                 return;
             }
 
-            int availableRelicLevels = relicsObtained - s.ConsumedRelicLevels
-                                     + s.RespecRelicLevels - s.PendingRelicLevels;
+            int availableRelicLevels = GetAvailableRelicLevels();
 
             if (availableRelicLevels > 0)
             {
@@ -76,7 +75,7 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// Commits the pending stat allocations, deducting rosaries and relic levels
+        /// Commits the pending stat allocations, deducting rosaries and relic levels.
         /// </summary>
         public void ApplyLevel()
         {
@@ -145,10 +144,9 @@ namespace BonfireSilksong
 
             if (s.TotalRosaryLevels == 1 && relicLevelsSpent == 0) return;
 
-            s.RespecRelicLevels = 0;
-            s.RespecRelicLevels += relicLevelsSpent;
-            if (s.RespecRelicLevels > CachedRelicsObtained)
-                s.RespecRelicLevels = CachedRelicsObtained;
+            RefreshRelicsDeposited();
+            if (CachedRelicsObtained < 0) return;
+            s.RespecRelicLevels = s.ConsumedRelicLevels = CachedRelicsObtained;
 
             PlayerData.instance.AddGeo(s.TotalSpentRosaries);
             HeroController.instance.AddGeo(s.TotalSpentRosaries);
@@ -312,11 +310,11 @@ namespace BonfireSilksong
         /// Helper for caching obtained relics data; otherwise bench ui would re-calculate this every single frame.
         /// To access cached data, use CachedRelicsObtained getter.
         /// </summary>
-        public void RefreshRelicsObtained()
+        public void RefreshRelicsDeposited()
         {
-            _cachedRelicsObtained = RelicsObtained();
+            _cachedRelicsDeposited = RelicsDeposited();
         }
-        public int CachedRelicsObtained => _cachedRelicsObtained;
+        public int CachedRelicsObtained => _cachedRelicsDeposited;
 
         /// <summary>
         /// Update blue mask count from Resilience stat.
@@ -512,7 +510,7 @@ namespace BonfireSilksong
         // -- stat formulas end here -- //
 
 
-        private int _cachedRelicsObtained = 0;
+        private int _cachedRelicsDeposited = 0;
 
         private static LevelingSystem _instance;
         private static bool _blueHpAddingInProgress = false;
@@ -524,7 +522,7 @@ namespace BonfireSilksong
         }
 
         // counts all tier 3-5 relics the player has given to relic seeker npc
-        private static int RelicsObtained()
+        private static int RelicsDeposited()
         {
             var relicChoralCommandments = Resources.FindObjectsOfTypeAll<CollectableItemRelicType>()
                 .FirstOrDefault(r => r.name == "R Seal Chit");
