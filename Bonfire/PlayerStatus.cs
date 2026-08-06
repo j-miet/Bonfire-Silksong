@@ -14,13 +14,17 @@ namespace BonfireSilksong
         public int WisdomStat = 0;
         public int LuckStat = 0;
 
-        public int TotalRosaryLevels = 1; // levelling starts from 1
+        public int TotalRosaryLevels = 1; // leveling starts from 1
         public int TotalSpentRosaries = 0;
         public int PendingRosaryLevels = 0;
         public int PendingRosaries = 0;
 
-        public int RespecRelicLevels = 0; // available free levels earned back from respecs
-        public int ConsumedRelicLevels = 0; // relics already absorbed into RespecRelicLevels or spent
+        // - RespecRelicLevels: available free levels after a respec. Respec resets this back to total deposited.
+        // - ConsumedRelicLevels: relics already part of RespecRelicLevels total pool + ones added after. Thus useful 
+        // when calculating how many deposits have occurred since last respec.
+        // - PendingRelicLevels: free levels put in stats, but not yet confirmed. Reset back to 0 on confirm & cancel.
+        public int RespecRelicLevels = 0;
+        public int ConsumedRelicLevels = 0;
         public int PendingRelicLevels = 0;
         public int RespecCost = 1;
 
@@ -43,5 +47,9 @@ namespace BonfireSilksong
         public bool UnlockedFastTravel = false;
         public bool VisitedAbyssSecondTime = false;
         public int BenchMenuStyle = 1;
+
+        // custom cursor
+        public int CustomCursorSpeed = 400;
+        public bool DisplayGameCursorWithGamepad = false;
     }
 }
