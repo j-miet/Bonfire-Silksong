@@ -1,10 +1,5 @@
 # Leveling system in Hollow Knight: Silksong
 
->**If you were looking for a similar mod for _Hollow Knight_, I have an updated version of the original
->Bonfire mod available as [BonfireRelit](https://github.com/j-miet/BonfireRelit) (requires HK modding API)**
-
----
-
 **Bonfire-Silksong** is a spiritual successor to Hollow Knight's BonfireMod. It adds a leveling system which allows 
 the player to spend rosaries to gain permanent raw stats and utility. Bench interface can be accessed when player sits 
 on a bench and it then closes automatically after player stands up. 
@@ -50,7 +45,7 @@ The main goals of this mod would be to make the player:
 
 - [<u>Features</u>](#features)
   - [<u>Leveling System</u>](#leveling-system)
-  - [<u>Extra Settings</u>](#extra-settings)
+  - [<u>Settings</u>](#settings)
   - [<u>Bench Fast Travel</u>](#bench-fast-travel)
 - [<u>Installation</u>](#installation)
 - [<u>Known Issues</u>](#known-issues)
@@ -59,10 +54,27 @@ The main goals of this mod would be to make the player:
 
 
 ## Features
-  
-Mod consists of 3 core systems/interfaces: leveling, extra QoL settings and fast travel.
 
-All of these are accessed via GUI menu which opens when the player sits down on any bench.
+- A custom GUI which is accessed by sitting on any bench. GUI is navigated using a cursor and supports both mouse and 
+GamePad users.
+    - on GamePad the native game cursor is not available as it's tied to mouse. A custom cursor object with it's own 
+    coordinate tracking is used instead. Thus there might be small inconsistencies between button click location and 
+    cursor position, but as long as you click closer to the center of each GUI element, it should work.
+    - **GamePad controls are simple:**
+        - Right Stick to move cursor.
+        - Attack/Jump to click.
+        - Left/Right bumper to move scrollbars up/down.
+- Leveling system: use rosaries to gain permanent primary stats + additional secondary bonuses after reaching 
+stat-specific milestones.
+- Extra QoL settings for additional customization
+- Bench fast travel system whichs allows you to  teleport to any unlocked bench location.
+    - Most locations are tied to bench pins: if map pin icon is darker/grayed out, it's not unlocked yet
+    - The remaining non-pin locations require custom unlock steps e.g. unlocking and visiting your home in Bellhart 
+    unlocks "Bellhome" bench.
+
+
+The 3 core systems (leveling, settings, fast travel) are explained in more detail below.
+
 
 ### Leveling System
 
@@ -184,7 +196,7 @@ So for example you could try following playstyles + main stat allocations:
 - summons: cogflies, Wispfire Lantern, other tools (artifice, wisdom)
 - tank (resilience, wisdom, also intelligence for bind cost reduction)
 
-Or just freely mix and test everything, your choice.
+Or just freely mix and test everything, it's your call.
 
 
 #### Additional info:
@@ -205,18 +217,15 @@ cost by one, starting from 1 Silkeater.
     free level-ups and are immediately available for reallocation.
 
 
-### Extra Settings
+### Settings
 Pressing "Extra Settings" button opens a new window where user can access following quality of life features:
 
-- <u>Shell shard regen</u> (toggle)
+- <u>Gamepad cursor</u> (only available if GamePad device is detected)
+    - adjust cursor speed
+    - hide mouse cursor: if you have both controller and mouse plugged in and don't need mouse cursor, this hides 
+    it in GUI menus
 
-    - *Infinite:* obtaining/using shards fills them to full, obviously breaks Architect Crest balance
-    - *Bench-only:* shards refill to full only at benches.
-        
-    Leveling the "Luck" stat also 
-    increases enemy shard drop rates if you prefer a more vanilla-like approach for shard management.
-
-- <u>Enemy hp bars</u> (toggle)
+- <u>Enemy hp bars</u>
 
     Just simple rectangles hovering on enemies, no fancy visuals or numbers.
     Can toggle between
@@ -230,14 +239,24 @@ Pressing "Extra Settings" button opens a new window where user can access follow
     => For this reason there's also a
     global hotkey `LeftControl + H` to quickly toggle them on/off.
 
-- <u>Reduce Fleatopia minigame score requirements by 50%</u> (toggle)
+- <u>Courier delivery quests</u>
+    - remove damage penalties
+    - remove timer penalty
 
-    Just to make minigames less grindy in case you're not in the mood. Visuals will still display the original score 
-    requirements, don't mind these.
+- <u>Other</u>
+    - Reduce Fleatopia minigame score requirements by 50%
 
-- <u>Unlock all crests</u> (button) 
+        Just to make minigames less grindy in case you're not in the mood. Visuals will still display the original 
+        score requirements, don't mind these.
 
-    For players who want to immediately get access to all crests. Pressing 
+    - Shell shard regen to full at benches
+        
+        **[Note]** Leveling the "Luck" stat also 
+        increases enemy shard drop rates if you prefer a more vanilla-like approach for shard management.
+
+- <u>Unlock all crests</u> 
+
+    For players who want to immediately access all crests. Pressing 
     this button opens a new smaller window where you can
     - Confirm to unlock all crests **permanently** for this save file
     - Cancel and not touch current crest progression
@@ -247,7 +266,7 @@ Pressing "Extra Settings" button opens a new window where user can access follow
     => Selecting either confirm or hide then removes the crest unlock button. It won't be displayed in
     the GUI afterwards.
 
-- <u>Reset config file data</u> (button)
+- <u>Reset config file data</u>
 
     Bonfire-Silksong creates config files individually for each save file. These are stored as
 
@@ -410,9 +429,9 @@ While Bonfire-Silksong doesn't directly require other mod dependencies, it has u
 
 #### Modding tools for Hollow Knight
 
-All these tools have been integral during mod development:
+These tools have been essential in developing this mod:
 
-API:
+Frameworks:
 - [BepInEx](https://github.com/BepInEx/BepInEx/releases)
 
 Third-party tools:
