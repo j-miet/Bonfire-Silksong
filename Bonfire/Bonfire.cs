@@ -80,26 +80,32 @@ namespace BonfireSilksong
         /// </summary>
         public void ShowCursor()
         {
-            if (HeroController.instance != null &&
-                HeroController.instance.cState != null &&
-                GameManager.instance != null)
+            if (GameManager.instance == null) return;
+
+            if (GameManager.instance.inputHandler.gameController.IsAttached &&
+                !Instance.Status.DisplayGameCursorWithGamepad)
             {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = PlayerData.instance.atBench || GameManager.instance.isPaused;
+                Cursor.visible = false;
                 return;
             }
 
-            if (GameManager.instance != null)
-                Cursor.visible = GameManager.instance.isPaused;
+            if (HeroController.instance != null &&
+                HeroController.instance.cState != null)
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = PlayerData.instance.atBench || GameManager.instance.isPaused;
+
+                return;
+            }
+
+            Cursor.visible = GameManager.instance.isPaused;
         }
 
         /// <summary>
-        /// When saving and exiting, sometimes the game inputs become unresponsive for several seconds in main menu 
-        /// before resuming normally. Checking if GameManager is null/game is still in gameplay scene/game is in main 
-        /// menu screen then preventing update loops might help a bit (maybe makes it less frequent?) but doesn't fix 
-        /// this entirely.
+        /// Check if game is in main menu or non-gameplay scene. Should be called att the start of each Unity callback
+        /// to prevent mod logic from running when it's unnecessary.
         /// </summary>
-        public static bool CheckIfNoGameManager()
+        public static bool IsNotGamePlayState()
         {
             if (GameManager.instance == null ||
                 GameManager.instance.GameState == GameState.MAIN_MENU ||
@@ -159,7 +165,7 @@ namespace BonfireSilksong
         {
             LevelingSystem.ResetInitFlags();
 
-            if (CheckIfNoGameManager()) return;
+            if (IsNotGamePlayState()) return;
 
             LevelingSystem.UpdateBindCostFSM();
 
@@ -175,7 +181,7 @@ namespace BonfireSilksong
 
         private void LateUpdate()
         {
-            if (CheckIfNoGameManager()) return;
+            if (IsNotGamePlayState()) return;
 
             if (PlayerData.instance == null) return;
 
