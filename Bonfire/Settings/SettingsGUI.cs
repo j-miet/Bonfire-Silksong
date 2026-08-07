@@ -17,7 +17,7 @@ namespace BonfireSilksong
             GUI.backgroundColor = Color.white;
             GUILayout.BeginVertical("box");
 
-            if (GUILayout.Button("Extra Settings", GUIStyles.ButtonStyle, GUILayout.Height(40f)))
+            if (CustomCursor.Button("Extra Settings", GUIStyles.ButtonStyle, GUILayout.Height(40f)))
             {
                 _pendingCrestUnlock = false;
                 _pendingSettingsWindow = true;
@@ -41,11 +41,11 @@ namespace BonfireSilksong
             GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            float w = 550f, h = 480f;
+            float w = 550f, h = 600f;
             Rect modalRect = new Rect(
                 BonfireGUI.Width / 2f - w / 2f, BonfireGUI.Height / 2f - h / 2f,
                 w, h);
-            GUI.ModalWindow(10003, modalRect, DrawExtraSettingsModal, "Settings");
+            CustomCursor.Window(10003, modalRect, DrawExtraSettingsModal, "Settings");
         }
 
         public void DrawEnemyHealthBars()
@@ -102,7 +102,7 @@ namespace BonfireSilksong
             Rect modalRect = new Rect(
                 BonfireGUI.Width / 2f - w / 2f, BonfireGUI.Height / 2f - h / 2f,
                 w, h);
-            GUI.ModalWindow(10002, modalRect, DrawCrestUnlockConfirmModal, "Crest unlocking");
+            CustomCursor.Window(10002, modalRect, DrawCrestUnlockConfirmModal, "Crest unlocking");
         }
 
         public void DrawPlayerStatusResetUI()
@@ -117,7 +117,7 @@ namespace BonfireSilksong
             Rect modalRect = new Rect(
                 BonfireGUI.Width / 2f - w / 2f, BonfireGUI.Height / 2f - h / 2f,
                 w, h);
-            GUI.ModalWindow(10003, modalRect, DrawPlayerStatusResetConfirmModal, "Reset mod configurations");
+            CustomCursor.Window(10003, modalRect, DrawPlayerStatusResetConfirmModal, "Reset mod configurations");
         }
 
 
@@ -153,7 +153,7 @@ namespace BonfireSilksong
 
             GUI.backgroundColor = Color.white;
 
-            if (GUILayout.Button(
+            if (CustomCursor.Button(
                     "Close window",
                     GUIStyles.CrestUnlockButtonStyle,
                     GUILayout.Width(160f),
@@ -170,11 +170,39 @@ namespace BonfireSilksong
         {
             var s = Bonfire.Instance.Status;
 
+            GUI.enabled = GameManager.instance.inputHandler.gameController.IsAttached;
+            GUI.backgroundColor = Color.white;
+            GUILayout.BeginVertical("box");
+            GUILayout.Label("Custom cursor (enabled if a GamePad device is detected)");
+
+            GUILayout.Label($"Current speed: {s.CustomCursorSpeed}");
+            GUILayout.Space(10);
+
+            GUILayout.BeginHorizontal();
+            if (CustomCursor.Button($"- (min. {CustomCursor.MinSpeed})", GUILayout.Width(120)))
+                s.CustomCursorSpeed = Mathf.Max(50, s.CustomCursorSpeed - 10);
+
+            GUILayout.Space(10);
+            if (CustomCursor.Button($"+ (max. {CustomCursor.MaxSpeed})", GUILayout.Width(120)))
+                s.CustomCursorSpeed = Mathf.Min(1000, s.CustomCursorSpeed + 10);
+
+            GUILayout.EndHorizontal();
+            GUILayout.Space(10);
+
+            s.DisplayGameCursorWithGamepad = CustomCursor.Toggle(
+                s.DisplayGameCursorWithGamepad,
+                "Display both custom and default cursors");
+            GUILayout.EndVertical();
+            GUI.enabled = true;
+
+            GUILayout.Space(10);
+
+
             GUI.backgroundColor = Color.white;
             GUILayout.BeginVertical("box");
             GUILayout.Label("Enemy HP bars");
 
-            s.EnemyHealthBarsEnabled = GUILayout.Toggle(
+            s.EnemyHealthBarsEnabled = CustomCursor.Toggle(
                 s.EnemyHealthBarsEnabled,
                 "Display enemy health bars (global hotkey is LeftControl + H)");
 
@@ -182,7 +210,7 @@ namespace BonfireSilksong
             GUILayout.Space(15);
 
             GUI.enabled = s.EnemyHealthBarsEnabled;
-            s.EnemyHpBarColorProgression = GUILayout.Toggle(
+            s.EnemyHpBarColorProgression = CustomCursor.Toggle(
                 s.EnemyHpBarColorProgression,
                 "Progressive HP bar values (green → yellow → red)");
             GUI.enabled = true;
@@ -191,14 +219,15 @@ namespace BonfireSilksong
             GUILayout.EndVertical();
             GUILayout.Space(10);
 
+
             GUILayout.BeginVertical("box");
             GUILayout.Label("Delivery Quests");
 
-            s.DeliveryQuestsRemoveDamage = GUILayout.Toggle(
+            s.DeliveryQuestsRemoveDamage = CustomCursor.Toggle(
                 s.DeliveryQuestsRemoveDamage,
                 "Remove damage penalties from delivery quests.");
 
-            s.DeliveryQuestsRemoveTimer = GUILayout.Toggle(
+            s.DeliveryQuestsRemoveTimer = CustomCursor.Toggle(
                 s.DeliveryQuestsRemoveTimer,
                 "Remove timers from delivery quests.");
 
@@ -208,12 +237,12 @@ namespace BonfireSilksong
             GUILayout.BeginVertical("box");
             GUILayout.Label("Other");
 
-            s.RefillShardsAtBench = GUILayout.Toggle(
+            s.RefillShardsAtBench = CustomCursor.Toggle(
                 s.RefillShardsAtBench,
                 "Refill shell shards to full at bench");
             GUILayout.Space(5);
 
-            s.ReduceFleaGamesScoreLimit = GUILayout.Toggle(
+            s.ReduceFleaGamesScoreLimit = CustomCursor.Toggle(
                 s.ReduceFleaGamesScoreLimit,
                 "Reduce Fleatopia game score requirements by 50% (visuals still show original score)");
 
@@ -224,7 +253,7 @@ namespace BonfireSilksong
         {
             if (Bonfire.Instance.Status.UnlockedAllCrests) return;
 
-            if (GUILayout.Button("Unlock All Crests (asks for confirmation)", GUILayout.Height(30f)))
+            if (CustomCursor.Button("Unlock All Crests (asks for confirmation)", GUILayout.Height(30f)))
             {
                 _pendingSettingsWindow = false;
                 _pendingCrestUnlock = true;
@@ -244,7 +273,7 @@ namespace BonfireSilksong
             GUILayout.BeginHorizontal();
 
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button(
+            if (CustomCursor.Button(
                     "Yes\nUnlock all crests",
                     GUIStyles.CrestUnlockButtonStyle,
                     GUILayout.Width(200f),
@@ -266,7 +295,7 @@ namespace BonfireSilksong
             }
 
             GUILayout.Space(30);
-            if (GUILayout.Button(
+            if (CustomCursor.Button(
                     "No\nLeave my crests alone",
                     GUIStyles.CrestUnlockButtonStyle,
                     GUILayout.Width(200f),
@@ -283,7 +312,8 @@ namespace BonfireSilksong
         private void DrawPlayerStatusResetButton()
         {
             GUI.backgroundColor = Color.red;
-            if (GUILayout.Button("Reset mod config for this save slot (asks for confirmation)", GUILayout.Height(30f)))
+            if (CustomCursor.Button("Reset mod config for this save slot (asks for confirmation)",
+                GUILayout.Height(30f)))
             {
                 _pendingSettingsWindow = false;
                 _pendingStatusReset = true;
@@ -314,7 +344,7 @@ namespace BonfireSilksong
             GUILayout.BeginHorizontal();
 
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button(
+            if (CustomCursor.Button(
                     "Yes\nReset config data",
                     GUIStyles.CrestUnlockButtonStyle,
                     GUILayout.Width(200f),
@@ -328,7 +358,7 @@ namespace BonfireSilksong
             }
 
             GUILayout.Space(30);
-            if (GUILayout.Button(
+            if (CustomCursor.Button(
                     "No\nKeep current data",
                     GUIStyles.CrestUnlockButtonStyle,
                     GUILayout.Width(200f),

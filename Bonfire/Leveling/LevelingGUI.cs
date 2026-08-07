@@ -11,13 +11,10 @@ namespace BonfireSilksong
     {
         public void DrawLevelingUI()
         {
-            _levelingAreaRectTopY = (BonfireGUI.Height / 4.25f) + 20;
-
-            var s = Bonfire.Instance.Status;
-            GUILayout.BeginArea(new Rect(
-                _levelingAreaRectTopX,
-                _levelingAreaRectTopY - 55,
-                _levelingAreaDefaultRectWidth,
+            CustomCursor.BeginArea(new Rect(
+                LevelingAreaRectTopX,
+                LevelingAreaRectTopY - 55,
+                LevelingAreaDefaultRectWidth,
                 50f));
 
             GUILayout.BeginHorizontal();
@@ -26,7 +23,7 @@ namespace BonfireSilksong
             string lvlStyleName = _levelingMenuStyle[Bonfire.Instance.Status.LevelingInfoStyle];
 
             GUI.backgroundColor = Color.white;
-            if (GUILayout.Button(
+            if (CustomCursor.Button(
                 $"Style: {lvlStyleName}",
                 GUIStyles.ButtonStyle,
                 GUILayout.Width(250f),
@@ -38,7 +35,7 @@ namespace BonfireSilksong
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            GUILayout.EndArea();
+            CustomCursor.EndArea();
 
             DrawUIPanels();
         }
@@ -48,25 +45,25 @@ namespace BonfireSilksong
         /// </summary>
         public void DrawOtherUIBeginArea()
         {
-            GUILayout.BeginArea(new Rect(20f,
-                _levelingAreaRectTopY + _levelingAreaDefaultRectHeight + _levelingAreaTextAndButtonsHeight,
-                _levelingAreaDefaultRectWidth,
+            CustomCursor.BeginArea(new Rect(20f,
+                LevelingAreaRectTopY + LevelingAreaDefaultRectHeight + LevelingAreaTextAndButtonsHeight,
+                LevelingAreaDefaultRectWidth,
                 200f));
         }
 
         // user interface measures
-        private const float _levelingAreaRectTopX = 20f;
-        private float _levelingAreaRectTopY;
-        private const float _levelingAreaDefaultRectWidth = 530f;
-        private const float _levelingAreaDefaultRectHeight = 350f;
-        private const float _levelingAreaTextAndButtonsHeight = 155f;
+        private const float LevelingAreaRectTopX = 20f;
+        private const float LevelingAreaRectTopY = 275f;
+        private const float LevelingAreaDefaultRectWidth = 530f;
+        private const float LevelingAreaDefaultRectHeight = 350f;
+        private const float LevelingAreaTextAndButtonsHeight = 155f;
 
-        private const float _infoAreaRectTopX = 800f;
-        private float _infoAreaRectTopY;
-        private const float _infoAreaRectWidth = 999f;
-        private const float _infoAreaRectHeight = 900f;
+        private const float InfoAreaRectTopX = 800f;
+        private const float InfoAreaRectTopY = 95f;
+        private const float InfoAreaRectWidth = 999f;
+        private const float InfoAreaRectHeight = 900f;
         // offset of 16f seems to prevent the horizontal scroll while fitting the 3. column's contents.
-        private const float _colWidth = _infoAreaRectWidth / 3f - 16f;
+        private const float ColWidth = InfoAreaRectWidth / 3f - 16f;
         private Vector2 _infoScrollPos;
 
         // shared variables
@@ -118,11 +115,11 @@ namespace BonfireSilksong
             UpdateGUIFields();
 
             // layout
-            GUILayout.BeginArea(new Rect(
-                _levelingAreaRectTopX,
-                _levelingAreaRectTopY,
-                _levelingAreaDefaultRectWidth,
-                _levelingAreaDefaultRectHeight));
+            CustomCursor.BeginArea(new Rect(
+                LevelingAreaRectTopX,
+                LevelingAreaRectTopY,
+                LevelingAreaDefaultRectWidth,
+                LevelingAreaDefaultRectHeight));
             GUILayout.Label("Leveling", GUIStyles.LevelHeaderStyle);
 
             // stats
@@ -159,14 +156,14 @@ namespace BonfireSilksong
             GUILayout.EndVertical();
 
             GUILayout.EndHorizontal();
-            GUILayout.EndArea();
+            CustomCursor.EndArea();
 
             // level and cost text + apply/cancel/respec buttons
-            GUILayout.BeginArea(new Rect(
-                _levelingAreaRectTopX,
-                _levelingAreaRectTopY + _levelingAreaDefaultRectHeight,
-                _levelingAreaDefaultRectWidth,
-                _levelingAreaTextAndButtonsHeight));
+            CustomCursor.BeginArea(new Rect(
+                LevelingAreaRectTopX,
+                LevelingAreaRectTopY + LevelingAreaDefaultRectHeight,
+                LevelingAreaDefaultRectWidth,
+                LevelingAreaTextAndButtonsHeight));
 
             GUILayout.Label("Current Level: " + _currentLvl, GUIStyles.LabelStyle);
             GUILayout.Label("Rosaries to Level Up: " + _rosariesToLvlUp, GUIStyles.LabelStyle);
@@ -174,7 +171,7 @@ namespace BonfireSilksong
             GUILayout.BeginHorizontal("box");
 
             GUI.backgroundColor = Color.green;
-            if (GUILayout.Button(_applyText, GUIStyles.ButtonStyle, GUILayout.Width(258f), GUILayout.Height(40f))
+            if (CustomCursor.Button(_applyText, GUIStyles.ButtonStyle, GUILayout.Width(258f), GUILayout.Height(40f))
                 && PlayerData.instance.atBench)
             {
                 ls.ApplyLevel();
@@ -183,7 +180,7 @@ namespace BonfireSilksong
             GUILayout.FlexibleSpace();
 
             GUI.backgroundColor = Color.white;
-            if (GUILayout.Button("Cancel", GUIStyles.ButtonStyle, GUILayout.Width(258f), GUILayout.Height(40f))
+            if (CustomCursor.Button("Cancel", GUIStyles.ButtonStyle, GUILayout.Width(258f), GUILayout.Height(40f))
                 && PlayerData.instance.atBench)
             {
                 ls.ResetPendingLevelUp();
@@ -195,7 +192,7 @@ namespace BonfireSilksong
             GUILayout.FlexibleSpace();
 
             GUI.backgroundColor = Color.red;
-            if (GUILayout.Button(
+            if (CustomCursor.Button(
                     $"Respec ({s.RespecCost} " + $"{(s.RespecCost > 1 ? "Silkeaters" : "Silkeater")})",
                     GUIStyles.ButtonStyle,
                     GUILayout.Width(522f),
@@ -208,7 +205,7 @@ namespace BonfireSilksong
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            GUILayout.EndArea();
+            CustomCursor.EndArea();
         }
 
         private void DrawSimpleUI()
@@ -220,11 +217,11 @@ namespace BonfireSilksong
             UpdateGUIFields();
 
             // layout
-            GUILayout.BeginArea(new Rect(
-                _levelingAreaRectTopX,
-                _levelingAreaRectTopY,
-                _levelingAreaDefaultRectWidth,
-                _levelingAreaDefaultRectHeight));
+            CustomCursor.BeginArea(new Rect(
+                LevelingAreaRectTopX,
+                LevelingAreaRectTopY,
+                LevelingAreaDefaultRectWidth,
+                LevelingAreaDefaultRectHeight));
             GUILayout.Label("Leveling", GUIStyles.LevelHeaderStyle);
 
             // stats
@@ -285,13 +282,13 @@ namespace BonfireSilksong
             GUIStyles.LabelStyle.fontSize = labelS;
 
             GUILayout.EndHorizontal();
-            GUILayout.EndArea();
+            CustomCursor.EndArea();
 
             // level and cost text + apply/cancel/respec buttons
-            GUILayout.BeginArea(new Rect(
-                _levelingAreaRectTopX,
-                _levelingAreaRectTopY + _levelingAreaDefaultRectHeight,
-                _levelingAreaDefaultRectWidth,
+            CustomCursor.BeginArea(new Rect(
+                LevelingAreaRectTopX,
+                LevelingAreaRectTopY + LevelingAreaDefaultRectHeight,
+                LevelingAreaDefaultRectWidth,
                 150f));
 
             GUILayout.Label("Current Level: " + _currentLvl, GUIStyles.LabelStyle);
@@ -300,7 +297,7 @@ namespace BonfireSilksong
             GUILayout.BeginHorizontal("box");
 
             GUI.backgroundColor = Color.green;
-            if (GUILayout.Button(_applyText, GUIStyles.ButtonStyle, GUILayout.Width(258f), GUILayout.Height(40f))
+            if (CustomCursor.Button(_applyText, GUIStyles.ButtonStyle, GUILayout.Width(258f), GUILayout.Height(40f))
                 && PlayerData.instance.atBench)
             {
                 ls.ApplyLevel();
@@ -309,7 +306,7 @@ namespace BonfireSilksong
             GUILayout.FlexibleSpace();
 
             GUI.backgroundColor = Color.white;
-            if (GUILayout.Button("Cancel", GUIStyles.ButtonStyle, GUILayout.Width(258f), GUILayout.Height(40f))
+            if (CustomCursor.Button("Cancel", GUIStyles.ButtonStyle, GUILayout.Width(258f), GUILayout.Height(40f))
                 && PlayerData.instance.atBench)
             {
                 ls.ResetPendingLevelUp();
@@ -321,7 +318,7 @@ namespace BonfireSilksong
             GUILayout.FlexibleSpace();
 
             GUI.backgroundColor = Color.red;
-            if (GUILayout.Button(
+            if (CustomCursor.Button(
                     $"Respec ({s.RespecCost} " + $"{(s.RespecCost > 1 ? "Silkeaters" : "Silkeater")})",
                     GUIStyles.ButtonStyle,
                     GUILayout.Height(40f),
@@ -334,33 +331,31 @@ namespace BonfireSilksong
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            GUILayout.EndArea();
+            CustomCursor.EndArea();
         }
 
         private void DrawExtendedStatPanel()
         {
-            _infoAreaRectTopY = (BonfireGUI.Height / 8f) - 40f;
-
             GUI.color = new Color(0.8f, 0.7f, 0.3f, 0.9f);
             GUI.DrawTexture(
                 new Rect(
-                    _infoAreaRectTopX - 4, _infoAreaRectTopY - 4,
-                    _infoAreaRectWidth + 8, _infoAreaRectHeight + 12),
+                    InfoAreaRectTopX - 4, InfoAreaRectTopY - 4,
+                    InfoAreaRectWidth + 8, InfoAreaRectHeight + 12),
                     Texture2D.whiteTexture);
 
             GUI.color = new Color(0.2f, 0.2f, 0.2f, 0.9f);
             GUI.DrawTexture(
                 new Rect(
-                    _infoAreaRectTopX, _infoAreaRectTopY,
-                    _infoAreaRectWidth, _infoAreaRectHeight),
+                    InfoAreaRectTopX, InfoAreaRectTopY,
+                    InfoAreaRectWidth, InfoAreaRectHeight),
                     Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            GUILayout.BeginArea(new Rect(
-                _infoAreaRectTopX,
-                _infoAreaRectTopY,
-                _infoAreaRectWidth,
-                _infoAreaRectHeight));
+            CustomCursor.BeginArea(new Rect(
+                InfoAreaRectTopX,
+                InfoAreaRectTopY,
+                InfoAreaRectWidth,
+                InfoAreaRectHeight));
 
             GUI.color = Color.white;
             _infoScrollPos = GUILayout.BeginScrollView(_infoScrollPos);
@@ -385,13 +380,13 @@ namespace BonfireSilksong
 
             GUI.color = Color.white;
             GUILayout.EndScrollView();
-            GUILayout.EndArea();
+            CustomCursor.EndArea();
         }
 
         private void DrawStatButton(string statName, string displayValue, bool gotFreeLevel, PlayerStatus s,
                                    int rosariesToLvlUp)
         {
-            if (GUILayout.Button(
+            if (CustomCursor.Button(
                     $"{statName}: {displayValue}",
                     GUIStyles.ButtonStyle,
                     GUILayout.Width(160f),
@@ -411,7 +406,7 @@ namespace BonfireSilksong
         private void DrawStatButtonExtended(string statName, bool gotFreeLevel, PlayerStatus s,
                                    int rosariesToLvlUp)
         {
-            if (GUILayout.Button(
+            if (CustomCursor.Button(
                     $"{statName}",
                     GUIStyles.ButtonStyle,
                     GUILayout.Width(160f),
@@ -430,13 +425,13 @@ namespace BonfireSilksong
 
         private void DrawInfoStatLabel(string text)
         {
-            GUILayout.Label(text, GUIStyles.LvlInfoLabelStyle, GUILayout.Width(_colWidth), GUILayout.Height(40f));
+            GUILayout.Label(text, GUIStyles.LvlInfoLabelStyle, GUILayout.Width(ColWidth), GUILayout.Height(40f));
         }
 
         // info boxes for all stats
         private void DrawStrengthInfo()
         {
-            GUILayout.BeginVertical("box", GUILayout.Width(_colWidth), GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.ExpandHeight(true));
             GUILayout.Label("Strength", GUIStyles.LabelStyle);
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
@@ -449,8 +444,7 @@ namespace BonfireSilksong
 
         private void DrawDexterityInfo()
         {
-            Bonfire.Log.LogInfo($"colWidth: {_colWidth}");
-            GUILayout.BeginVertical("box", GUILayout.Width(_colWidth), GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.ExpandHeight(true));
             GUILayout.Label("Dexterity", GUIStyles.LabelStyle);
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
@@ -464,7 +458,7 @@ namespace BonfireSilksong
 
         private void DrawIntelligenceInfo()
         {
-            GUILayout.BeginVertical("box", GUILayout.Width(_colWidth), GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.ExpandHeight(true));
             GUILayout.Label("Intelligence", GUIStyles.LabelStyle);
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
@@ -478,7 +472,7 @@ namespace BonfireSilksong
 
         private void DrawArtificeInfo()
         {
-            GUILayout.BeginVertical("box", GUILayout.Width(_colWidth), GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.ExpandHeight(true));
             GUILayout.Label("Artifice", GUIStyles.LabelStyle);
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
@@ -492,7 +486,7 @@ namespace BonfireSilksong
 
         private void DrawResilienceInfo()
         {
-            GUILayout.BeginVertical("box", GUILayout.Width(_colWidth), GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.ExpandHeight(true));
             GUILayout.Label("Resilience", GUIStyles.LabelStyle);
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
@@ -506,7 +500,7 @@ namespace BonfireSilksong
 
         private void DrawWisdomInfo()
         {
-            GUILayout.BeginVertical("box", GUILayout.Width(_colWidth), GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.ExpandHeight(true));
             GUILayout.Label("Wisdom", GUIStyles.LabelStyle);
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
@@ -530,7 +524,7 @@ namespace BonfireSilksong
 
         private void DrawLuckInfo()
         {
-            GUILayout.BeginVertical("box", GUILayout.Width(_colWidth), GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.ExpandHeight(true));
             GUILayout.Label("Luck", GUIStyles.LabelStyle);
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
@@ -545,7 +539,7 @@ namespace BonfireSilksong
         // filler component for empty cell spaces
         private void DrawInfoFillerBox()
         {
-            GUILayout.BeginVertical("box", GUILayout.Width(_colWidth), GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.ExpandHeight(true));
 
             DrawInfoStatLabel("");
 
@@ -640,13 +634,17 @@ namespace BonfireSilksong
             _rosaryIncrease = (5 * (s.LuckStat + ls.LuckIncrease)).ToString();
 
             // "Apply" button label
+            int pRelics = s.PendingRelicLevels;
             if (s.PendingRelicLevels > 0 && s.PendingRosaries > 0)
             {
-                _applyText = $"Apply ({s.PendingRosaries} rosaries and {s.PendingRelicLevels} relics)";
+                _applyText =
+                    $"Apply \n({s.PendingRosaries} rosaries + {s.PendingRelicLevels} " +
+                    $"{(s.PendingRelicLevels > 1 ? "relics" : "relic")})";
             }
             else if (s.PendingRelicLevels > 0)
             {
-                _applyText = $"Apply ({s.PendingRelicLevels} relic levels)";
+                _applyText =
+                    $"Apply ({s.PendingRelicLevels} relic {(s.PendingRelicLevels > 1 ? "levels" : "level")})";
             }
             else if (_gotFreeLevel)
             {

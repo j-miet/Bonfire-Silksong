@@ -34,14 +34,24 @@ namespace BonfireSilksong
             else if (hasBenchPins) text += "\n(Locked, need a map from Shakra)";
             else text += "\n(Locked, need a map + Bench Pins from Shakra)";
 
-            if (GUILayout.Button(text, GUIStyles.ButtonStyle, GUILayout.Height(40f)))
+            if (CustomCursor.Button(text, GUIStyles.ButtonStyle, GUILayout.Height(40f)))
             {
+                CustomCursor.ResetCursorPosition();
+
                 GUI.backgroundColor = Color.white;
                 Bonfire.Log.LogDebug("[TeleportGUI] Fast travel menu open button was clicked");
 
-                if (!hasAnyMap || !hasBenchPins) return;
+                if (!hasAnyMap || !hasBenchPins)
+                {
+                    GUILayout.EndVertical();
+                    return;
+                }
 
-                if (!UpdateCurrentBenchFSM()) return;
+                if (!UpdateCurrentBenchFSM())
+                {
+                    GUILayout.EndVertical();
+                    return;
+                }
 
                 SendOpenMapFSM();
                 FastTravelDisplay = true;
@@ -72,9 +82,9 @@ namespace BonfireSilksong
             GUI.DrawTexture(listRect, Texture2D.whiteTexture);
             GUI.color = old;
 
-            GUILayout.BeginArea(listRect);
+            CustomCursor.BeginArea(listRect);
             DrawBenchListPanel();
-            GUILayout.EndArea();
+            CustomCursor.EndArea();
 
             // if a bench is clicked: confirmation panel with dark background and border
             if (_selectedPin != null)
@@ -96,9 +106,9 @@ namespace BonfireSilksong
                 GUI.DrawTexture(confirmRect, Texture2D.whiteTexture);
                 GUI.color = old;
 
-                GUILayout.BeginArea(confirmRect);
+                CustomCursor.BeginArea(confirmRect);
                 DrawTeleportConfirmPanel();
-                GUILayout.EndArea();
+                CustomCursor.EndArea();
             }
             // for benches which don't have a pin location on map (same code, just different draw method called)
             else if (_selectedScene != null)
@@ -120,9 +130,9 @@ namespace BonfireSilksong
                 GUI.DrawTexture(confirmRect, Texture2D.whiteTexture);
                 GUI.color = old;
 
-                GUILayout.BeginArea(confirmRect);
+                CustomCursor.BeginArea(confirmRect);
                 DrawTeleportConfirmPanelExtraLocations();
-                GUILayout.EndArea();
+                CustomCursor.EndArea();
             }
         }
 
@@ -138,7 +148,7 @@ namespace BonfireSilksong
 
                 float w = 600f, h = 300f;
                 Rect modalRect = new Rect(BonfireGUI.Width / 2f - w / 2f, BonfireGUI.Height / 2f - h / 2f, w, h);
-                GUI.ModalWindow(10000, modalRect, DrawFastTravelUnlockModalPopup, "Bench fast travel unlocked!");
+                CustomCursor.Window(10000, modalRect, DrawFastTravelUnlockModalPopup, "Bench fast travel unlocked!");
             }
         }
 
@@ -178,6 +188,10 @@ namespace BonfireSilksong
             actions.OpenInventoryJournal.Enabled = false;
             actions.OpenInventoryTools.Enabled = false;
             actions.OpenInventoryQuests.Enabled = false;
+            actions.Up.Enabled = false;
+            actions.Down.Enabled = false;
+            actions.Left.Enabled = false;
+            actions.Right.Enabled = false;
 
             // allow these through: patched InventoryPaneInput.Update will prevent any inputs from doing their
             // normal behavior while map is open. However it still allows them to register which allows BonfireGUI
@@ -197,6 +211,10 @@ namespace BonfireSilksong
             actions.OpenInventoryJournal.Enabled = true;
             actions.OpenInventoryTools.Enabled = true;
             actions.OpenInventoryQuests.Enabled = true;
+            actions.Up.Enabled = true;
+            actions.Down.Enabled = true;
+            actions.Left.Enabled = true;
+            actions.Right.Enabled = true;
 
             //actions.OpenInventory.Enabled = true;
             //actions.OpenInventoryMap.Enabled = true;
@@ -412,6 +430,8 @@ namespace BonfireSilksong
         // finish first so that teleporting sequence doesn't break menu functionality (StartTeleport)
         private IEnumerator CloseFastTravelMenuRoutine()
         {
+            CustomCursor.ResetCursorPosition();
+
             _selectedPin = null;
             _selectedScene = null;
             FastTravelDisplay = false;
@@ -451,15 +471,13 @@ namespace BonfireSilksong
             GUI.backgroundColor = Color.white;
 
             GUILayout.BeginHorizontal("box");
-            if (GUILayout.Button($"Style: {styleText}", GUIStyles.ButtonStyle, GUILayout.Height(30f)))
+            if (CustomCursor.Button($"Style: {styleText}", GUIStyles.ButtonStyle, GUILayout.Height(30f)))
             {
                 ChangeBenchMenuStyle();
 
                 menuStyleIndex = Bonfire.Instance.Status.BenchMenuStyle;
                 _isCustomNameStyle = menuStyleIndex == 1 || menuStyleIndex == 3;
                 UpdateBenchPins();
-
-                return;
             }
             GUILayout.EndHorizontal();
             GUILayout.Space(15);
@@ -474,7 +492,7 @@ namespace BonfireSilksong
             }
             else
             {
-                _scrollPos = GUILayout.BeginScrollView(_scrollPos);
+                _scrollPos = CustomCursor.BeginScrollView(_scrollPos);
 
                 foreach ((string mapArea, Color32 c) in TeleportData.OrderedBenchAreaNames)
                 {
@@ -532,7 +550,7 @@ namespace BonfireSilksong
                             GUIStyle buttonStyle = isSelected ?
                                 GUIStyles.BenchListButtonSelectedStyle : GUIStyles.BenchListButtonStyle;
 
-                            if (GUILayout.Button(customName, buttonStyle, GUILayout.Height(30f)))
+                            if (CustomCursor.Button(customName, buttonStyle, GUILayout.Height(30f)))
                             {
                                 _selectedPin = mapPin;
                                 _selectedScene = null;
@@ -557,7 +575,7 @@ namespace BonfireSilksong
                     GUI.color = textOld;
                 }
 
-                GUILayout.EndScrollView();
+                CustomCursor.EndScrollView();
                 GUI.backgroundColor = Color.white;
             }
 
@@ -565,7 +583,7 @@ namespace BonfireSilksong
 
             GUI.backgroundColor = Color.red;
             GUILayout.BeginHorizontal("box");
-            if (GUILayout.Button("Close teleport menu", GUIStyles.ButtonStyle, GUILayout.Height(40f)))
+            if (CustomCursor.Button("Close teleport menu", GUIStyles.ButtonStyle, GUILayout.Height(40f)))
             {
                 CloseFastTravelMenu();
             }
@@ -584,8 +602,10 @@ namespace BonfireSilksong
 
             GUI.backgroundColor = new Color(0.9f, 0.8f, 0.5f);
             GUI.contentColor = Color.white;
-            if (GUILayout.Button("Travel", GUIStyles.ButtonStyle, GUILayout.Width(200f), GUILayout.Height(30f)))
+            if (CustomCursor.Button("Travel", GUIStyles.ButtonStyle, GUILayout.Width(200f), GUILayout.Height(30f)))
             {
+                CustomCursor.ResetCursorPosition();
+
                 DeliveryQuestItem.TakeHit(100); // destroy all courier quest items
 
                 BenchTeleport.PrepareTeleportLocation(_selectedPin);
@@ -625,7 +645,7 @@ namespace BonfireSilksong
                     GUIStyles.BenchListButtonSelectedStyle : GUIStyles.BenchListButtonStyle;
 
                 // special locations are highlighted with a custom symbol
-                if (GUILayout.Button(customName + " ★", buttonStyle, GUILayout.Height(30f)))
+                if (CustomCursor.Button(customName + " ★", buttonStyle, GUILayout.Height(30f)))
                 {
                     _selectedPin = null;
                     _selectedFullName = areaName + ": " + customName;
@@ -661,8 +681,10 @@ namespace BonfireSilksong
 
             GUI.backgroundColor = new Color(0.9f, 0.8f, 0.5f);
             GUI.contentColor = Color.white;
-            if (GUILayout.Button("Travel", GUIStyles.ButtonStyle, GUILayout.Width(200f), GUILayout.Height(30f)))
+            if (CustomCursor.Button("Travel", GUIStyles.ButtonStyle, GUILayout.Width(200f), GUILayout.Height(30f)))
             {
+                CustomCursor.ResetCursorPosition();
+
                 DeliveryQuestItem.TakeHit(100);
 
                 FillTeleportData(_selectedScene);
@@ -700,12 +722,14 @@ namespace BonfireSilksong
             GUILayout.BeginHorizontal();
 
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button(
+            if (CustomCursor.Button(
                     "Close",
                     GUIStyles.CrestUnlockButtonStyle,
                     GUILayout.Width(100f),
                     GUILayout.Height(40f)))
             {
+                CustomCursor.ResetCursorPosition();
+
                 Bonfire.Instance.Status.UnlockedFastTravel = true;
                 Bonfire.Instance.SaveSettings();
             }
