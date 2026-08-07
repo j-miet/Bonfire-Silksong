@@ -22,7 +22,7 @@ namespace BonfireSilksong
         {
             Bonfire.Log.LogDebug("[CustomCursor] Resetting stack");
 
-            _currentOffset = new Vector2(OffSetX, OffSetY);
+            _currentOffset = Vector2.zero;
             _offsetStack.Clear();
         }
 
@@ -107,12 +107,15 @@ namespace BonfireSilksong
 
         public static Vector2 BeginScrollView(Vector2 scrollPos, params GUILayoutOption[] options)
         {
-            // scrollbar requires some further offsetting. 
-            // Following values have been found by testing click areas.
-            float scrollX = -2f;
-            float scrollY = -66f;
+            // scrollbar width and length offset:
+            // Width: scrollbar width + some buffer
+            // Height: in bench menu, scrollbar covers a bit over 3 button heights, buttons have h = 30f -> 90f + buffer
+            // Following values have been found by testing click areas: tricky part is make it work for both overview
+            // info scroll and bench teleport scroll menu.
+            float scrollX = 28f;
+            float scrollY = 99f;
 
-            Vector2 offSet = new Vector2(scrollPos.x + scrollX + OffSetX, scrollPos.y + scrollY + OffSetY);
+            Vector2 offSet = new Vector2(scrollPos.x - scrollX, scrollPos.y - scrollY);
 
             _offsetStack.Push(_currentOffset);
             _currentOffset -= offSet; // scrolling down moves content up, have to subtract
@@ -165,10 +168,6 @@ namespace BonfireSilksong
             return CustomButton(GUILayout.Button(text, style, options));
         }
 
-
-        // these are for initializing _currentOffset to match button click areas as closely as possible with visuals
-        private const float OffSetX = -12f;
-        private const float OffSetY = -16f;
 
         private static readonly Stack<Vector2> _offsetStack = new Stack<Vector2>();
         private static Vector2 _currentOffset;
