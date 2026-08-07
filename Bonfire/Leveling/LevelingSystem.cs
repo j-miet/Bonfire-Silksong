@@ -616,8 +616,6 @@ namespace BonfireSilksong
             {
                 for (int i = 0; i < masks; i++)
                 {
-                    if (Bonfire.CheckIfNoGameManager()) yield break;
-
                     if (BlueHpCheckInvOrMenu()) yield break;
 
                     EventRegister.SendEvent(EventRegisterEvents.AddBlueHealth);

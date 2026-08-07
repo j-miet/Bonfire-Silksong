@@ -90,7 +90,7 @@ namespace BonfireSilksong
                 {"Room_Forge", ("Forge", "Deep Docks")},
                 {"Room_Diving_Bell", ("Diving Bell", "Deep Docks")},
 
-                {"Ant_17", ("Rest", "Hunter's March")},
+                {"Ant_17", ("Trap", "Hunter's March")},
 
                 {"Bone_East_10_Room", ("Pilgrim's Rest", "Far Fields")},
                 {"Bone_East_15", ("Entrance West", "Far Fields")},
@@ -98,7 +98,7 @@ namespace BonfireSilksong
                 {"Bellway_03", ("Bellway", "Far Fields")},
                 {"Bone_East_Umbrella", ("Seamstress", "Far Fields")},
                 {"Bone_East_Weavehome", ("Weavenest Cindril", "Far Fields")},
-                {"Sprintmaster_Cave", ("Sprintmaster Cave", "Far Fields")},
+                {"Sprintmaster_Cave", ("Sprintmaster's Cave", "Far Fields")},
 
                 {"Bellshrine_02", ("Bellshrine", "Greymoor")},
                 {"Halfway_01", ("Halfway Home", "Greymoor")},
@@ -208,7 +208,7 @@ namespace BonfireSilksong
                 Marker = "RestBench",
                 RespawnType = 1,
                 AreaName = "The Cradle",
-                DefaultName = "Cradle_Destroyed_Challenge_Bench",
+                DefaultName = "Cradle_Challenge_Bench", // make name slightly shorter to avoid vertical scrollbar
                 CustomName = "Climb",
                 IsUnlocked = () => PlayerData.instance.blackThreadWorld
                                 && PlayerData.instance.hasSilkBossNeedle // available after picking Pale Nails
