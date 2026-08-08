@@ -83,6 +83,7 @@ namespace BonfireSilksong
             _currentOffset = _offsetStack.Pop();
         }
 
+        // -- unused, previous popup window logic uses now GUI.Box + BeginGroup/EndGroup
         public static Rect Window(
             int id,
             Rect rect,
@@ -103,6 +104,21 @@ namespace BonfireSilksong
                     _currentOffset = _offsetStack.Pop();
                 }
             }, title);
+        }
+
+        public static void BeginGroup(Rect rect)
+        {
+            _offsetStack.Push(_currentOffset);
+            _currentOffset += rect.position;
+
+            GUI.BeginGroup(rect);
+        }
+
+        public static void EndGroup()
+        {
+            GUI.EndGroup();
+
+            _currentOffset = _offsetStack.Pop();
         }
 
         public static Vector2 BeginScrollView(Vector2 scrollPos, params GUILayoutOption[] options)
@@ -175,10 +191,8 @@ namespace BonfireSilksong
         // GUILayout.Button wrapper
         private static bool CustomButton(bool clicked)
         {
-            var handler = GameManager.instance.inputHandler;
-            if (!handler.gameController.IsAttached) return clicked;
-
-            if (IsCursorPressed())
+            if (GameManager.instance.inputHandler.gameController.IsAttached &&
+                IsCursorPressed())
             {
                 Bonfire.Log.LogDebug("[CustomCursor] Pressed a GUI button");
                 clicked = true;
@@ -189,13 +203,14 @@ namespace BonfireSilksong
 
         public static bool CustomToggle(bool value, string text, params GUILayoutOption[] options)
         {
-            var handler = GameManager.instance.inputHandler;
-            if (!handler.gameController.IsAttached) return value;
-
             bool newValue = GUILayout.Toggle(value, text, options);
 
-            if (IsCursorPressed())
+            if (GameManager.instance.inputHandler.gameController.IsAttached &&
+                IsCursorPressed())
+            {
+                Bonfire.Log.LogDebug("[CustomCursor] Pressed a GUI toggle");
                 newValue = !value;
+            }
 
             return newValue;
         }

@@ -144,11 +144,33 @@ namespace BonfireSilksong
             {
                 GUI.color = new Color(0, 0, 0, 0.8f);
                 GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
-                GUI.color = Color.yellow;
 
-                float w = 600f, h = 300f;
-                Rect modalRect = new Rect(BonfireGUI.Width / 2f - w / 2f, BonfireGUI.Height / 2f - h / 2f, w, h);
-                CustomCursor.Window(10000, modalRect, DrawFastTravelUnlockModalPopup, "Bench fast travel unlocked!");
+                float w = 600f, h = 380f;
+
+                float x = BonfireGUI.Width / 2f - w / 2f;
+                float y = BonfireGUI.Height / 2f - h / 2f;
+
+                Rect borderRect = new Rect(x - 4, y - 4, w + 8, h + 8);
+                GUI.color = Color.gray;
+                GUI.DrawTexture(borderRect, Texture2D.whiteTexture);
+
+                Rect rect = new Rect(x, y, w, h);
+                GUI.color = new Color(0.8f, 0.6f, 0);
+                GUI.DrawTexture(rect, Texture2D.whiteTexture);
+                GUI.color = Color.white;
+
+
+                GUI.Box(rect, GUIContent.none);
+                CustomCursor.BeginGroup(rect);
+
+                CustomCursor.BeginArea(new Rect(20, 20, rect.width - 40, rect.height - 40));
+
+                GUILayout.Label("Bench fast travel unlocked!", GUIStyles.LabelStyle);
+                DrawFastTravelUnlockModalPopup();
+
+                CustomCursor.EndArea();
+
+                CustomCursor.EndGroup();
             }
         }
 
@@ -698,7 +720,7 @@ namespace BonfireSilksong
             GUILayout.EndHorizontal();
         }
 
-        private void DrawFastTravelUnlockModalPopup(int windowId)
+        private void DrawFastTravelUnlockModalPopup()
         {
             GUILayout.Space(10);
             GUILayout.Label(
@@ -709,7 +731,9 @@ namespace BonfireSilksong
 
             GUILayout.Space(5);
             GUILayout.Label(
-                "To access travel menu: you need to own a map + Bench Pins item from Shakra.\n" +
+                "To access travel menu: you need to have obtained\n" +
+                "- A map\n" +
+                "- Bench Pins\n\n" +
                 "To fast travel:\n" +
                 "\n" +
                 "- Sit down on any bench and click the new \"Fast Travel\" button.\n" +
