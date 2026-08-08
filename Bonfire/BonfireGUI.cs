@@ -67,6 +67,8 @@ namespace BonfireSilksong
 
                     DrawCustomCursor();
 
+                    GUI.matrix = oldMatrix;
+
                     return;
                 }
 
@@ -96,6 +98,12 @@ namespace BonfireSilksong
                     Settings.DrawExtraSettingsUI();
                     Settings.DrawCrestUnlockUI();
                     Settings.DrawPlayerStatusResetUI();
+                }
+                else
+                {
+                    Settings.PendingCrestUnlock = false;
+                    Settings.PendingSettingsWindow = false;
+                    Settings.PendingStatusReset = false;
                 }
 
                 if (!PlayerData.instance.atBench && _benchCheck)

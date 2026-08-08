@@ -13,6 +13,11 @@ namespace BonfireSilksong
         public static GUIStyle LevelHeaderStyle;
         public static GUIStyle LabelStyle;
         public static GUIStyle ButtonStyle;
+        public static GUIStyle EnemyHpStyle;
+        public static GUIStyle BossHpStyle;
+        public static GUIStyle HpHighStyle;
+        public static GUIStyle HpMediumStyle;
+        public static GUIStyle HpLowStyle;
         public static GUIStyle CrestUnlockLabelStyle;
         public static GUIStyle CrestUnlockButtonStyle;
         public static GUIStyle FastTravelUnlockLabelStyle;
@@ -70,6 +75,46 @@ namespace BonfireSilksong
                     fontStyle = FontStyle.Normal,
                     fontSize = 15,
                     alignment = TextAnchor.MiddleCenter,
+                };
+            }
+
+            if (EnemyHpStyle == null)
+            {
+                EnemyHpStyle = new GUIStyle(GUI.skin.label)
+                {
+                    normal = { textColor = Color.red }
+                };
+            }
+
+            if (BossHpStyle == null)
+            {
+                BossHpStyle = new GUIStyle(GUI.skin.label)
+                {
+                    normal = { textColor = new Color(1f, 0.5f, 0f) }
+                };
+            }
+
+            if (HpHighStyle == null)
+            {
+                HpHighStyle = new GUIStyle(GUI.skin.label)
+                {
+                    normal = { textColor = Color.green }
+                };
+            }
+
+            if (HpMediumStyle == null)
+            {
+                HpMediumStyle = new GUIStyle(GUI.skin.label)
+                {
+                    normal = { textColor = Color.yellow }
+                };
+            }
+
+            if (HpLowStyle == null)
+            {
+                HpLowStyle = new GUIStyle(GUI.skin.label)
+                {
+                    normal = { textColor = Color.red }
                 };
             }
 

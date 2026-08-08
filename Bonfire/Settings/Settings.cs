@@ -9,6 +9,36 @@ namespace BonfireSilksong
     /// </summary>
     public class Settings
     {
+        // remove damage penalties and/or timers from courier delivery quests
+        [HarmonyPatch(typeof(DeliveryQuestItem), "TakeHitForItem", new[] {
+            typeof(DeliveryQuestItem.ActiveItem),
+            typeof(bool),
+            typeof(int)
+        })]
+        class DeliveryQuestItem_TakeHitForItem
+        {
+            static bool Prefix()
+            {
+                // this will ensure bench teleporting breaks all delivery quest items after it calls TakeHit.
+                if (PlayerData.instance.atBench) return true;
+
+                if (!Bonfire.Instance.Status.DeliveryQuestsRemoveDamage) return true;
+
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(HeroController), "TickDeliveryItems")]
+        class HeroController_TickDeliveryItems
+        {
+            static bool Prefix()
+            {
+                if (!Bonfire.Instance.Status.DeliveryQuestsRemoveTimer) return true;
+
+                return false;
+            }
+        }
+
         // shell shards replenishment to full when visiting a bench
         [HarmonyPatch(typeof(CurrencyManager), "ProcessAddCurrency")]
         class CurrencyManager_ProcessAddCurrency
@@ -95,33 +125,14 @@ namespace BonfireSilksong
             }
         }
 
-        // remove damage penalties and/or timers from courier delivery quests
-        [HarmonyPatch(typeof(DeliveryQuestItem), "TakeHitForItem", new[] {
-            typeof(DeliveryQuestItem.ActiveItem),
-            typeof(bool),
-            typeof(int)
-        })]
-        class DeliveryQuestItem_TakeHitForItem
+        // reduce SprintMaster Swift's run speed to 50% of original.
+        [HarmonyPatch(typeof(SprintRaceController), "GetRaceInfo")]
+        class SprintRaceController_GetRaceInfo
         {
-            static bool Prefix()
+            static void Postfix(ref float currentBaseSpeed)
             {
-                // this will ensure bench teleporting breaks all delivery quest items
-                if (PlayerData.instance.atBench) return true;
-
-                if (!Bonfire.Instance.Status.DeliveryQuestsRemoveDamage) return true;
-
-                return false;
-            }
-        }
-
-        [HarmonyPatch(typeof(HeroController), "TickDeliveryItems")]
-        class HeroController_TickDeliveryItems
-        {
-            static bool Prefix()
-            {
-                if (!Bonfire.Instance.Status.DeliveryQuestsRemoveTimer) return true;
-
-                return false;
+                if (!Bonfire.Instance.Status.EasierSprintmasterRaces) return;
+                currentBaseSpeed *= 0.5f;
             }
         }
 

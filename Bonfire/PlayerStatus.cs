@@ -40,6 +40,7 @@ namespace BonfireSilksong
 
         public bool RefillShardsAtBench = false;
         public bool ReduceFleaGamesScoreLimit = false;
+        public bool EasierSprintmasterRaces = false;
 
         public bool UnlockedAllCrests = false;
 
