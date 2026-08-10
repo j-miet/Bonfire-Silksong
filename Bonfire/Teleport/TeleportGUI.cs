@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-using HarmonyLib;
 using UnityEngine;
 
 namespace BonfireSilksong
@@ -760,33 +759,6 @@ namespace BonfireSilksong
 
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
-        }
-
-        // these should prevent inputs which BlockInventoryInputs can't block in bench fast travel menu:
-        // ESC/inventory pane navigation
-        [HarmonyPatch(typeof(InventoryPaneInput), "Update")]
-        class InventoryPaneInput_Update
-        {
-            static bool Prefix()
-            {
-                if (BonfireGUI.Teleport != null && BonfireGUI.Teleport.FastTravelDisplay)
-                    return false;
-
-                return true;
-            }
-        }
-
-        // map panning
-        [HarmonyPatch(typeof(GameMap), "Update")]
-        class GameMap_Update
-        {
-            static bool Prefix()
-            {
-                if (BonfireGUI.Teleport != null && BonfireGUI.Teleport.FastTravelDisplay)
-                    return false;
-
-                return true;
-            }
         }
     }
 }

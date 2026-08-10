@@ -3,14 +3,17 @@ using System.Linq;
 using System.Reflection;
 
 using GlobalEnums;
-using HarmonyLib;
-using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Bench fast travel API.
+    /// Bench fast travel API. Setup: add HandleArrival and CheckMarkerValidity methods from TeleportPatchHelpers
+    /// under their respective Harmony patchers.
+    ///
+    /// Simple usage without extra checks: call PrepareTeleportLocation for target pin, then TeleportToBench.
+    /// For pinless locations, manually update tempRespawnScene, tempRespawnMarker and tempRespawnType fields of
+    /// PlayerData.instance, then call TeleportToBench.
     /// </summary>
     public class BenchTeleport
     {
@@ -239,8 +242,8 @@ namespace BonfireSilksong
         private static readonly FieldInfo ParentSceneField = typeof(MapPin)
             .GetField("parentScene", BindingFlags.Instance | BindingFlags.NonPublic);
 
-        private static readonly FieldInfo NeedFirstFadeInField = typeof(GameManager).
-            GetField("needFirstFadeIn", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly FieldInfo NeedFirstFadeInField = typeof(GameManager)
+            .GetField("needFirstFadeIn", BindingFlags.Instance | BindingFlags.NonPublic);
 
         private static bool CanTeleport()
         {
@@ -251,98 +254,6 @@ namespace BonfireSilksong
                 return false;
 
             return PlayerData.instance.atBench;
-        }
-
-        // handle transition post-check: set spawn location to targeted bench
-        // -> There's a rare bug, which leaves hornet into floating/falling state after teleporting. 
-        // Haven't been able to replicate it consistently with current setup. Tested some alternate FSM state chains, 
-        // but ultimately decided to keep state "Set Spawn Location" + event "OVERRIDE" combo: this sets spawn location 
-        // as spawn point properly, but is most likely also the cause of floating if some internal timing is off more 
-        // than usual.
-        [HarmonyPatch(typeof(HeroController), "FinishedEnteringScene")]
-        class HeroController_FinishedEnteringScene
-        {
-            static void Postfix(HeroController __instance)
-            {
-                if (!IsBenchTeleporting)
-                    return;
-
-                IsBenchTeleporting = false;
-
-                var markers = RespawnMarker.Markers
-                    .FirstOrDefault(r => r.gameObject != null &&
-                                    r.gameObject.activeInHierarchy &&
-                                    r.name == PlayerData.instance.respawnMarkerName);
-
-                if (markers != null)
-                {
-                    var benchFSM = FSMUtility.LocateFSM(markers.gameObject, "Bench Control");
-
-                    // properly update spawn location. This will also ensure the save slot displays image of correct 
-                    // main/side area
-                    benchFSM?.SetState("Set Spawn Location");
-                    benchFSM?.SendEventSafe("OVERRIDE");
-                    Bonfire.Log.LogDebug("[BenchTeleport] Set spawn location");
-                }
-
-                __instance.proxyFSM.SendEventSafe("HeroCtrl-EnteringScene");
-
-                // without this,
-                Bonfire.Instance.StartCoroutine(LevelingSystem.CallDelayedUpdateBlueHP());
-
-                GameManager.instance.SaveGame(null);
-            }
-        }
-
-        // check if the bench location is valid for respawning after the scene has loaded
-        // settles for a fallback in case the value set by TeleportToBench turned out not to be a valid bench marker for
-        // target scene
-        [HarmonyPatch(typeof(GameManager), "EnterHero")]
-        class GameManager_EnterHero
-        {
-            static void Prefix(GameManager __instance)
-            {
-                if (!IsBenchTeleporting)
-                    return;
-
-                if (!__instance.RespawningHero)
-                    return;
-
-                string scene = __instance.playerData.tempRespawnScene;
-                string marker = __instance.playerData.tempRespawnMarker;
-
-                Bonfire.Log.LogDebug($"[BenchTeleport] EnterHero: scene={scene}, marker={marker}");
-
-                List<RespawnMarker> markers = RespawnMarker.Markers
-                    .Where(r =>
-                        r.gameObject != null &&
-                        r.gameObject.scene.name != "DontDestroyOnLoad" &&
-                        r.gameObject.activeInHierarchy)
-                    .ToList();
-
-                // compare value fetched from static marker in TeleportToBench table to actual scene markers
-                RespawnMarker found = markers.FirstOrDefault(r => r.name == marker);
-                if (found != null)
-                {
-                    __instance.playerData.respawnMarkerName = marker;
-                    Bonfire.Log.LogDebug("Destination marker exists.");
-                    return;
-                }
-
-                Bonfire.Log.LogWarning("Marker missing, selecting fallback...");
-
-                found = markers.FirstOrDefault(r => r.name.Contains("Bench")) ??
-                    markers.FirstOrDefault(r => r.name == "Death Respawn Marker") ??
-                    markers.FirstOrDefault();
-
-                if (found != null)
-                {
-                    __instance.playerData.tempRespawnMarker = found.name;
-                    __instance.playerData.respawnMarkerName = found.name;
-
-                    Bonfire.Log.LogDebug($"Fallback marker = {found.name}");
-                }
-            }
         }
     }
 }

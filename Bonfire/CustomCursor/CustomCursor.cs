@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 
-using HarmonyLib;
-using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace BonfireSilksong
@@ -226,64 +224,6 @@ namespace BonfireSilksong
             return rect.Contains(Position) &&
                    (inputs.Jump.WasPressed ||
                     inputs.Attack.WasPressed);
-        }
-
-        // disable attack/jump bench leave behavior so they can be used for clicking GUI buttons on GamePad devices.
-        [HarmonyPatch(typeof(ListenForAttack), "OnUpdate")]
-        class ListenForAttack_OnUpdate
-        {
-            static bool Prefix()
-            {
-                // prevent inputs only for controllers
-                var input = GameManager.instance?.inputHandler;
-                if (input == null || !input.gameController.IsAttached) return true;
-
-                if (PlayerData.instance.atBench) return false;
-
-                return true;
-            }
-        }
-
-        [HarmonyPatch(typeof(ListenForAttackV2), "OnUpdate")]
-        class ListenForAttack_OnUpdateV2
-        {
-            static bool Prefix()
-            {
-                var input = GameManager.instance?.inputHandler;
-                if (input == null || !input.gameController.IsAttached) return true;
-
-                if (PlayerData.instance.atBench) return false;
-
-                return true;
-            }
-        }
-
-        [HarmonyPatch(typeof(ListenForJump), "OnUpdate")]
-        class ListenForJump_OnUpdate
-        {
-            static bool Prefix()
-            {
-                var input = GameManager.instance?.inputHandler;
-                if (input == null || !input.gameController.IsAttached) return true;
-
-                if (PlayerData.instance.atBench) return false;
-
-                return true;
-            }
-        }
-
-        [HarmonyPatch(typeof(ListenForJumpV2), "OnUpdate")]
-        class ListenForJump_OnUpdateV2
-        {
-            static bool Prefix()
-            {
-                var input = GameManager.instance?.inputHandler;
-                if (input == null || !input.gameController.IsAttached) return true;
-
-                if (PlayerData.instance.atBench) return false;
-
-                return true;
-            }
         }
     }
 }
