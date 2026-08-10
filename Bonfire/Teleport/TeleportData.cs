@@ -6,7 +6,7 @@ using UnityEngine;
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Static data for Teleport class.
+    /// Static data for TeleportGUI class.
     /// </summary>
     public static class TeleportData
     {
