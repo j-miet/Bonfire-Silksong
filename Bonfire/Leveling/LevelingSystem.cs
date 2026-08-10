@@ -31,13 +31,78 @@ namespace BonfireSilksong
 
         // stat requirements for secondary effects + their check methods. 
         // int getters are for direct values e.g. GUI display, bool getters for logic checks.
-        // must be 'static' to allow Harmony patchers access them.
+        // must be 'static' to allow Harmony patcher access.
+        public static int StrengthMilestone_1 => 5;
+        public static int StrengthMilestone_2 => 10;
+        public static int StrengthMilestone_3 => 15;
+        public static bool CheckStrengthMilestone_1 =>
+            Bonfire.Instance.Status.StrengthStat + Instance.StrengthIncrease >= StrengthMilestone_1;
+        public static bool CheckStrengthMilestone_2 =>
+            Bonfire.Instance.Status.StrengthStat + Instance.StrengthIncrease >= StrengthMilestone_2;
+        public static bool CheckStrengthMilestone_3 =>
+            Bonfire.Instance.Status.StrengthStat + Instance.StrengthIncrease >= StrengthMilestone_3;
+
+        public static int DexterityMilestone_1 => 0;
+        public static int DexterityMilestone_2 => 0;
+        public static int DexterityMilestone_3 => 0;
+        public static bool CheckDexterityMilestone_1 =>
+            Bonfire.Instance.Status.DexterityStat + Instance.DexterityIncrease >= DexterityMilestone_1;
+        public static bool CheckDexterityMilestone_2 =>
+            Bonfire.Instance.Status.DexterityStat + Instance.DexterityIncrease >= DexterityMilestone_2;
+        public static bool CheckDexterityMilestone_3 =>
+            Bonfire.Instance.Status.DexterityStat + Instance.DexterityIncrease >= DexterityMilestone_3;
+
+        public static int IntelligenceMilestone_1 => 0;
+        public static int IntelligenceMilestone_2 => 0;
+        public static int IntelligenceMilestone_3 => 0;
+        public static bool CheckIntelligenceMilestone_1 =>
+            Bonfire.Instance.Status.IntelligenceStat + Instance.IntelligenceIncrease >= IntelligenceMilestone_1;
+        public static bool CheckIntelligenceMilestone_2 =>
+            Bonfire.Instance.Status.IntelligenceStat + Instance.IntelligenceIncrease >= IntelligenceMilestone_2;
+        public static bool CheckIntelligenceMilestone_3 =>
+            Bonfire.Instance.Status.IntelligenceStat + Instance.IntelligenceIncrease >= IntelligenceMilestone_3;
+
+        public static int ArtificeMilestone_1 => 0;
+        public static int ArtificeMilestone_2 => 0;
+        public static int ArtificeMilestone_3 => 0;
+        public static bool CheckArtificeMilestone_1 =>
+            Bonfire.Instance.Status.ArtificeStat + Instance.ArtificeIncrease >= ArtificeMilestone_1;
+        public static bool CheckArtificeMilestone_2 =>
+            Bonfire.Instance.Status.ArtificeStat + Instance.ArtificeIncrease >= ArtificeMilestone_2;
+        public static bool CheckArtificeMilestone_3 =>
+            Bonfire.Instance.Status.ArtificeStat + Instance.ArtificeIncrease >= ArtificeMilestone_3;
+
+        public static int ResilienceMilestone_1 => 0;
+        public static int ResilienceMilestone_2 => 0;
+        public static int ResilienceMilestone_3 => 0;
+        public static int ResilienceMilestone_4 => 0;
+        public static bool CheckResilienceMilestone_1 =>
+            Bonfire.Instance.Status.ResilienceStat + Instance.ResilienceIncrease >= ResilienceMilestone_1;
+        public static bool CheckResilienceMilestone_2 =>
+            Bonfire.Instance.Status.ResilienceStat + Instance.ResilienceIncrease >= ResilienceMilestone_2;
+        public static bool CheckResilienceMilestone_3 =>
+            Bonfire.Instance.Status.ResilienceStat + Instance.ResilienceIncrease >= ResilienceMilestone_3;
+
         public static int WisdomMilestone_1 => 20;
         public static int WisdomMilestone_2 => 30;
+        public static int WisdomMilestone_3 => 30;
         public static bool CheckWisdomMilestone_1 =>
             Bonfire.Instance.Status.WisdomStat + Instance.WisdomIncrease >= WisdomMilestone_1;
         public static bool CheckWisdomMilestone_2 =>
             Bonfire.Instance.Status.WisdomStat + Instance.WisdomIncrease >= WisdomMilestone_2;
+        public static bool CheckWisdomMilestone_3 =>
+            Bonfire.Instance.Status.WisdomStat + Instance.WisdomIncrease >= WisdomMilestone_3;
+
+        public static int LuckMilestone_1 => 0;
+        public static int LuckMilestone_2 => 0;
+        public static int LuckMilestone_3 => 0;
+        public static bool CheckLuckMilestone_1 =>
+            Bonfire.Instance.Status.LuckStat + Instance.LuckIncrease >= LuckMilestone_1;
+        public static bool CheckLuckMilestone_2 =>
+            Bonfire.Instance.Status.LuckStat + Instance.LuckIncrease >= LuckMilestone_2;
+        public static bool CheckLuckMilestone_3 =>
+            Bonfire.Instance.Status.LuckStat + Instance.LuckIncrease >= LuckMilestone_3;
+
 
         /// <summary>
         /// Increments the pending allocation for a single stat.
@@ -266,38 +331,6 @@ namespace BonfireSilksong
             }
 
             return valid;
-        }
-
-        // TODO implement milestones
-        public (int current, int total) GetStatSecondaryStatus(string statName)
-        {
-            switch (statName.ToLower())
-            {
-                case "strength":
-                    return (0, 3);
-                case "dexterity":
-                    return (0, 3);
-                case "intelligence":
-                    return (0, 3);
-                case "artifice":
-                    return (0, 3);
-                case "resilience":
-                    return (0, 3);
-                case "wisdom":
-                    {
-                        if (CheckWisdomMilestone_2)
-                            return (2, 3);
-                        if (CheckWisdomMilestone_1)
-                            return (1, 3);
-
-                        return (0, 3);
-                    }
-                case "luck":
-                    return (0, 3);
-                default:
-                    Bonfire.Log.LogDebug($"Could not find secondary status for stat {statName}");
-                    return (0, 0);
-            }
         }
 
         public int GetAvailableRelicLevels()

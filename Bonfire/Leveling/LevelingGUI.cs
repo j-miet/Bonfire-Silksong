@@ -138,21 +138,21 @@ namespace BonfireSilksong
             GUILayout.BeginVertical("box");
             DrawStatLabel("Needle Damage: " + _needleDamage);
             DrawStatLabel("Slash Speed: " + _attackSpeed);
-            DrawStatLabel("Silk Skill Damage: " + _spellDamage + "%");
-            DrawStatLabel("Tool Damage: " + _toolDamage + "%");
+            DrawStatLabel("Silk Skill Damage: " + _spellDamage);
+            DrawStatLabel("Tool Damage: " + _toolDamage);
             DrawStatLabel("Extra Lifeblood Masks: " + _extraMasks);
             DrawStatLabel("Silk Gained On Enemy Hit: " + _extraSilk);
-            DrawStatLabel("Crit Chance: " + _critChance + "%");
+            DrawStatLabel("Crit Chance: " + _critChance);
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical("box");
             DrawStatLabel("");   // spacer to align with column 1, because Str doesn't have a second modifier
-            DrawStatLabel("Crit Damage: " + _critDamage + "%");
+            DrawStatLabel("Crit Damage: " + _critDamage);
             DrawStatLabel("Binding Cost: " + _bindCost);
             DrawStatLabel("Tool Regen Interval: " + _toolRegenInterval);
-            DrawStatLabel("Block Chance: " + _blockChance + "%");
+            DrawStatLabel("Block Chance: " + _blockChance);
             DrawStatLabel("Silk Regen Interval: " + _silkRegenInterval);
-            DrawStatLabel("Rosary & Shard Increase: " + _rosaryIncrease + "%");
+            DrawStatLabel("Rosary & Shard Increase: " + _rosaryIncrease);
             GUILayout.EndVertical();
 
             GUILayout.EndHorizontal();
@@ -267,19 +267,15 @@ namespace BonfireSilksong
             DrawStatLabelExtended($"{(s.LuckStat + ls.LuckIncrease).ToString()}");
             GUILayout.EndVertical();
 
-            // secondary stat milestone unlocks
-            int labelS = GUIStyles.LabelStyle.fontSize;
-            GUIStyles.LabelStyle.fontSize = 24;
             GUILayout.BeginVertical("box");
-            DrawStatLabelExtended(GetStatSecondaryStatusVisuals("strength"));
-            DrawStatLabelExtended(GetStatSecondaryStatusVisuals("dexterity"));
-            DrawStatLabelExtended(GetStatSecondaryStatusVisuals("intelligence"));
-            DrawStatLabelExtended(GetStatSecondaryStatusVisuals("artifice"));
-            DrawStatLabelExtended(GetStatSecondaryStatusVisuals("resilience"));
-            DrawStatLabelExtended(GetStatSecondaryStatusVisuals("wisdom"));
-            DrawStatLabelExtended(GetStatSecondaryStatusVisuals("luck"));
+            DrawStatLabelExtended(_needleDamage);
+            DrawStatLabelExtended($"{_attackSpeed}\n{_critDamage}");
+            DrawStatLabelExtended($"{_spellDamage}\n{_bindCost}");
+            DrawStatLabelExtended($"{_toolDamage}\n{_toolRegenInterval}");
+            DrawStatLabelExtended($"{_extraMasks}\n{_blockChance}");
+            DrawStatLabelExtended($"{_extraSilk}\n{_silkRegenInterval}");
+            DrawStatLabelExtended($"{_critChance}\n{_rosaryIncrease}");
             GUILayout.EndVertical();
-            GUIStyles.LabelStyle.fontSize = labelS;
 
             GUILayout.EndHorizontal();
             CustomCursor.EndArea();
@@ -449,7 +445,7 @@ namespace BonfireSilksong
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
             DrawInfoStatLabel("Slash Speed: " + _attackSpeed);
-            DrawInfoStatLabel("Crit Damage: " + _critDamage + "%");
+            DrawInfoStatLabel("Crit Damage: " + _critDamage);
 
             GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
 
@@ -462,7 +458,7 @@ namespace BonfireSilksong
             GUILayout.Label("Intelligence", GUIStyles.LabelStyle);
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
-            DrawInfoStatLabel("Silk Skill Damage: " + _spellDamage + "%");
+            DrawInfoStatLabel("Silk Skill Damage: " + _spellDamage);
             DrawInfoStatLabel("Binding Cost: " + _bindCost);
 
             GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
@@ -476,7 +472,7 @@ namespace BonfireSilksong
             GUILayout.Label("Artifice", GUIStyles.LabelStyle);
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
-            DrawInfoStatLabel("Tool Damage: " + _toolDamage + "%");
+            DrawInfoStatLabel("Tool Damage: " + _toolDamage);
             DrawInfoStatLabel("Tool Regen Interval: " + _toolRegenInterval);
 
             GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
@@ -491,7 +487,7 @@ namespace BonfireSilksong
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
             DrawInfoStatLabel("Extra Lifeblood Masks " + _extraMasks);
-            DrawInfoStatLabel("Block Chance: " + _blockChance + "%");
+            DrawInfoStatLabel("Block Chance: " + _blockChance);
 
             GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
 
@@ -528,8 +524,8 @@ namespace BonfireSilksong
             GUILayout.Label("Luck", GUIStyles.LabelStyle);
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
-            DrawInfoStatLabel("Crit Chance: " + _critChance + "%");
-            DrawInfoStatLabel("Rosary & Shard Increase: " + _rosaryIncrease + "%");
+            DrawInfoStatLabel("Crit Chance: " + _critChance);
+            DrawInfoStatLabel("Rosary & Shard Increase: " + _rosaryIncrease);
 
             GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
 
@@ -604,12 +600,15 @@ namespace BonfireSilksong
             _needleDamage = LevelingSystem.NeedleDamage(s.StrengthStat + ls.StrengthIncrease).ToString();
 
             _attackSpeed = LevelingSystem.AttackSpeed(s.DexterityStat + ls.DexterityIncrease).ToString();
-            _critDamage = LevelingSystem.CritDamage(s.DexterityStat + ls.DexterityIncrease, 100).ToString();
+            _critDamage =
+                LevelingSystem.CritDamage(s.DexterityStat + ls.DexterityIncrease, 100).ToString() + "%";
 
-            _spellDamage = LevelingSystem.SpellDamage(100, s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
+            _spellDamage =
+                LevelingSystem.SpellDamage(100, s.IntelligenceStat + ls.IntelligenceIncrease).ToString() + "%";
             _bindCost = LevelingSystem.BindCost(s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
 
-            _toolDamage = LevelingSystem.ToolDamage(100, s.ArtificeStat + ls.ArtificeIncrease).ToString();
+            _toolDamage =
+                LevelingSystem.ToolDamage(100, s.ArtificeStat + ls.ArtificeIncrease).ToString() + "%";
             _toolRegenInterval = "-";
             if (s.ArtificeStat + ls.ArtificeIncrease > 0)
             {
@@ -619,8 +618,8 @@ namespace BonfireSilksong
 
             _extraMasks = LevelingSystem.ExtraMasks(s.ResilienceStat + ls.ResilienceIncrease).ToString();
             _blockChance = s.ResilienceStat + ls.ResilienceIncrease > 0
-                ? LevelingSystem.AverageBlockChance(s.ResilienceStat + ls.ResilienceIncrease).ToString("F0")
-                : "0";
+                ? LevelingSystem.AverageBlockChance(s.ResilienceStat + ls.ResilienceIncrease).ToString("F0") + "%"
+                : "0%";
 
             _extraSilk = LevelingSystem.ExtraSilk(s.WisdomStat + ls.WisdomIncrease, 1).ToString();
             _silkRegenInterval = "-";
@@ -630,8 +629,8 @@ namespace BonfireSilksong
                 _silkRegenInterval = silkRegen > 0 ? silkRegen.ToString() + " s" : "-";
             }
 
-            _critChance = LevelingSystem.CritChance(s.LuckStat + ls.LuckIncrease).ToString();
-            _rosaryIncrease = (5 * (s.LuckStat + ls.LuckIncrease)).ToString();
+            _critChance = LevelingSystem.CritChance(s.LuckStat + ls.LuckIncrease).ToString() + "%";
+            _rosaryIncrease = (5 * (s.LuckStat + ls.LuckIncrease)).ToString() + "%";
 
             // "Apply" button label
             int pRelics = s.PendingRelicLevels;
@@ -654,14 +653,6 @@ namespace BonfireSilksong
             {
                 _applyText = $"Apply ({s.PendingRosaries} rosaries)";
             }
-        }
-
-        private string GetStatSecondaryStatusVisuals(string statName)
-        {
-            (int current, int total) = LevelingSystem.Instance.GetStatSecondaryStatus(statName);
-            if (total == 0) return "";
-
-            return new string('●', current) + new string('○', total - current);
         }
     }
 }
