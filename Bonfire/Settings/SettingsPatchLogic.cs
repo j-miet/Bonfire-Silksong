@@ -3,7 +3,7 @@ using HutongGames.PlayMaker.Actions;
 
 namespace BonfireSilksong
 {
-    public static class SettingsPatchHelpers
+    public static class SettingsPatchLogic
     {
         /// <summary>
         /// CurrencyManager.ProcessAddCurrency (Postfix) + CurrencyManager.ProcessTakeCurrency (Postfix): shell shards 

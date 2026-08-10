@@ -1,6 +1,6 @@
 namespace BonfireSilksong
 {
-    public static class CursorPatchHelpers
+    public static class CursorPatchLogic
     {
         /// <summary>
         /// ListenForX classes e.g. ListenForAttack, which listen to user input:

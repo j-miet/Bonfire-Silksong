@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace BonfireSilksong
 {
-    public static class TeleportPatchHelpers
+    public static class TeleportPatchLogic
     {
         /// <summary>
         /// HeroController.FinishedEnteringScene (Postfix):
