@@ -1,5 +1,3 @@
-using System;
-
 using GlobalEnums;
 using HutongGames.PlayMaker;
 using UnityEngine;
@@ -24,8 +22,10 @@ namespace BonfireSilksong
         public static float Width => 1920f;
         public static float Height => 1080f;
 
-        private bool _benchCheck = false;
         private const bool _applyScaleMatrix = true; // should always stay true unless scaling causes issues
+        private readonly float _scale = Mathf.Min(Screen.width / 1920f, Screen.height / 1080f);
+
+        private bool _benchCheck = false;
 
         private Texture2D _cursorTexture;
 
@@ -41,96 +41,87 @@ namespace BonfireSilksong
 
         private void OnGUI()
         {
-            try
+            Matrix4x4 oldMatrix = GUI.matrix;
+            if (Bonfire.IsNotGamePlayState()) return;
+
+            CustomCursor.ResetCursorStack();
+            CustomCursor.Update();
+
+            if (_applyScaleMatrix)
             {
-                Matrix4x4 oldMatrix = GUI.matrix;
-                if (Bonfire.IsNotGamePlayState()) return;
+                GUI.matrix = Matrix4x4.Scale(new Vector3(_scale, _scale, 1));
+            }
 
-                CustomCursor.ResetCursorStack();
-                CustomCursor.Update();
+            GUIStyles.EnsureFonts();
+            GUI.enabled = true;
 
-                if (_applyScaleMatrix)
-                {
-                    // this must use Screen.width and Screen.height and keep 1920x1080 resolution as base
-                    float scale = Mathf.Min(Screen.width / 1920f, Screen.height / 1080f);
-                    GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1));
-                }
+            if (Teleport.FastTravelDisplay)
+            {
+                Bonfire.Instance.ShowCursor();
 
-                GUIStyles.EnsureFonts();
-                GUI.enabled = true;
+                Teleport.DrawBenchFastTravelUI();
 
-                if (Teleport.FastTravelDisplay)
-                {
-                    Bonfire.Instance.ShowCursor();
-
-                    Teleport.DrawBenchFastTravelUI();
-
-                    DrawCustomCursor();
-
-                    GUI.matrix = oldMatrix;
-
-                    return;
-                }
-
-                // then check if game state is playing, paused or in inventory
-                // if none of them is true, avoid GUI generation to prevent fps drop in main menu
-                if (!(GameManager.instance.GameState == GameState.PLAYING ||
-                      GameManager.instance.GameState == GameState.PAUSED) ||
-                    InInventory())
-                {
-                    GUI.matrix = oldMatrix;
-                    return;
-                }
-
-                if (PlayerData.instance.atBench && !GameManager.instance.isPaused)
-                {
-                    _benchCheck = true;
-
-                    GUIStyles.EnsureStyles();
-
-                    GUI.backgroundColor = Color.white;
-                    GUI.contentColor = Color.white;
-                    GUI.color = Color.white;
-
-                    DrawBenchUI();
-
-                    Teleport.FastTravelUnlockNotification();
-                    Settings.DrawExtraSettingsUI();
-                    Settings.DrawCrestUnlockUI();
-                    Settings.DrawPlayerStatusResetUI();
-                }
-                else
-                {
-                    Settings.PendingCrestUnlock = false;
-                    Settings.PendingSettingsWindow = false;
-                    Settings.PendingStatusReset = false;
-                }
-
-                if (!PlayerData.instance.atBench && _benchCheck)
-                {
-                    CustomCursor.ResetCursorPosition();
-
-                    LevelingSystem.Instance.ResetPendingLevelUp();
-
-                    _benchCheck = false;
-                }
-
-                // cursor visual when controller is plugged in
-                if (GameManager.instance.inputHandler.gameController.IsAttached &&
-                    !HeroController.instance.IsPaused() &&
-                    PlayerData.instance.atBench)
-                {
-                    DrawCustomCursor();
-                }
-
-                Settings.DrawEnemyHealthBars();
+                DrawCustomCursor();
 
                 GUI.matrix = oldMatrix;
+
+                return;
             }
-            catch (Exception ex)
+
+            // check if game state is playing, paused or in inventory
+            // if none of them is true, avoid GUI rendering to prevent fps drop in main menu
+            if (!(GameManager.instance.GameState == GameState.PLAYING ||
+                  GameManager.instance.GameState == GameState.PAUSED) ||
+                InInventory())
             {
-                Bonfire.Log.LogError(ex);
+                GUI.matrix = oldMatrix;
+                return;
             }
+
+            if (PlayerData.instance.atBench && !GameManager.instance.isPaused)
+            {
+                _benchCheck = true;
+
+                GUIStyles.EnsureStyles();
+
+                GUI.backgroundColor = Color.white;
+                GUI.contentColor = Color.white;
+                GUI.color = Color.white;
+
+                DrawBenchUI();
+
+                Teleport.FastTravelUnlockNotification();
+                Settings.DrawExtraSettingsUI();
+                Settings.DrawCrestUnlockUI();
+                Settings.DrawPlayerStatusResetUI();
+            }
+            else
+            {
+                Settings.PendingCrestUnlock = false;
+                Settings.PendingSettingsWindow = false;
+                Settings.PendingStatusReset = false;
+            }
+
+            if (!PlayerData.instance.atBench && _benchCheck)
+            {
+                CustomCursor.ResetCursorPosition();
+
+                LevelingSystem.Instance.ResetPendingLevelUp();
+
+                _benchCheck = false;
+            }
+
+            // cursor visual when controller is plugged in
+            if (GameManager.instance.inputHandler.gameController.IsAttached &&
+                !HeroController.instance.IsPaused() &&
+                PlayerData.instance.atBench)
+            {
+                DrawCustomCursor();
+            }
+
+            Settings.DrawEnemyHealthBars();
+
+            GUI.matrix = oldMatrix;
         }
 
         private void Update()
