@@ -3,7 +3,10 @@ using System.Linq;
 
 namespace BonfireSilksong
 {
-    public static class TeleportPatchLogic
+    /// <summary>
+    /// Additional bench teleport logic e.g. for Harmony patches.
+    /// </summary>
+    public static class TeleportLogic
     {
         /// <summary>
         /// HeroController.FinishedEnteringScene (Postfix):
@@ -29,22 +32,21 @@ namespace BonfireSilksong
                 // main/side area
                 benchFSM?.SetState("Set Spawn Location");
                 benchFSM?.SendEventSafe("OVERRIDE");
-                Bonfire.Log.LogDebug("[BenchTeleport] Set spawn location");
+                Bonfire.Log.LogDebug("[TeleportPatchLogic] Set spawn location");
             }
 
             instance.proxyFSM.SendEventSafe("HeroCtrl-EnteringScene");
 
             // teleporting will update blue hp too early so call update again after a short delay for refresh state
-            Bonfire.Instance.StartCoroutine(LevelingSystem.CallDelayedUpdateBlueHP());
+            Bonfire.Instance.StartCoroutine(ResilienceLogic.CallDelayedUpdateBlueHP());
 
             GameManager.instance.SaveGame(null);
         }
 
         /// <summary>
-        /// GameManager.EnterHero (Prefix):
-        /// Check if the bench location is valid for respawning after player is loaded into scene.
-        /// Settles for a fallback in case the value set by BenchTeleport turned out not to be a valid bench marker for
-        /// target scene.
+        /// GameManager.EnterHero (Prefix): Check if the bench location is valid for respawning after player is loaded 
+        /// into scene. Settles for a fallback in case the value set by BenchTeleport turned out not to be a valid 
+        /// bench marker for target scene.
         /// </summary>
         public static void CheckMarkerValidity(GameManager instance)
         {
@@ -57,7 +59,7 @@ namespace BonfireSilksong
             string scene = instance.playerData.tempRespawnScene;
             string marker = instance.playerData.tempRespawnMarker;
 
-            Bonfire.Log.LogDebug($"[BenchTeleport] EnterHero: scene={scene}, marker={marker}");
+            Bonfire.Log.LogDebug($"[TeleportPatchLogic] EnterHero: scene={scene}, marker={marker}");
 
             List<RespawnMarker> markers = RespawnMarker.Markers
                 .Where(r =>

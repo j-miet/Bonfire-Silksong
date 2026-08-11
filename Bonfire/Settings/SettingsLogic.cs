@@ -3,7 +3,10 @@ using HutongGames.PlayMaker.Actions;
 
 namespace BonfireSilksong
 {
-    public static class SettingsPatchLogic
+    /// <summary>
+    /// Additional settings logic e.g. for Harmony patches.
+    /// </summary>
+    public static class SettingsLogic
     {
         /// <summary>
         /// CurrencyManager.ProcessAddCurrency (Postfix) + CurrencyManager.ProcessTakeCurrency (Postfix): shell shards 
@@ -20,16 +23,18 @@ namespace BonfireSilksong
         /// <summary>
         /// SprintRaceController.GetRaceInfo (Postfix): reduce SprintMaster Swift's run speed by 50%.
         /// </summary>
-        public static void MakeSprintmasterRaceEasier(ref float currentBaseSpeed)
+        public static float MakeSprintmasterRaceEasier(float currentBaseSpeed)
         {
-            if (!Bonfire.Instance.Status.EasierSprintmasterRaces) return;
-            currentBaseSpeed *= 0.5f;
+            if (!Bonfire.Instance.Status.EasierSprintmasterRaces) return currentBaseSpeed;
+
+            float updatedSpeed = currentBaseSpeed *= 0.5f;
+            return updatedSpeed;
         }
 
         /// <summary>
-        /// PlayerDataBoolTest.OnEnter (Prefix): check if Chapel of the Beast door should be open.
+        /// PlayerDataBoolTest.OnEnter (Prefix): Check if Chapel of the Beast door should be open.
         /// </summary>
-        public static bool UpdateBeastChapelDoorState(PlayerDataBoolTest instance)
+        public static bool KeepBeastChapelDoorStateOpen(PlayerDataBoolTest instance)
         {
             // if player uses unlock all crests feature, the beast crest unlock prevents fighting Savage Beastfly boss, 
             // thus preventing getting the second encounter and its mask shard reward.
@@ -54,10 +59,10 @@ namespace BonfireSilksong
                 instance.Fsm.Event("OPEN");
                 instance.Finish();
 
-                return false; // return false to skip default OnEnter behavior
+                return true;
             }
 
-            return true;
+            return false;
         }
 
         /// <summary>

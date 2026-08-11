@@ -27,6 +27,8 @@ namespace BonfireSilksong
         /// </summary>
         public static bool PrepareTeleportLocation(MapPin closestPin)
         {
+            Bonfire.Log.LogDebug($"[BenchTeleport]");
+
             if (closestPin == null || !CanTeleport())
                 return false;
 
@@ -49,7 +51,7 @@ namespace BonfireSilksong
             // In this case targetScene is very useful as it will always be the most unique descriptor available.
             string targetScene = parentScene.Name;
 
-            Bonfire.Log.LogDebug($"[BenchTeleport] Teleport target scene: {targetScene}");
+            Bonfire.Log.LogDebug($"Teleport target scene: {targetScene}");
 
             Dictionary<string, SceneTeleportMap.SceneInfo> teleportMap = SceneTeleportMap.GetTeleportMap();
             if (teleportMap == null)
