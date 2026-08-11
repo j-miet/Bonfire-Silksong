@@ -10,9 +10,9 @@ namespace BonfireSilksong
     public class BonfireGUI : MonoBehaviour
     {
         public static BonfireGUI Instance;
+        public static LevelingGUI Leveling;
         public static SettingsGUI Settings;
         public static TeleportGUI Teleport;
-        public static LevelingGUI Leveling;
 
         // all GUI resolution logic should use these instead of Screen.width/Screen.height EXCEPT the scaling itself
         // inside OnGUI callback. This way GUI.Matrix can properly apply its scaling and keep user interfaces 
@@ -23,11 +23,61 @@ namespace BonfireSilksong
         public static float Height => 1080f;
 
         private const bool _applyScaleMatrix = true; // should always stay true unless scaling causes issues
-        private readonly float _scale = Mathf.Min(Screen.width / 1920f, Screen.height / 1080f);
 
         private bool _benchCheck = false;
-
         private Texture2D _cursorTexture;
+
+        // check if game is in inventory screen.
+        private static bool InInventory()
+        {
+            GameObject go = GameObject.FindGameObjectWithTag("Inventory Top");
+            if (go == null) return false;
+
+            PlayMakerFSM fsm = FSMUtility.LocateFSM(go, "Inventory Control");
+            if (fsm == null) return false;
+
+            FsmBool open = fsm.FsmVariables.GetFsmBool("Open");
+            return open != null && open.Value;
+        }
+
+        // draws a white disc with black center
+        private static Texture2D CreateCursorTexture()
+        {
+            const int size = 16;
+
+            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp
+            };
+
+            Color32[] pixels = new Color32[size * size];
+            Color32 clear = new Color32(0, 0, 0, 0);
+            Vector2 center = new Vector2(7.5f, 7.5f);
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float d = Vector2.Distance(new Vector2(x, y), center);
+                    Color32 c;
+
+                    if (d <= 1.5f)
+                        c = Color.black;
+                    else if (d <= 4.0f)
+                        c = Color.white;
+                    else
+                        c = clear;
+
+                    pixels[y * size + x] = c;
+                }
+            }
+
+            tex.SetPixels32(pixels);
+            tex.Apply();
+
+            return tex;
+        }
 
         private void Awake()
         {
@@ -49,7 +99,8 @@ namespace BonfireSilksong
 
             if (_applyScaleMatrix)
             {
-                GUI.matrix = Matrix4x4.Scale(new Vector3(_scale, _scale, 1));
+                float scale = Mathf.Min(Screen.width / 1920f, Screen.height / 1080f);
+                GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1));
             }
 
             GUIStyles.EnsureFonts();
@@ -143,58 +194,6 @@ namespace BonfireSilksong
                     Teleport.CloseFastTravelMenu();
                 }
             }
-        }
-
-        // check if game is in inventory screen.
-        private static bool InInventory()
-        {
-            GameObject go = GameObject.FindGameObjectWithTag("Inventory Top");
-            if (go == null) return false;
-
-            PlayMakerFSM fsm = FSMUtility.LocateFSM(go, "Inventory Control");
-            if (fsm == null) return false;
-
-            FsmBool open = fsm.FsmVariables.GetFsmBool("Open");
-            return open != null && open.Value;
-        }
-
-        // draws a white disc with black center
-        private static Texture2D CreateCursorTexture()
-        {
-            const int size = 16;
-
-            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false)
-            {
-                filterMode = FilterMode.Point,
-                wrapMode = TextureWrapMode.Clamp
-            };
-
-            Color32[] pixels = new Color32[size * size];
-            Color32 clear = new Color32(0, 0, 0, 0);
-            Vector2 center = new Vector2(7.5f, 7.5f);
-
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    float d = Vector2.Distance(new Vector2(x, y), center);
-                    Color32 c;
-
-                    if (d <= 1.5f)
-                        c = Color.black;
-                    else if (d <= 4.0f)
-                        c = Color.white;
-                    else
-                        c = clear;
-
-                    pixels[y * size + x] = c;
-                }
-            }
-
-            tex.SetPixels32(pixels);
-            tex.Apply();
-
-            return tex;
         }
 
         private void DrawCustomCursor()
