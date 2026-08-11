@@ -13,22 +13,28 @@ namespace BonfireSilksong
         public static GUIStyle LevelHeaderStyle;
         public static GUIStyle LabelStyle;
         public static GUIStyle ButtonStyle;
+
         public static GUIStyle EnemyHpStyle;
         public static GUIStyle BossHpStyle;
         public static GUIStyle HpHighStyle;
         public static GUIStyle HpMediumStyle;
         public static GUIStyle HpLowStyle;
+
         public static GUIStyle CrestUnlockLabelStyle;
         public static GUIStyle CrestUnlockButtonStyle;
+
         public static GUIStyle FastTravelUnlockLabelStyle;
+
         public static GUIStyle BenchListAreaLabelStyle;
         public static GUIStyle BenchListButtonStyle;
         public static GUIStyle BenchListButtonSelectedStyle;
         public static GUIStyle FastTravelConfirmHeaderStyle;
         public static GUIStyle FastTravelConfirmDestinationStyle;
+
         public static GUIStyle LvlInfoHeaderPrimaryStyle;
         public static GUIStyle LvlInfoHeaderSecondaryStyle;
         public static GUIStyle LvlInfoLabelStyle;
+        public static GUIStyle LvlInfoButtonStyle;
         public static GUIStyle LvlInfoLabelDisabledStyle;
 
         public static void EnsureFonts()
@@ -233,6 +239,18 @@ namespace BonfireSilksong
                     fontStyle = FontStyle.Bold,
                     fontSize = 14,
                 };
+            }
+
+            if (LvlInfoButtonStyle == null)
+            {
+                LvlInfoButtonStyle = new GUIStyle(GUI.skin.button)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleCenter,
+                    fontSize = 12,
+                };
+                LvlInfoButtonStyle.normal.background = Texture2D.whiteTexture;
             }
 
             if (LvlInfoLabelDisabledStyle == null)

@@ -31,6 +31,9 @@ namespace BonfireSilksong
         // leveling GUI
         public int LevelingInfoStyle = 0;
 
+        // stat flags
+        public bool AutoReleaseNeedleStrike = false;
+
         // settings
         public bool EnemyHealthBarsEnabled = false;
         public bool EnemyHpBarColorProgression = false;
