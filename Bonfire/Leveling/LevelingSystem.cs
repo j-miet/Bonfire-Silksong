@@ -1,15 +1,13 @@
 using System;
-using System.Collections;
 using System.Linq;
 
 using GlobalEnums;
-using HutongGames.PlayMaker;
 using UnityEngine;
 
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Leveling system logic.
+    /// High-level leveling system logic. Knows only the numerical values of each stat, but not their underlying logic.
     /// </summary>
     public class LevelingSystem : MonoBehaviour
     {
@@ -21,88 +19,108 @@ namespace BonfireSilksong
         public int WisdomIncrease = 0;
         public int LuckIncrease = 0;
 
-        public static bool SatDownAtBench = false;
-        public static bool BlueHpInit = false;
         public static LevelingSystem Instance
         {
             get => _instance;
             private set => _instance = value;
         }
 
-        // stat requirements for secondary effects + their check methods. 
-        // int getters are for direct values e.g. GUI display, bool getters for logic checks.
-        // must be 'static' to allow Harmony patcher access.
-        public static int StrengthMilestone_1 => 5;
-        public static int StrengthMilestone_2 => 10;
-        public static int StrengthMilestone_3 => 15;
-        public static bool CheckStrengthMilestone_1 =>
-            Bonfire.Instance.Status.StrengthStat + Instance.StrengthIncrease >= StrengthMilestone_1;
-        public static bool CheckStrengthMilestone_2 =>
-            Bonfire.Instance.Status.StrengthStat + Instance.StrengthIncrease >= StrengthMilestone_2;
-        public static bool CheckStrengthMilestone_3 =>
-            Bonfire.Instance.Status.StrengthStat + Instance.StrengthIncrease >= StrengthMilestone_3;
+        // these are used for visual highlighting in LevelingGUI
+        public static bool HighLightStrenghtMileStone_1 =>
+            Bonfire.Instance.Status.StrengthStat + Instance.StrengthIncrease >= StrengthLogic.StrengthMilestone_1;
+        public static bool HighLightStrenghtMileStone_2 =>
+            Bonfire.Instance.Status.StrengthStat + Instance.StrengthIncrease >= StrengthLogic.StrengthMilestone_2;
+        public static bool HighLightStrenghtMileStone_3 =>
+            Bonfire.Instance.Status.StrengthStat + Instance.StrengthIncrease >= StrengthLogic.StrengthMilestone_3;
 
-        public static int DexterityMilestone_1 => 0;
-        public static int DexterityMilestone_2 => 0;
-        public static int DexterityMilestone_3 => 0;
-        public static bool CheckDexterityMilestone_1 =>
-            Bonfire.Instance.Status.DexterityStat + Instance.DexterityIncrease >= DexterityMilestone_1;
-        public static bool CheckDexterityMilestone_2 =>
-            Bonfire.Instance.Status.DexterityStat + Instance.DexterityIncrease >= DexterityMilestone_2;
-        public static bool CheckDexterityMilestone_3 =>
-            Bonfire.Instance.Status.DexterityStat + Instance.DexterityIncrease >= DexterityMilestone_3;
+        public static bool HighlightDexterityMilestone_1 =>
+            Bonfire.Instance.Status.DexterityStat + Instance.DexterityIncrease >= DexterityLogic.DexterityMilestone_1;
+        public static bool HighlightDexterityMilestone_2 =>
+            Bonfire.Instance.Status.DexterityStat + Instance.DexterityIncrease >= DexterityLogic.DexterityMilestone_2;
+        public static bool HighlightDexterityMilestone_3 =>
+            Bonfire.Instance.Status.DexterityStat + Instance.DexterityIncrease >= DexterityLogic.DexterityMilestone_3;
 
-        public static int IntelligenceMilestone_1 => 0;
-        public static int IntelligenceMilestone_2 => 0;
-        public static int IntelligenceMilestone_3 => 0;
-        public static bool CheckIntelligenceMilestone_1 =>
-            Bonfire.Instance.Status.IntelligenceStat + Instance.IntelligenceIncrease >= IntelligenceMilestone_1;
-        public static bool CheckIntelligenceMilestone_2 =>
-            Bonfire.Instance.Status.IntelligenceStat + Instance.IntelligenceIncrease >= IntelligenceMilestone_2;
-        public static bool CheckIntelligenceMilestone_3 =>
-            Bonfire.Instance.Status.IntelligenceStat + Instance.IntelligenceIncrease >= IntelligenceMilestone_3;
+        public static bool HighlightIntelligenceMilestone_1 =>
+            Bonfire.Instance.Status.IntelligenceStat + Instance.IntelligenceIncrease
+            >= IntelligenceLogic.IntelligenceMilestone_1;
+        public static bool HighlightIntelligenceMilestone_2 =>
+            Bonfire.Instance.Status.IntelligenceStat + Instance.IntelligenceIncrease
+            >= IntelligenceLogic.IntelligenceMilestone_2;
+        public static bool HighlightIntelligenceMilestone_3 =>
+            Bonfire.Instance.Status.IntelligenceStat + Instance.IntelligenceIncrease
+            >= IntelligenceLogic.IntelligenceMilestone_3;
 
-        public static int ArtificeMilestone_1 => 0;
-        public static int ArtificeMilestone_2 => 0;
-        public static int ArtificeMilestone_3 => 0;
-        public static bool CheckArtificeMilestone_1 =>
-            Bonfire.Instance.Status.ArtificeStat + Instance.ArtificeIncrease >= ArtificeMilestone_1;
-        public static bool CheckArtificeMilestone_2 =>
-            Bonfire.Instance.Status.ArtificeStat + Instance.ArtificeIncrease >= ArtificeMilestone_2;
-        public static bool CheckArtificeMilestone_3 =>
-            Bonfire.Instance.Status.ArtificeStat + Instance.ArtificeIncrease >= ArtificeMilestone_3;
+        public static bool HighlightArtificeMilestone_1 =>
+            Bonfire.Instance.Status.ArtificeStat + Instance.ArtificeIncrease >= ArtificeLogic.ArtificeMilestone_1;
+        public static bool HighlightArtificeMilestone_2 =>
+            Bonfire.Instance.Status.ArtificeStat + Instance.ArtificeIncrease >= ArtificeLogic.ArtificeMilestone_2;
+        public static bool HighlightArtificeMilestone_3 =>
+            Bonfire.Instance.Status.ArtificeStat + Instance.ArtificeIncrease >= ArtificeLogic.ArtificeMilestone_3;
 
-        public static int ResilienceMilestone_1 => 0;
-        public static int ResilienceMilestone_2 => 0;
-        public static int ResilienceMilestone_3 => 0;
-        public static int ResilienceMilestone_4 => 0;
-        public static bool CheckResilienceMilestone_1 =>
-            Bonfire.Instance.Status.ResilienceStat + Instance.ResilienceIncrease >= ResilienceMilestone_1;
-        public static bool CheckResilienceMilestone_2 =>
-            Bonfire.Instance.Status.ResilienceStat + Instance.ResilienceIncrease >= ResilienceMilestone_2;
-        public static bool CheckResilienceMilestone_3 =>
-            Bonfire.Instance.Status.ResilienceStat + Instance.ResilienceIncrease >= ResilienceMilestone_3;
+        public static bool HighlightResilienceMilestone_1 =>
+            Bonfire.Instance.Status.ResilienceStat + Instance.ResilienceIncrease
+            >= ResilienceLogic.ResilienceMilestone_1;
+        public static bool HighlightResilienceMilestone_2 =>
+            Bonfire.Instance.Status.ResilienceStat + Instance.ResilienceIncrease
+            >= ResilienceLogic.ResilienceMilestone_3;
+        public static bool HighlightResilienceMilestone_3 =>
+            Bonfire.Instance.Status.ResilienceStat + Instance.ResilienceIncrease
+            >= ResilienceLogic.ResilienceMilestone_3;
 
-        public static int WisdomMilestone_1 => 20;
-        public static int WisdomMilestone_2 => 30;
-        public static int WisdomMilestone_3 => 30;
-        public static bool CheckWisdomMilestone_1 =>
-            Bonfire.Instance.Status.WisdomStat + Instance.WisdomIncrease >= WisdomMilestone_1;
-        public static bool CheckWisdomMilestone_2 =>
-            Bonfire.Instance.Status.WisdomStat + Instance.WisdomIncrease >= WisdomMilestone_2;
-        public static bool CheckWisdomMilestone_3 =>
-            Bonfire.Instance.Status.WisdomStat + Instance.WisdomIncrease >= WisdomMilestone_3;
+        public static bool HighlightWisdomMilestone_1 =>
+            Bonfire.Instance.Status.WisdomStat + Instance.WisdomIncrease >= WisdomLogic.WisdomMilestone_1;
+        public static bool HighlightWisdomMilestone_2 =>
+            Bonfire.Instance.Status.WisdomStat + Instance.WisdomIncrease >= WisdomLogic.WisdomMilestone_2;
+        public static bool HighlightWisdomMilestone_3 =>
+            Bonfire.Instance.Status.WisdomStat + Instance.WisdomIncrease >= WisdomLogic.WisdomMilestone_3;
 
-        public static int LuckMilestone_1 => 0;
-        public static int LuckMilestone_2 => 0;
-        public static int LuckMilestone_3 => 0;
-        public static bool CheckLuckMilestone_1 =>
-            Bonfire.Instance.Status.LuckStat + Instance.LuckIncrease >= LuckMilestone_1;
-        public static bool CheckLuckMilestone_2 =>
-            Bonfire.Instance.Status.LuckStat + Instance.LuckIncrease >= LuckMilestone_2;
-        public static bool CheckLuckMilestone_3 =>
-            Bonfire.Instance.Status.LuckStat + Instance.LuckIncrease >= LuckMilestone_3;
+        public static bool HighlightLuckMilestone_1 =>
+            Bonfire.Instance.Status.LuckStat + Instance.LuckIncrease >= LuckLogic.LuckMilestone_1;
+        public static bool HighlightLuckMilestone_2 =>
+            Bonfire.Instance.Status.LuckStat + Instance.LuckIncrease >= LuckLogic.LuckMilestone_2;
+        public static bool HighlightLuckMilestone_3 =>
+            Bonfire.Instance.Status.LuckStat + Instance.LuckIncrease >= LuckLogic.LuckMilestone_3;
 
+        /// <summary>
+        /// Resets all initialization flags when in main menu.
+        /// </summary>
+        public static void ResetInitFlags()
+        {
+            if (GameManager.instance.GameState == GameState.MAIN_MENU)
+            {
+                IntelligenceLogic.BindCostInit = false;
+                ResilienceLogic.BlueHpInit = false;
+            }
+        }
+
+        public static bool CanLevelUp(bool gotFreeLevel, int rosariesToLvlUp)
+        {
+            var s = Bonfire.Instance.Status;
+            return PlayerData.instance.atBench &&
+                   (gotFreeLevel || (rosariesToLvlUp + s.PendingRosaries <= PlayerData.instance.geo));
+        }
+
+        public static int GetCurrentLevel()
+        {
+            var s = Bonfire.Instance.Status;
+
+            return s.StrengthStat + s.DexterityStat + s.IntelligenceStat
+                    + s.ArtificeStat + s.ResilienceStat + s.WisdomStat + s.LuckStat
+                    + s.PendingRelicLevels
+                    + s.PendingRosaryLevels
+                    + 1; // base level
+        }
+
+        public static int DisplayPendingRosaryLevel()
+        {
+            var s = Bonfire.Instance.Status;
+            return s.TotalRosaryLevels + s.PendingRosaryLevels;
+        }
+
+        public static int GetLevelUpRosaryRequirement(int rosaryLevels)
+        {
+            return (int)(Math.Pow(rosaryLevels, 2.0) + (10 * rosaryLevels) + 50.0);
+        }
 
         /// <summary>
         /// Increments the pending allocation for a single stat.
@@ -189,7 +207,7 @@ namespace BonfireSilksong
             LuckIncrease = 0;
 
             HeroController.instance.CharmUpdate();
-            UpdateBlueHP();
+            ResilienceLogic.CallUpdateBlueHP();
         }
 
         /// <summary>
@@ -242,7 +260,7 @@ namespace BonfireSilksong
             s.RespecCost++;
 
             HeroController.instance.CharmUpdate();
-            UpdateBlueHP();
+            ResilienceLogic.CallUpdateBlueHP();
         }
 
         /// <summary>
@@ -340,8 +358,7 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// Helper for caching obtained relics data; otherwise bench ui would re-calculate this every single frame.
-        /// To access cached data, use CachedRelicsObtained getter.
+        /// Updates deposited relic count which can be then accessed via CachedRelicsObtained getter.
         /// </summary>
         public void RefreshRelicsDeposited()
         {
@@ -349,210 +366,10 @@ namespace BonfireSilksong
         }
         public int CachedRelicsObtained => _cachedRelicsDeposited;
 
-        /// <summary>
-        /// Update blue mask count from Resilience stat.
-        /// </summary>
-        public static void UpdateBlueHP()
-        {
-            Bonfire.Log.LogDebug("[LevelingSystem] Called UpdateBlueHP");
-            Instance.StartCoroutine(RefreshResilienceBlueHealth());
-        }
-
-        /// <summary>
-        /// Resets all initialization flags when in main menu.
-        /// </summary>
-        public static void ResetInitFlags()
-        {
-            if (GameManager.instance.GameState == GameState.MAIN_MENU)
-            {
-                _bindCostInit = false;
-                BlueHpInit = false;
-            }
-        }
-
-        /// <summary>
-        /// Delays blue up update: waits until player is detected at bench, then adds a small extra delay.
-        /// Should be used after fast travel teleport finishes as it will trigger normal UpdateBlueHP call prematurely,
-        /// then fix any possible visual issues with another update loop.
-        /// </summary>
-        public static IEnumerator CallDelayedUpdateBlueHP()
-        {
-            yield return new WaitUntil(() => GameManager.instance.GameState == GameState.PLAYING);
-            yield return new WaitForSecondsRealtime(0.25f);
-            UpdateBlueHP();
-        }
-
-        // Override bind cost gameplay value in FSM.
-        // SilkSpool_BindCost_Getter handles the patching of getter value which is used for visually matching the silk 
-        // spool with current silk available.
-        public static void UpdateBindCostFSM()
-        {
-            // _bindCostInit is just to prevent calling Fsm event search loop continuously: _bindCostInit starts 
-            // false, which forces loop to run once and initialize "Silk Cost" and "Silk Cost Witch" int values when 
-            // loading into a save. Afterwards it should only repeat this if player is currently binding. And finally: 
-            // going back to main menu should reset init value so that init may be repeated after each "save & exit 
-            // into load into game" sequence. 
-            // Is this absolutely necessary? No, probably doesn't even affect game performance to be honest, but 
-            // just a good habit to prevent a pointless execution loop because UpdateBindCostFSM is called on each
-            // frame.
-
-            if (!GameManager.instance.hero_ctrl.cState.isBinding && _bindCostInit) return;
-
-            if (HeroController.instance == null || Instance == null) return;
-
-            FsmInt silkCost;
-            FsmInt silkCostWitch;
-            int cost = BindCost(Bonfire.Instance.Status.IntelligenceStat);
-
-            foreach (var fsm in HeroController.instance.GetComponents<PlayMakerFSM>())
-            {
-                if (fsm.FsmName != "Bind") continue;
-
-                silkCost = fsm.FsmVariables.GetFsmInt("Silk Cost");
-                silkCostWitch = fsm.FsmVariables.GetFsmInt("Silk Cost Witch");
-
-                if (silkCost != null)
-                    silkCost.Value = cost;
-
-                if (silkCostWitch != null)
-                    silkCostWitch.Value = cost;
-
-                _bindCostInit = true;
-            }
-        }
-
-        public static bool CanLevelUp(bool gotFreeLevel, int rosariesToLvlUp)
-        {
-            var s = Bonfire.Instance.Status;
-            return PlayerData.instance.atBench &&
-                   (gotFreeLevel || (rosariesToLvlUp + s.PendingRosaries <= PlayerData.instance.geo));
-        }
-
-        public static int GetCurrentLevel()
-        {
-            var s = Bonfire.Instance.Status;
-
-            return s.StrengthStat + s.DexterityStat + s.IntelligenceStat
-                    + s.ArtificeStat + s.ResilienceStat + s.WisdomStat + s.LuckStat
-                    + s.PendingRelicLevels
-                    + s.PendingRosaryLevels
-                    + 1; // base level
-        }
-
-        public static int DisplayPendingRosaryLevel()
-        {
-            var s = Bonfire.Instance.Status;
-            return s.TotalRosaryLevels + s.PendingRosaryLevels;
-        }
-
-        public static int GetLevelUpRosaryRequirement(int rosaryLevels)
-        {
-            return (int)(Math.Pow(rosaryLevels, 2.0) + (10 * rosaryLevels) + 50.0);
-        }
-
-        /// <summary>
-        /// Returns average damage blocking chance from current Resilience stat value.
-        /// </summary>
-        public static float AverageBlockChance(int totalRes)
-        {
-            float f = BlockChance(totalRes);
-            float[] multipliers = { 10f, 20f, 30f, 50f, 70f, 80f, 90f };
-            float sum = 0f;
-            foreach (var m in multipliers)
-                sum += m * f;
-            return sum / multipliers.Length;
-        }
-
-        // -- stat formulas -- //
-
-        // strength: needle damage
-        public static int NeedleDamage(int totalStr) =>
-            (int)Math.Round((5 + 4 * PlayerData.instance.nailUpgrades) * Math.Pow(1.2, Math.Log(totalStr + 1, 2.0)));
-
-        // dexterity: needle attack speed
-        public static float AttackSpeed(int totalDex) =>
-            (float)Math.Round(2.7 / (1.0 + 1.82 * Math.Exp(-0.08 * (totalDex + 1))) - 0.01, 2);
-
-        // dexterity: needle crit damage
-        public static int CritDamage(int totalDex, int needleDamage) =>
-            (int)(needleDamage * (1.2 + Math.Log(totalDex + 1)));
-
-        // intelligence: silk skill damage
-        public static int SpellDamage(int baseDamage, int totalInt) =>
-            (int)Math.Round(baseDamage * Math.Pow(1.25, Math.Log(totalInt + 1, 2.0)));
-
-        // intelligence: binding (healing) cost
-        public static int BindCost(int totalInt) => (int)Math.Round(9.1 * Math.Exp(-0.01 * (totalInt + 2.0)));
-
-        // artifice: red and blue tool damage
-        public static int ToolDamage(int baseDamage, int totalArt)
-        {
-            if (totalArt <= 0) return baseDamage;
-
-            return (int)Math.Round(baseDamage * (1.0 + 2.0 / (1.0 + 15.0 * Math.Exp(-0.1 * totalArt))));
-        }
-
-        // artifice: amount of time it takes to passively replenish a single tool charge (without costing any shards)
-        // starts from 60 seconds timer at lvl 5: this prevents player from putting just a single point for such an 
-        // impactful upgrade
-        public static int ToolRegenInterval(int totalArt)
-        {
-            if (totalArt < 5) return -1;
-
-            return (int)(2.0 + 58.0 * Math.Exp(-0.06 * (totalArt - 5)));
-        }
-
-        // resilience: extra lifeblood masks. Caps at 8 on level 40; using a single plasmium from phial will then
-        // activate overdose regen effect
-        public static int ExtraMasks(int totalRes)
-        {
-            if (totalRes >= 40) return 8;
-
-            return (int)Math.Round(8.0 * (1.0 - Math.Exp(-0.055 * (totalRes - 1))));
-        }
-
-        // resilience: chance to block an enemy hit
-        public static float BlockChance(int totalRes) => (float)(0.72 / (1.0 + 12.0 * Math.Exp(-0.09 * totalRes)));
-
-        // wisdom: extra silk gained when striking an enemy with needle (+1 silk for every 20 levels)
-        public static int ExtraSilk(int totalWsdm, int baseSilk) => (int)(baseSilk + Math.Floor(totalWsdm / 20f));
-
-        // wisdom: amount of time it takes to passively produce a single silk
-        // starts from 40 seconds timer at lvl 5 to prevents players from putting just a single point and
-        // reaping the benefits
-        public static int SilkRegenInterval(int totalWsdm)
-        {
-            if (totalWsdm < 5) return -1;
-
-            return (int)(4.0 + 36.0 * Math.Exp(-0.06 * (totalWsdm - 5)));
-        }
-
-        // luck: crit chance
-        public static int CritChance(int totalLck)
-        {
-            if (totalLck <= 0) return 0;
-
-            return (int)Math.Round(60.0 / (1.0 + 15.0 * Math.Exp(-0.08 * totalLck)));
-        }
-
-        // luck: rosary drop multiplier from enemies.
-        // Multiplier per level is additive 5% to current stat e.g. 1x -> 1.05x -> 1.10x -> 1.15x etc.
-        public static int IncreaseRosaries(int droppedRosaries, int totalLck) =>
-            (int)(droppedRosaries * (1f + (totalLck / 20f)));
-
-        // -- stat formulas end here -- //
-
-
-        private int _cachedRelicsDeposited = 0;
 
         private static LevelingSystem _instance;
-        private static bool _blueHpAddingInProgress = false;
-        private static bool _bindCostInit = false;
 
-        private void Awake()
-        {
-            _instance = this;
-        }
+        private int _cachedRelicsDeposited = 0;
 
         // counts all tier 3-5 relics the player has given to relic seeker npc
         private static int RelicsDeposited()
@@ -581,94 +398,9 @@ namespace BonfireSilksong
             return total;
         }
 
-        // helper for RefreshResilienceBlueHealth
-        private static bool BlueHpCheckInvOrMenu()
+        private void Awake()
         {
-            if (PlayerData.instance.isInventoryOpen ||
-                GameManager.instance.isPaused ||
-                SatDownAtBench)
-            {
-                _blueHpAddingInProgress = false;
-                return true;
-            }
-
-            return false;
-        }
-
-        // handles blue health updates for Resilience stat by clearing existing masks then applies update count after.
-        // Includes multiple intermediary checks which exit the routine if either inventory or pause menu is opened.
-        // It's important to immediately call this method again if this happens: this is already done in LateUpdate 
-        // callback.
-        //
-        // Previously a much simpler logic was used: HeroController_UpdateBlueHealth patch would simply set PlayerData's
-        // healthBlue equal to Resilience stat mask amount. This would work just fine except the visuals lagged a 
-        // single mask behind. Thus all of the extra code logic is to fix that small but annoying issue + make sure the 
-        // masks are also properly preserved after menu interactions. It might still break occasionally if
-        // player spams inventory and/or pause on and off repeatedly.
-        private static IEnumerator RefreshResilienceBlueHealth()
-        {
-            Bonfire.Log.LogDebug("[LevelingSystem] blue hp refresh");
-            yield return new WaitForSecondsRealtime(0.25f);
-
-            if (_blueHpAddingInProgress) yield break;
-            _blueHpAddingInProgress = true;
-
-            if (BlueHpCheckInvOrMenu())
-            {
-                if (SatDownAtBench)
-                {
-                    Bonfire.Log.LogDebug("SatDownAtBench is true, call refresh again");
-                    SatDownAtBench = false;
-                    Instance.StartCoroutine(RefreshResilienceBlueHealth());
-                }
-                yield break;
-            }
-            SatDownAtBench = false;
-
-            // removes existing blue hp before applying new values: closing the inventory automatically sets healthBlue 
-            // = 0 while closing pause menu doesn't so it's important to do it here manually. HeroCtrl-MaxHealth fsm 
-            // then removes mask visual. This way SendEvent for AddBlueHealth can just add the hp without caring 
-            // about previous blue mask state.
-            // For future updates: if there will be new ways to obtain blue masks which are added during bench visits 
-            // e.g. tools similar to Hollow Knight's lifeblood charms, then healthBlue = 0 would override these. In 
-            // that case, just introduce a new variable to track base game masks separately then set 
-            // healthBlue = base masks and keep current SendEvent logic for modded masks. Even better: updates could
-            // make update logic less complex, leading to a complete removal of this Do-It-Yourself implementation.
-            PlayerData.instance.healthBlue = 0;
-            HeroController.instance.proxyFSM.SendEvent("HeroCtrl-MaxHealth");
-            // HeroController.MaxHealth also sends EventRegister.SendEvent(EventRegisterEvents.HeroHealedToMax), but 
-            // apparently it's not needed to reset blue mask state
-
-            if (BlueHpCheckInvOrMenu()) yield break;
-
-            yield return new WaitForSecondsRealtime(0.25f);
-
-            int masks = ExtraMasks(Bonfire.Instance.Status.ResilienceStat);
-
-            if (masks >= 1)
-            {
-                for (int i = 0; i < masks; i++)
-                {
-                    if (BlueHpCheckInvOrMenu()) yield break;
-
-                    EventRegister.SendEvent(EventRegisterEvents.AddBlueHealth);
-                    yield return new WaitForSecondsRealtime(0.15f);
-
-                    if (HeroController.instance.IsInLifebloodState)
-                    {
-                        HeroController.instance.EnterLifebloodStateQuick();
-                        yield return new WaitForSecondsRealtime(0.25f);
-
-                        _blueHpAddingInProgress = false;
-
-                        yield break;
-                    }
-                }
-            }
-
-            if (BlueHpCheckInvOrMenu()) yield break;
-
-            _blueHpAddingInProgress = false;
+            _instance = this;
         }
     }
 }

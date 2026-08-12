@@ -9,6 +9,21 @@ namespace BonfireSilksong
     /// </summary>
     public class LevelingGUI
     {
+        // user interface measures
+        public const float LevelingAreaRectTopX = 20f;
+        public const float LevelingAreaRectTopY = 275f;
+        public const float LevelingAreaDefaultRectWidth = 530f;
+        public const float LevelingAreaDefaultRectHeight = 350f;
+        public const float LevelingAreaTextAndButtonsHeight = 155f;
+
+        public const float InfoAreaRectTopX = 800f;
+        public const float InfoAreaRectTopY = 95f;
+        public const float InfoAreaRectWidth = 999f;
+        public const float InfoAreaRectHeight = 900f;
+        // offset of 22f seems to be just enough to prevent the horizontal scroll bar from appearing while also
+        // preventing extra unused area between right box cell and vertical scroll bar from getting generated.
+        public const float ColWidth = InfoAreaRectWidth / 3f - 22f;
+
         public void DrawLevelingUI()
         {
             CustomCursor.BeginArea(new Rect(
@@ -51,27 +66,15 @@ namespace BonfireSilksong
                 200f));
         }
 
-        // user interface measures
-        private const float LevelingAreaRectTopX = 20f;
-        private const float LevelingAreaRectTopY = 275f;
-        private const float LevelingAreaDefaultRectWidth = 530f;
-        private const float LevelingAreaDefaultRectHeight = 350f;
-        private const float LevelingAreaTextAndButtonsHeight = 155f;
 
-        private const float InfoAreaRectTopX = 800f;
-        private const float InfoAreaRectTopY = 95f;
-        private const float InfoAreaRectWidth = 999f;
-        private const float InfoAreaRectHeight = 900f;
-        // offset of 16f seems to prevent the horizontal scroll while fitting the 3. column's contents.
-        private const float ColWidth = InfoAreaRectWidth / 3f - 16f;
         private Vector2 _infoScrollPos;
 
         // shared variables
-        private int _availableRelicLevels;
-        private bool _gotFreeLevel;
+        private int _currentLvl;
         private int _rosaryLevel;
         private int _rosariesToLvlUp;
-        private int _currentLvl;
+        private int _availableRelicLevels;
+        private bool _gotFreeLevel;
 
         private string _totalStr;
         private string _totalDex;
@@ -356,22 +359,26 @@ namespace BonfireSilksong
             GUI.color = Color.white;
             _infoScrollPos = GUILayout.BeginScrollView(_infoScrollPos);
 
+            float firstRowHeight = 500f;
+            float secondRowHeight = 400f;
+            float thirdRowHeight = 400f;
+
             GUILayout.BeginHorizontal("box");
-            DrawStrengthInfo();
-            DrawDexterityInfo();
-            DrawIntelligenceInfo();
+            DrawStrengthInfo(firstRowHeight);
+            DrawDexterityInfo(firstRowHeight);
+            DrawIntelligenceInfo(firstRowHeight);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("box");
-            DrawArtificeInfo();
-            DrawResilienceInfo();
-            DrawWisdomInfo();
+            DrawArtificeInfo(secondRowHeight);
+            DrawResilienceInfo(secondRowHeight);
+            DrawWisdomInfo(secondRowHeight);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("box");
-            DrawLuckInfo();
-            DrawInfoFillerBox();  // draw 2 filler boxes to fill empty grid cells on 3rd row
-            DrawInfoFillerBox();
+            DrawLuckInfo(thirdRowHeight);
+            DrawInfoFillerBox(thirdRowHeight);   // draw 2 filler boxes to fill empty grid cells on 3rd row
+            DrawInfoFillerBox(thirdRowHeight);
             GUILayout.EndHorizontal();
 
             GUI.color = Color.white;
@@ -425,22 +432,59 @@ namespace BonfireSilksong
         }
 
         // info boxes for all stats
-        private void DrawStrengthInfo()
+        private void DrawStrengthInfo(float height)
         {
-            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.Height(height));
             GUILayout.Label("Strength", GUIStyles.LabelStyle);
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
             DrawInfoStatLabel("Needle Damage: " + _needleDamage);
 
             GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
+            GUILayout.Label(
+                $"[{StrengthLogic.StrengthMilestone_1}] " +
+                "Needle strike: base value of current charge time reduced by 20%. " +
+                "Can toggle on/off automatic release when fully charged.",
+                LevelingSystem.HighLightStrenghtMileStone_1 ?
+                    GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            if (LevelingSystem.HighLightStrenghtMileStone_1)
+            {
+                GUI.enabled = StrengthLogic.CheckStrengthMilestone_1;
+
+                string autoStrike = "Needle strike auto-release: " +
+                    $"{(Bonfire.Instance.Status.AutoReleaseNeedleStrike ? "ENABLED" : "DISABLED")}";
+                Color bgOld = GUI.backgroundColor;
+                GUI.backgroundColor = new Color(0, 0.5f, 0.8f);
+                if (CustomCursor.Button(autoStrike, GUIStyles.LvlInfoButtonStyle, GUILayout.Height(30f)))
+                {
+                    Bonfire.Instance.Status.AutoReleaseNeedleStrike = !Bonfire.Instance.Status.AutoReleaseNeedleStrike;
+                }
+                GUI.backgroundColor = bgOld;
+                GUILayout.Space(5);
+
+                GUI.enabled = true;
+            }
+
+            GUILayout.Label(
+                $"[{StrengthLogic.StrengthMilestone_2}] " +
+                "Needle range increased by 33%. Needle strike initial charge time base value reduced by 20%",
+                LevelingSystem.HighLightStrenghtMileStone_2 ?
+                    GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
+            GUILayout.Label(
+                $"[{StrengthLogic.StrengthMilestone_3}] " +
+                "Flintslate and Flea Brew tools have infinite buff duration. " +
+                "Down slash(pogo) damage increased by 100  %." +
+                "Needle strike: base values of initial and current charge time reduced by 50%",
+                LevelingSystem.HighLightStrenghtMileStone_3 ?
+                    GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.EndVertical();
         }
 
-        private void DrawDexterityInfo()
+        private void DrawDexterityInfo(float height)
         {
-            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.Height(height));
             GUILayout.Label("Dexterity", GUIStyles.LabelStyle);
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
@@ -452,9 +496,9 @@ namespace BonfireSilksong
             GUILayout.EndVertical();
         }
 
-        private void DrawIntelligenceInfo()
+        private void DrawIntelligenceInfo(float height)
         {
-            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.Height(height));
             GUILayout.Label("Intelligence", GUIStyles.LabelStyle);
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
@@ -466,9 +510,9 @@ namespace BonfireSilksong
             GUILayout.EndVertical();
         }
 
-        private void DrawArtificeInfo()
+        private void DrawArtificeInfo(float height)
         {
-            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.Height(height));
             GUILayout.Label("Artifice", GUIStyles.LabelStyle);
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
@@ -480,9 +524,9 @@ namespace BonfireSilksong
             GUILayout.EndVertical();
         }
 
-        private void DrawResilienceInfo()
+        private void DrawResilienceInfo(float height)
         {
-            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.Height(height));
             GUILayout.Label("Resilience", GUIStyles.LabelStyle);
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
@@ -494,9 +538,9 @@ namespace BonfireSilksong
             GUILayout.EndVertical();
         }
 
-        private void DrawWisdomInfo()
+        private void DrawWisdomInfo(float height)
         {
-            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.Height(height));
             GUILayout.Label("Wisdom", GUIStyles.LabelStyle);
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
@@ -505,22 +549,22 @@ namespace BonfireSilksong
 
             GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
             GUILayout.Label(
-                $"[{LevelingSystem.WisdomMilestone_1}] " +
+                $"[{WisdomLogic.WisdomMilestone_2}] " +
                 "Wispfire Lantern silk cost removed, attack delay halved and spawn cooldown is down to 2 seconds.",
-                LevelingSystem.CheckWisdomMilestone_1 ?
+                LevelingSystem.HighlightWisdomMilestone_2 ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
             GUILayout.Label(
-                $"[{LevelingSystem.WisdomMilestone_2}] " +
+                $"[{WisdomLogic.WisdomMilestone_3}] " +
                 "Wispfire Lantern attack cooldown down to 1/3 of original, spawns a wisp every second.",
-                LevelingSystem.CheckWisdomMilestone_2 ?
+                LevelingSystem.HighlightWisdomMilestone_3 ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.EndVertical();
         }
 
-        private void DrawLuckInfo()
+        private void DrawLuckInfo(float height)
         {
-            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.Height(height));
             GUILayout.Label("Luck", GUIStyles.LabelStyle);
 
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
@@ -533,9 +577,9 @@ namespace BonfireSilksong
         }
 
         // filler component for empty cell spaces
-        private void DrawInfoFillerBox()
+        private void DrawInfoFillerBox(float height)
         {
-            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.ExpandHeight(true));
+            GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.Height(height));
 
             DrawInfoStatLabel("");
 
@@ -597,40 +641,43 @@ namespace BonfireSilksong
             _totalLuck = (s.LuckStat + ls.LuckIncrease).ToString();
 
             // stat calculations
-            _needleDamage = LevelingSystem.NeedleDamage(s.StrengthStat + ls.StrengthIncrease).ToString();
+            _needleDamage = StrengthLogic.NeedleDamage(
+                5 + 4 * PlayerData.instance.nailUpgrades,
+                s.StrengthStat + ls.StrengthIncrease)
+                .ToString();
 
-            _attackSpeed = LevelingSystem.AttackSpeed(s.DexterityStat + ls.DexterityIncrease).ToString();
+            _attackSpeed = DexterityLogic.AttackSpeed(s.DexterityStat + ls.DexterityIncrease).ToString();
             _critDamage =
-                LevelingSystem.CritDamage(s.DexterityStat + ls.DexterityIncrease, 100).ToString() + "%";
+                DexterityLogic.CritDamage(s.DexterityStat + ls.DexterityIncrease, 100).ToString() + "%";
 
             _spellDamage =
-                LevelingSystem.SpellDamage(100, s.IntelligenceStat + ls.IntelligenceIncrease).ToString() + "%";
-            _bindCost = LevelingSystem.BindCost(s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
+                IntelligenceLogic.SpellDamage(100, s.IntelligenceStat + ls.IntelligenceIncrease).ToString() + "%";
+            _bindCost = IntelligenceLogic.BindCost(s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
 
             _toolDamage =
-                LevelingSystem.ToolDamage(100, s.ArtificeStat + ls.ArtificeIncrease).ToString() + "%";
+                ArtificeLogic.ToolDamage(100, s.ArtificeStat + ls.ArtificeIncrease).ToString() + "%";
             _toolRegenInterval = "-";
             if (s.ArtificeStat + ls.ArtificeIncrease > 0)
             {
-                int toolRegen = LevelingSystem.ToolRegenInterval(s.ArtificeStat + ls.ArtificeIncrease);
+                int toolRegen = ArtificeLogic.ToolRegenInterval(s.ArtificeStat + ls.ArtificeIncrease);
                 _toolRegenInterval = toolRegen > 0 ? toolRegen.ToString() + " s" : "-";
             }
 
-            _extraMasks = LevelingSystem.ExtraMasks(s.ResilienceStat + ls.ResilienceIncrease).ToString();
+            _extraMasks = ResilienceLogic.ExtraMasks(s.ResilienceStat + ls.ResilienceIncrease).ToString();
             _blockChance = s.ResilienceStat + ls.ResilienceIncrease > 0
-                ? LevelingSystem.AverageBlockChance(s.ResilienceStat + ls.ResilienceIncrease).ToString("F0") + "%"
+                ? ResilienceLogic.AverageBlockChance(s.ResilienceStat + ls.ResilienceIncrease).ToString("F0") + "%"
                 : "0%";
 
-            _extraSilk = LevelingSystem.ExtraSilk(s.WisdomStat + ls.WisdomIncrease, 1).ToString();
+            _extraSilk = WisdomLogic.ExtraSilk(s.WisdomStat + ls.WisdomIncrease, 1).ToString();
             _silkRegenInterval = "-";
             if (s.WisdomStat + ls.WisdomIncrease > 0)
             {
-                int silkRegen = LevelingSystem.SilkRegenInterval(s.WisdomStat + ls.WisdomIncrease);
+                int silkRegen = WisdomLogic.SilkRegenInterval(s.WisdomStat + ls.WisdomIncrease);
                 _silkRegenInterval = silkRegen > 0 ? silkRegen.ToString() + " s" : "-";
             }
 
-            _critChance = LevelingSystem.CritChance(s.LuckStat + ls.LuckIncrease).ToString() + "%";
-            _rosaryIncrease = (5 * (s.LuckStat + ls.LuckIncrease)).ToString() + "%";
+            _critChance = LuckLogic.CritChance(s.LuckStat + ls.LuckIncrease).ToString() + "%";
+            _rosaryIncrease = LuckLogic.GetRosaryIncreasePercentage(s.LuckStat, ls.LuckIncrease);
 
             // "Apply" button label
             int pRelics = s.PendingRelicLevels;
