@@ -11,15 +11,32 @@ using UnityEngine.SceneManagement;
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Main class for Bonfire-Silksong mod
+    /// Main class for Bonfire-Silksong mod.
     /// </summary>
-    [BepInPlugin("hksilksong.mod.bonfire-silksong", "Bonfire-Silksong", "0.8.0")]
+    [BepInPlugin("hksilksong.mod.bonfire-silksong", "Bonfire-Silksong", "0.9.0")]
     public class Bonfire : BaseUnityPlugin
     {
-        public PlayerStatus Status;
-
         public static Bonfire Instance;
         internal static ManualLogSource Log;
+
+        public PlayerStatus Status;
+
+        /// <summary>
+        /// Check if game is in main menu or non-gameplay scene. Should be called att the start of each Unity callback
+        /// to prevent mod logic from running when it's unnecessary.
+        /// </summary>
+        public static bool IsNotGamePlayState()
+        {
+            if (GameManager.instance == null ||
+                GameManager.instance.GameState == GameState.MAIN_MENU ||
+                !GameManager.instance.IsGameplayScene())
+            {
+                Log.LogDebug("[Bonfire] GameManager instance null or in gameplay scene, or GameState is main menu");
+                return true;
+            }
+
+            return false;
+        }
 
         public void SaveSettings()
         {
@@ -101,23 +118,6 @@ namespace BonfireSilksong
             Cursor.visible = GameManager.instance.isPaused;
         }
 
-        /// <summary>
-        /// Check if game is in main menu or non-gameplay scene. Should be called att the start of each Unity callback
-        /// to prevent mod logic from running when it's unnecessary.
-        /// </summary>
-        public static bool IsNotGamePlayState()
-        {
-            if (GameManager.instance == null ||
-                GameManager.instance.GameState == GameState.MAIN_MENU ||
-                !GameManager.instance.IsGameplayScene())
-            {
-                Log.LogDebug("[Bonfire] GameManager instance null or in gameplay scene, or GameState is main menu");
-                return true;
-            }
-
-            return false;
-        }
-
 
         // _firstSave guard flag: it stays true until GameManager.instance != null and its profileID field has value 
         // greater than 1 which corresponds to a valid save slot (1-4). And every time the user quits to main menu, it 
@@ -167,7 +167,7 @@ namespace BonfireSilksong
 
             if (IsNotGamePlayState()) return;
 
-            LevelingSystem.UpdateBindCostFSM();
+            IntelligenceLogic.UpdateBindCostFSM();
 
             AtBenchCheck();
 
@@ -193,10 +193,10 @@ namespace BonfireSilksong
                 {
                     ShowCursor();
 
-                    // this check refreshes blue masks after inventory is closed, otherwise they get wiped
+                    // this check refreshes blue masks after inventory/pause menu is closed, otherwise they get wiped
                     if (_invClosedCheck)
                     {
-                        LevelingSystem.UpdateBlueHP();
+                        ResilienceLogic.CallUpdateBlueHP();
 
                         _invClosedCheck = false;
                     }
@@ -240,27 +240,27 @@ namespace BonfireSilksong
         // -- other --
 
         // update when player sits down on a bench and flip it only after standing up.
-        // useful for blue hp updates where an additional flag needs to cancel previous update if player ends up
-        // sitting down again while previous loop is still processing
+        // Used for blue hp updates where an additional flag needs to cancel ongoing update loop if player ends up
+        // sitting down again while it's still processing
         private void AtBenchCheck()
         {
             if (PlayerData.instance.atBench && !_satDown)
             {
                 Log.LogDebug("[Bonfire] Bench sat down check");
                 _satDown = true;
-                LevelingSystem.SatDownAtBench = true;
+                ResilienceLogic.SatDownAtBench = true;
 
                 // this causes BlueHpCheckInvOrMenu check to be ignored on first blue hp update call which happens
                 // right after loading into a save.
-                if (!LevelingSystem.BlueHpInit)
+                if (!ResilienceLogic.BlueHpInit)
                 {
-                    LevelingSystem.SatDownAtBench = false;
+                    ResilienceLogic.SatDownAtBench = false;
                 }
             }
             else if (!PlayerData.instance.atBench)
             {
                 _satDown = false;
-                LevelingSystem.SatDownAtBench = false;
+                ResilienceLogic.SatDownAtBench = false;
             }
         }
     }

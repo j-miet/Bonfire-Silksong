@@ -10,18 +10,6 @@ namespace BonfireSilksong
     /// </summary>
     public static class TeleportData
     {
-        // defines a bench location that has no map pin and must be added manually.
-        public class SpecialLocation
-        {
-            public string Scene;           // PlayerData.tempRespawnScene
-            public string Marker;          // PlayerData.tempRespawnMarker
-            public int RespawnType;        // PlayerData.tempRespawnType
-            public string AreaName;        // area name
-            public string DefaultName;     // shown when custom names are off; use Scene here unless it's too long
-            public string CustomName;      // shown when custom names are on
-            public Func<bool> IsUnlocked;  // condition for whether to display this location
-        }
-
         public static readonly Color32 DefaultMenuColor = Rgb(204, 191, 26);
 
         // Custom order for area names, in-game fast travel bench list then displays them in same order
@@ -223,6 +211,18 @@ namespace BonfireSilksong
             {2, "Colored + Default names"},
             {3, "Colored + Custom names"}
         };
+
+        // defines a bench location that has no map pin and must be added manually.
+        public class SpecialLocation
+        {
+            public string Scene;           // PlayerData.tempRespawnScene
+            public string Marker;          // PlayerData.tempRespawnMarker
+            public int RespawnType;        // PlayerData.tempRespawnType
+            public string AreaName;        // area name
+            public string DefaultName;     // shown when custom names are off; use Scene here unless it's too long
+            public string CustomName;      // shown when custom names are on
+            public Func<bool> IsUnlocked;  // condition for whether to display this location
+        }
 
 
         private static Color32 Rgb(byte r, byte g, byte b) => new Color32(r, g, b, 255);
