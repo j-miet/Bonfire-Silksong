@@ -9,7 +9,7 @@ namespace BonfireSilksong
         {
             static void Prefix(GameManager __instance)
             {
-                TeleportPatchHelpers.CheckMarkerValidity(__instance);
+                TeleportLogic.CheckMarkerValidity(__instance);
             }
         }
     }

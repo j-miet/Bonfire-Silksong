@@ -9,7 +9,7 @@ namespace BonfireSilksong
         {
             static bool Prefix()
             {
-                return !TeleportPatchHelpers.InFastTravelDisplayScreen();
+                return !TeleportLogic.InFastTravelDisplayScreen();
             }
         }
     }

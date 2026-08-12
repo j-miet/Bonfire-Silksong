@@ -1,3 +1,4 @@
+using GlobalEnums;
 using HarmonyLib;
 using HutongGames.PlayMaker.Actions;
 
@@ -13,24 +14,22 @@ namespace BonfireSilksong
         {
             static bool Prefix()
             {
-                if (!CursorPatchHelpers.AllowInput()) return false;
+                if (!CursorPatchLogic.AllowInput()) return false;
 
-                // TODO 
-                // make needle strike charge time very short + auto-cast it when fully charged (Strength milestone 1)
+                StrengthLogic.ReleaseNeedleChargeAutomatically();
 
                 return true;
             }
         }
 
         [HarmonyPatch(typeof(ListenForAttackV2), "OnUpdate")]
-        class ListenForAttack_OnUpdateV2
+        class ListenForAttackV2_OnUpdate
         {
             static bool Prefix()
             {
-                if (!CursorPatchHelpers.AllowInput()) return false;
+                if (!CursorPatchLogic.AllowInput()) return false;
 
-                // TODO 
-                // make needle strike charge time very short + auto-cast it when fully charged (Strength milestone 1)
+                StrengthLogic.ReleaseNeedleChargeAutomatically();
 
                 return true;
             }
@@ -41,7 +40,7 @@ namespace BonfireSilksong
         {
             static bool Prefix()
             {
-                if (!CursorPatchHelpers.AllowInput()) return false;
+                if (!CursorPatchLogic.AllowInput()) return false;
 
                 return true;
             }
@@ -52,7 +51,7 @@ namespace BonfireSilksong
         {
             static bool Prefix()
             {
-                if (!CursorPatchHelpers.AllowInput()) return false;
+                if (!CursorPatchLogic.AllowInput()) return false;
 
                 return true;
             }

@@ -2,7 +2,7 @@ using HarmonyLib;
 
 namespace BonfireSilksong
 {
-    internal static class DeliveryQuestItem_Patch
+    internal class DeliveryQuestItem_Patch
     {
         [HarmonyPatch(typeof(DeliveryQuestItem), "TakeHitForItem", new[] {
             typeof(DeliveryQuestItem.ActiveItem),
@@ -13,7 +13,7 @@ namespace BonfireSilksong
         {
             static bool Prefix()
             {
-                return SettingsPatchHelpers.DeliveryQuestHitCheck();
+                return SettingsLogic.DeliveryQuestHitCheck();
             }
         }
     }

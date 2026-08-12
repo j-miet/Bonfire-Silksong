@@ -3,14 +3,15 @@ using HutongGames.PlayMaker.Actions;
 
 namespace BonfireSilksong
 {
-    internal static class PlayerDataBoolTest_Patch
+    internal class PlayerDataBoolTest_Patch
     {
         [HarmonyPatch(typeof(PlayerDataBoolTest), "OnEnter")]
         class Patch_PlayerDataBoolTest
         {
             static bool Prefix(PlayerDataBoolTest __instance)
             {
-                return SettingsPatchHelpers.UpdateBeastChapelDoorState(__instance);
+                // negate return value to ignore running the actual OnEnter when door should stay open
+                return !SettingsLogic.KeepBeastChapelDoorStateOpen(__instance);
             }
         }
     }

@@ -2,7 +2,7 @@ using HarmonyLib;
 
 namespace BonfireSilksong
 {
-    internal static class PlayerData_Patch
+    internal class PlayerData_Patch
     {
         // reduce fleatopia game score requirements by 50% (odd values are rounded down).
         // There are 6 checks in total: 3 for becoming Champion, 3 for beating Seth's scores.
@@ -64,6 +64,26 @@ namespace BonfireSilksong
             {
                 if (!Bonfire.Instance.Status.ReduceFleaGamesScoreLimit) return;
                 __result = __instance.fleaGames_dodging_highscore > 45;
+            }
+        }
+
+        [HarmonyPatch(typeof(PlayerData), "TakeHealth")]
+        class PlayerData_TakeHealth
+        {
+            static void Prefix(ref int amount)
+            {
+                amount = ResilienceLogic.PreventHPLossOnBlock(amount);
+            }
+        }
+
+        [HarmonyPatch(typeof(PlayerData), "nailDamage", MethodType.Getter)]
+        class PlayerData_NailDamage
+        {
+            static void Postfix(ref int __result)
+            {
+                Bonfire.Log.LogInfo("[PlayerData.nailDamage] Updating needle base damage");
+
+                __result = StrengthLogic.UpdateNeedleBaseDamage(__result);
             }
         }
     }
