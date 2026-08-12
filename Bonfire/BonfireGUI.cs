@@ -9,6 +9,8 @@ namespace BonfireSilksong
     /// </summary>
     public class BonfireGUI : MonoBehaviour
     {
+        public const int CursorTextureSize = 16;
+
         public static BonfireGUI Instance;
         public static LevelingGUI Leveling;
         public static SettingsGUI Settings;
@@ -21,8 +23,6 @@ namespace BonfireSilksong
         // under this assumption and changing it now would a lot of code rewriting.
         public static float Width => 1920f;
         public static float Height => 1080f;
-
-        private const bool _applyScaleMatrix = true; // should always stay true unless scaling causes issues
 
         private bool _benchCheck = false;
         private Texture2D _cursorTexture;
@@ -43,21 +43,19 @@ namespace BonfireSilksong
         // draws a white disc with black center
         private static Texture2D CreateCursorTexture()
         {
-            const int size = 16;
-
-            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            Texture2D tex = new Texture2D(CursorTextureSize, CursorTextureSize, TextureFormat.RGBA32, false)
             {
                 filterMode = FilterMode.Point,
                 wrapMode = TextureWrapMode.Clamp
             };
 
-            Color32[] pixels = new Color32[size * size];
+            Color32[] pixels = new Color32[CursorTextureSize * CursorTextureSize];
             Color32 clear = new Color32(0, 0, 0, 0);
             Vector2 center = new Vector2(7.5f, 7.5f);
 
-            for (int y = 0; y < size; y++)
+            for (int y = 0; y < CursorTextureSize; y++)
             {
-                for (int x = 0; x < size; x++)
+                for (int x = 0; x < CursorTextureSize; x++)
                 {
                     float d = Vector2.Distance(new Vector2(x, y), center);
                     Color32 c;
@@ -69,7 +67,7 @@ namespace BonfireSilksong
                     else
                         c = clear;
 
-                    pixels[y * size + x] = c;
+                    pixels[y * CursorTextureSize + x] = c;
                 }
             }
 
@@ -97,11 +95,9 @@ namespace BonfireSilksong
             CustomCursor.ResetCursorStack();
             CustomCursor.Update();
 
-            if (_applyScaleMatrix)
-            {
-                float scale = Mathf.Min(Screen.width / 1920f, Screen.height / 1080f);
-                GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1));
-            }
+            // apply scaling to adjust GUI size to current resolution
+            float scale = Mathf.Min(Screen.width / 1920f, Screen.height / 1080f);
+            GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1));
 
             GUIStyles.EnsureFonts();
             GUI.enabled = true;
