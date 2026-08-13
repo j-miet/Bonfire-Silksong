@@ -6,7 +6,7 @@ namespace BonfireSilksong
     {
         // reduce fleatopia game score requirements by 50% (odd values are rounded down).
         // There are 6 checks in total: 3 for becoming Champion, 3 for beating Seth's scores.
-        // these will not update scoreboard visuals.
+        // These will not update scoreboard visuals.
         [HarmonyPatch(typeof(PlayerData), "FleaGamesIsJugglingChampion", MethodType.Getter)]
         class PlayerData_FleaGamesIsJugglingChampion
         {
@@ -67,23 +67,13 @@ namespace BonfireSilksong
             }
         }
 
+        // public void TakeHealth(int amount, bool hasBlueHealth, bool allowFracturedMaskBreak)
         [HarmonyPatch(typeof(PlayerData), "TakeHealth")]
         class PlayerData_TakeHealth
         {
             static void Prefix(ref int amount)
             {
                 amount = ResilienceLogic.PreventHPLossOnBlock(amount);
-            }
-        }
-
-        [HarmonyPatch(typeof(PlayerData), "nailDamage", MethodType.Getter)]
-        class PlayerData_NailDamage
-        {
-            static void Postfix(ref int __result)
-            {
-                Bonfire.Log.LogInfo("[PlayerData.nailDamage] Updating needle base damage");
-
-                __result = StrengthLogic.UpdateNeedleBaseDamage(__result);
             }
         }
     }

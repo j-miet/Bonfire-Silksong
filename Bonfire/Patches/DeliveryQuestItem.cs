@@ -4,6 +4,7 @@ namespace BonfireSilksong
 {
     internal class DeliveryQuestItem_Patch
     {
+        // public static void TakeHitForItem(ActiveItem item, bool hitEffect, int amount)
         [HarmonyPatch(typeof(DeliveryQuestItem), "TakeHitForItem", new[] {
             typeof(DeliveryQuestItem.ActiveItem),
             typeof(bool),

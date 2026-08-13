@@ -13,6 +13,7 @@ namespace BonfireSilksong
             }
         }
 
+        // private void OnSceneLoaded(Scene arg0, LoadSceneMode arg1)
         [HarmonyPatch(typeof(HeroWispLantern), "OnSceneLoaded")]
         class HeroWispLantern_OnSceneLoaded
         {

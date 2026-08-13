@@ -18,6 +18,7 @@ namespace BonfireSilksong
             }
         }
 
+        // private void FinishedEnteringScene(bool setHazardMarker, bool preventRunBob)
         [HarmonyPatch(typeof(HeroController), "FinishedEnteringScene")]
         class HeroController_FinishedEnteringScene
         {
@@ -100,6 +101,7 @@ namespace BonfireSilksong
             }
         }
 
+        // private void Attack(AttackDirection attackDir)
         [HarmonyPatch(typeof(HeroController), "Attack")]
         class HeroController_Attack
         {
@@ -109,6 +111,8 @@ namespace BonfireSilksong
             }
         }
 
+        // public void TakeDamage( GameObject go, CollisionSide damageSide, int damageAmount, HazardType hazardType, 
+        //     DamagePropertyFlags damagePropertyFlags)
         [HarmonyPatch(typeof(HeroController), "TakeDamage")]
         class HealthManager_TakeDamage
         {
@@ -125,6 +129,7 @@ namespace BonfireSilksong
             }
         }
 
+        // public void SilkGain(HitInstance hitInstance)
         [HarmonyPatch(typeof(HeroController), "SilkGain", new[] { typeof(HitInstance) })]
         class HeroController_SilkGain
         {

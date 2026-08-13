@@ -4,6 +4,7 @@ namespace BonfireSilksong
 {
     internal class CurrencyManager_Patch
     {
+        // public static void ProcessAddCurrency(int amount, CurrencyType type, bool showCounter)
         [HarmonyPatch(typeof(CurrencyManager), "ProcessAddCurrency")]
         class CurrencyManager_ProcessAddCurrency
         {
@@ -13,6 +14,7 @@ namespace BonfireSilksong
             }
         }
 
+        // public static void ProcessTakeCurrency(int amount, CurrencyType type, bool showCounter)
         [HarmonyPatch(typeof(CurrencyManager), "ProcessTakeCurrency")]
         class CurrencyManager_ProcessTakeCurrency
         {
