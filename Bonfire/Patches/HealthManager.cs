@@ -124,7 +124,7 @@ namespace BonfireSilksong
                     // -> make sure to put this hitInstance.IsUsingNeedleDamageMult else-if block after 
                     // ToolItemType.Skill check.
 
-                    int updatedDamage = StrengthLogic.ApplyNeedleDamageBonuses(hitInstance.DamageDealt, sourceName);
+                    int updatedDamage = StatsShared.ApplyNeedleDamageBonuses(hitInstance.DamageDealt, sourceName);
                     hitInstance.DamageDealt = DexterityLogic.ApplyCritDamage(updatedDamage);
                 }
             }

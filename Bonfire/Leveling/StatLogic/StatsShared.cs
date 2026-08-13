@@ -101,7 +101,7 @@ namespace BonfireSilksong
 
             damage = StrengthLogic.UpdateNeedleBaseDamage(damage);
 
-            Bonfire.Log.LogInfo($"[StatsShared] updated needle damage={damage}");
+            Bonfire.Log.LogDebug($"[StatsShared] updated needle damage={damage}");
 
             return damage;
         }
@@ -120,9 +120,30 @@ namespace BonfireSilksong
 
             damage = StrengthLogic.UpdateNeedleBaseDamage(damage);
 
-            Bonfire.Log.LogInfo($"[StatsShared] updated needle damage={damage}");
+            Bonfire.Log.LogDebug($"[StatsShared] updated needle damage={damage}");
 
             return damage;
+        }
+
+        /// <summary>
+        /// HealthManager.Hit (Prefix): Apply needle damage bonuses. PlayerData.nailDamage getter will handle base
+        /// damage update so don't use NeedleDamage here!
+        /// </summary>
+        public static int ApplyNeedleDamageBonuses(int damage, string sourceName)
+        {
+            Bonfire.Log.LogDebug($"[StrengthLogic] Apply needle damage bonuses:");
+            int updated = damage;
+
+            if (StrengthLogic.CheckStrengthMilestone_3 && sourceName == "DownSlash")
+            {
+                updated *= 2; // 100% extra damage on pogos
+
+                Bonfire.Log.LogDebug($"- Applied pogo damage");
+            }
+
+            Bonfire.Log.LogDebug($"Damage after bonuses for {sourceName} = {updated}");
+
+            return updated;
         }
     }
 }

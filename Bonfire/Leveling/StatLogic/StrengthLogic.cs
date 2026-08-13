@@ -75,27 +75,6 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// HealthManager.Hit (Prefix): Apply needle damage bonuses. PlayerData.nailDamage getter will handle base
-        /// damage update so don't use NeedleDamage here!
-        /// </summary>
-        public static int ApplyNeedleDamageBonuses(int damage, string sourceName)
-        {
-            Bonfire.Log.LogInfo($"[StrengthLogic] Apply needle damage bonuses:");
-            int updated = damage;
-
-            if (CheckStrengthMilestone_3 && sourceName == "DownSlash")
-            {
-                updated *= 2; // 100% extra damage on pogos
-
-                Bonfire.Log.LogInfo($"- Applied pogo damage");
-            }
-
-            Bonfire.Log.LogInfo($"Damage after bonuses for {sourceName} = {updated}");
-
-            return updated;
-        }
-
-        /// <summary>
         /// HeroController.CurrentNailChargeBeginTime (Postfix): Update initial windup time before needle strike
         /// charge begins.
         /// </summary>
