@@ -174,13 +174,41 @@ namespace BonfireSilksong
             }
         }
 
-        // progression colors must match their styles (EnemyHpStyle, BossHpStyle, HighStyle, HpMediumStyle, HpLowStyle)
-        private static Color _bossColor = new Color(1f, 0.5f, 0f);
-        private static Color _enemyColor = Color.red;
-        private static Color _progLow = Color.red;
-        private static Color _progMedium = Color.yellow;
-        private static Color _progHigh = Color.green;
+        /// <summary>
+        /// Initializes hp bar custom colors for settings window.
+        /// </summary>
+        public void EnsureHpBarColors()
+        {
+            // UnityEngine.Color is struct: it's a value type 'color == null' checks are always false, unlike with
+            // UnityEngine.GUIStyle. Better to first check GUIStyles null values and only then update 
+            // colors.
 
+            if (_hpBarColorsInitialized)
+                return;
+
+            if (GUIStyles.EnemyHpStyle == null ||
+                GUIStyles.BossHpStyle == null ||
+                GUIStyles.HpLowStyle == null ||
+                GUIStyles.HpMediumStyle == null ||
+                GUIStyles.HpHighStyle == null)
+                return;
+
+            _enemyColor = GUIStyles.EnemyHpStyle.normal.textColor;
+            _bossColor = GUIStyles.BossHpStyle.normal.textColor;
+            _progLow = GUIStyles.HpLowStyle.normal.textColor;
+            _progMedium = GUIStyles.HpMediumStyle.normal.textColor;
+            _progHigh = GUIStyles.HpHighStyle.normal.textColor;
+
+            _hpBarColorsInitialized = true;
+        }
+
+
+        private static bool _hpBarColorsInitialized;
+        private static Color _bossColor;
+        private static Color _enemyColor;
+        private static Color _progLow;
+        private static Color _progMedium;
+        private static Color _progHigh;
         private static Texture2D _tex;
 
         private static Texture2D SolidTex()

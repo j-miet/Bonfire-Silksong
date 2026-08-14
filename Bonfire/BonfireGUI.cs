@@ -100,6 +100,9 @@ namespace BonfireSilksong
             GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1));
 
             GUIStyles.EnsureFonts();
+            GUIStyles.EnsureStyles();
+            Settings.EnsureHpBarColors();
+
             GUI.enabled = true;
 
             if (Teleport.FastTravelDisplay)
@@ -128,8 +131,6 @@ namespace BonfireSilksong
             if (PlayerData.instance.atBench && !GameManager.instance.isPaused)
             {
                 _benchCheck = true;
-
-                GUIStyles.EnsureStyles();
 
                 GUI.backgroundColor = Color.white;
                 GUI.contentColor = Color.white;
