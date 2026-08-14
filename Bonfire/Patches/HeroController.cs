@@ -50,7 +50,6 @@ namespace BonfireSilksong
                 Bonfire.Log.LogDebug("[HeroController.Update] Update hp data, roll crit, check sil + tool regen");
 
                 StatsShared.FlushEnemyHPData();
-                StatsShared.RollCritValue();
 
                 if (HeroController.instance == null || PlayerData.instance == null)
                     return;
@@ -139,12 +138,29 @@ namespace BonfireSilksong
             }
         }
 
+        // public void TakeSilk(int amount, SilkSpool.SilkTakeSource source)
         [HarmonyPatch(typeof(HeroController), "TakeSilk", new[] { typeof(int), typeof(SilkSpool.SilkTakeSource) })]
         class HeroController_TakeSilk
         {
-            static void Postfix(HeroController __instance, int amount, SilkSpool.SilkTakeSource source)
+            static bool Prefix(int amount, SilkSpool.SilkTakeSource source)
             {
-                WisdomLogic.WispLanternRefundCost(__instance, amount, source);
+                if (WisdomLogic.CheckWispLanternCostRefund(source))
+                    return false;
+
+                if (DexterityLogic.CheckHarpoonCostRefund(amount))
+                    return false;
+
+                return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(HeroController), "CanHarpoonDash")]
+        class HeroController_CanHarpoonDash
+        {
+            static void Postfix(ref bool __result)
+            {
+                if (__result)
+                    DexterityLogic.UsedHarpoon();
             }
         }
     }

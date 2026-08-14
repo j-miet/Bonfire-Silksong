@@ -29,7 +29,25 @@ namespace BonfireSilksong
         // In HK:SS, silk container has range 0-9, with all upgrades reaching 0-18, binding costs 3 silk.
         // In Hk, range is then divided by 33, in Silksong by 9.
         // => Silksong scaling is not as smooth, but ramps a bit harder on high intelligence.
-        public static int BindCost(int totalInt) => (int)Math.Round(9.1 * Math.Exp(-0.01 * (totalInt + 2.0)));
+        public static int BindCost(int totalInt)
+        {
+            return (int)Math.Round(9.1 * Math.Exp(-0.01 * (totalInt + 2.0)));
+        }
+
+        /// <summary>
+        /// Apply silk skill damage bonus.
+        /// </summary>
+        public static int ApplySpellDamageBonuses(int baseDamage, ToolItem spell)
+        {
+            Bonfire.Log.LogDebug($"[IntelligenceLogic]");
+            Bonfire.Log.LogDebug($"<Vanilla> Silk Skill: {spell}. Damage: {baseDamage}");
+
+            int updatedDamage = SpellDamage(baseDamage, Bonfire.Instance.Status.IntelligenceStat);
+
+            Bonfire.Log.LogDebug($"<Modded> Silk Skill: {spell}. Damage: {updatedDamage}");
+
+            return updatedDamage;
+        }
 
         /// <summary>
         /// Override bind cost gameplay value in FSM.
@@ -68,8 +86,6 @@ namespace BonfireSilksong
                     silkCostWitch.Value = cost;
 
                 BindCostInit = true;
-
-                break;
             }
         }
 
@@ -84,21 +100,6 @@ namespace BonfireSilksong
             int cost = BindCost(Bonfire.Instance.Status.IntelligenceStat);
 
             return cost;
-        }
-
-        /// <summary>
-        /// HealthManager.Hit (Prefix): Apply silk skill damage bonus.
-        /// </summary>
-        public static int ApplySpellDamage(int baseDamage, ToolItem spell)
-        {
-            Bonfire.Log.LogDebug($"[IntelligenceLogic]");
-            Bonfire.Log.LogDebug($"<Vanilla> Silk Skill: {spell}. Damage: {baseDamage}");
-
-            int updatedDamage = SpellDamage(baseDamage, Bonfire.Instance.Status.IntelligenceStat);
-
-            Bonfire.Log.LogDebug($"<Modded> Silk Skill: {spell}. Damage: {updatedDamage}");
-
-            return updatedDamage;
         }
     }
 }

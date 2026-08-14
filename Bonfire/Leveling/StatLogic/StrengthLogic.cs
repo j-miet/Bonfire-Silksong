@@ -22,6 +22,27 @@ namespace BonfireSilksong
         }
 
         /// <summary>
+        /// Apply needle damage bonuses. PlayerData.nailDamage getter will handle base damage updates so don't reapply
+        /// NeedleDamage bonus again!
+        /// </summary>
+        public static int ApplyNeedleDamageBonuses(int damage, string sourceName)
+        {
+            Bonfire.Log.LogDebug($"[StrengthLogic] Apply needle damage bonuses:");
+            int updated = damage;
+
+            if (CheckStrengthMilestone_3 && sourceName == "DownSlash")
+            {
+                updated *= 2; // 100% extra damage on pogos
+
+                Bonfire.Log.LogDebug($"- Applied pogo damage");
+            }
+
+            Bonfire.Log.LogDebug($"Damage after bonuses for {sourceName} = {updated}");
+
+            return updated;
+        }
+
+        /// <summary>
         /// PlayerData.nailDamage (Postfix): Update needle damage getter, this way all needle damage buffs
         /// are applied on top of custom value + this makes needle strike damage also scale properly.
         /// </summary>
@@ -81,7 +102,7 @@ namespace BonfireSilksong
         public static float UpdateNeedleChargeBeginTime(float result)
         {
             if (CheckStrengthMilestone_3)
-                result *= 0.5f;
+                result *= 0.6f;
             else if (CheckStrengthMilestone_2)
                 result *= 0.8f;
 
@@ -94,7 +115,7 @@ namespace BonfireSilksong
         public static float UpdateNeedleChargeTime(float result)
         {
             if (CheckStrengthMilestone_3)
-                result *= 0.5f;
+                result *= 0.6f;
             else if (CheckStrengthMilestone_1)
                 result *= 0.8f;
 
@@ -142,6 +163,7 @@ namespace BonfireSilksong
 
         private static readonly Vector2 NeedleRangeMultiplier = new Vector2(1.33f, 1.33f);
         private static float CurrentChargeLimit;
+
         private static readonly FieldInfo ImbuementTimeLeftField = typeof(HeroNailImbuement)
             .GetField("imbuementTimeLeft", BindingFlags.Instance | BindingFlags.NonPublic);
         private static readonly FieldInfo QuickeningTimeLeftField = typeof(HeroController)

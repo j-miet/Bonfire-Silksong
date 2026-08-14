@@ -77,7 +77,8 @@ namespace BonfireSilksong
         public static void CheckIfCrit(DamageEnemies __instance, GameObject target)
         {
             // Actual crit handling sequence:
-            // - DamageEnemies.DoDamage Prefix rolls crit chance (-> this method's logic inside patcher)
+            // - DamageEnemies.DoDamage Prefix rolls crit chance and sets crit true/false (-> this method's logic 
+            // inside patcher)
             // - Actual DamageEnemies.DoDamage calls Hit at some point
             // - HealthManager.Hit checks and handles player's perspective by adding damage and displaying visual 
             // effect on player
@@ -93,12 +94,15 @@ namespace BonfireSilksong
                 return;
             }
 
-            int critRoll = StatsShared.CritRoll;
+            int critRoll = UnityEngine.Random.Range(1, 101);
 
             Bonfire.Log.LogDebug($"[LuckLogic] Crit chance: {critChance}. Rolled {critRoll}.");
 
-            StatsShared.Crit = critRoll <= critChance;
-            StatsShared.CritRoll = 0;
+            bool didCrit = critRoll <= critChance;
+            if (didCrit)
+                Bonfire.Log.LogDebug($"Rolled a crit.");
+
+            StatsShared.Crit = didCrit;
         }
 
         /// <summary>

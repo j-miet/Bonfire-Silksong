@@ -25,6 +25,48 @@ namespace BonfireSilksong
         }
 
         /// <summary>
+        /// Apply crit damage bonus to hit and display visual effect on player character.
+        /// </summary>
+        public static int ApplyCritDamage(int baseDamage)
+        {
+            if (StatsShared.Crit)
+            {
+                int updatedDamage = CritDamage(Bonfire.Instance.Status.DexterityStat, baseDamage);
+
+                HeroController.instance.GetComponent<SpriteFlash>().FlashGrimmflame();
+                StatsShared.Crit = false;
+
+                Bonfire.Log.LogDebug($"[DexterityLogic] Crit Damage = {updatedDamage}");
+
+                return updatedDamage;
+            }
+
+            return baseDamage;
+        }
+
+        /// <summary>
+        /// Apply Clawline damage bonuses.
+        /// </summary>
+        public static int ApplyHarpoonDamageBonuses(int baseDamage)
+        {
+            _harpoonHitCounter += 1;
+
+            int updatedDamage = baseDamage;
+
+            if (Bonfire.Instance.Status.DexterityStat < 1) return baseDamage;
+
+            if (CheckDexterityMilestone_2 && _harpoonHitCounter >= 5)
+            {
+                updatedDamage *= 2;
+                _harpoonHitCounter = 0;
+
+                Bonfire.Log.LogDebug($"[DexterityLogic] 4th harpoon hit, updated damage={updatedDamage}");
+            }
+
+            return updatedDamage;
+        }
+
+        /// <summary>
         /// HeroController.DidAttack (Postfix): Update needle attack cooldown.
         /// </summary>
         public static void UpdateNeedleAttackCooldown(HeroController instance)
@@ -36,9 +78,9 @@ namespace BonfireSilksong
 
             float attackSpeed = AttackSpeed(Bonfire.Instance.Status.DexterityStat);
 
-            StatsShared.AttackCooldownField?.SetValue(
+            AttackCooldownField?.SetValue(
                 instance,
-                (float)StatsShared.AttackCooldownField.GetValue(instance) / attackSpeed);
+                (float)AttackCooldownField.GetValue(instance) / attackSpeed);
         }
 
         /// <summary>
@@ -59,26 +101,30 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// HealthManager.Hit (Prefix): Apply crit damage bonus to hit and display visual effect on player character.
+        /// HeroController.CanHarpoonDash (Postfix): Toggle usedHarpoon state for RefundHarpoonCost.
         /// </summary>
-        public static int ApplyCritDamage(int baseDamage)
+        public static void UsedHarpoon()
         {
-            if (StatsShared.Crit)
-            {
-                int updatedDamage = CritDamage(Bonfire.Instance.Status.DexterityStat, baseDamage);
-
-                HeroController.instance.GetComponent<SpriteFlash>().FlashGrimmflame();
-                StatsShared.Crit = false;
-
-                Bonfire.Log.LogDebug($"[DexterityLogic] Crit Damage = {updatedDamage}");
-
-                return updatedDamage;
-            }
-
-            return baseDamage;
+            _usedHarpoon = true;
         }
 
+        /// <summary>
+        /// HeroController.TakeSilk (Prefix): If Clawline silk cost should be ignored.
+        /// </summary>
+        public static bool CheckHarpoonCostRefund(int cost)
+        {
+            bool refunded = _usedHarpoon && cost == 1 && CheckDexterityMilestone_1;
 
+            _usedHarpoon = false;
+
+            return refunded;
+        }
+
+        private static int _harpoonHitCounter = 0;
+        private static bool _usedHarpoon = false;
+
+        private static readonly FieldInfo AttackCooldownField = typeof(HeroController)
+            .GetField("attack_cooldown", BindingFlags.Instance | BindingFlags.NonPublic);
         private static readonly FieldInfo AttackDurationField = typeof(HeroController)
             .GetField("attackDuration", BindingFlags.Instance | BindingFlags.NonPublic);
     }

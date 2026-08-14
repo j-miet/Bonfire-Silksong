@@ -11,12 +11,8 @@ namespace BonfireSilksong
     /// </summary>
     public static class StatsShared
     {
-        public static int CritRoll = 0;
         public static bool Crit = false;
         public static bool BlockNextHit = false;
-
-        public static readonly FieldInfo AttackCooldownField = typeof(HeroController)
-            .GetField("attack_cooldown", BindingFlags.Instance | BindingFlags.NonPublic);
 
         public static readonly MethodInfo PlayerDataInstanceGetter = AccessTools.PropertyGetter(
             typeof(PlayerData),
@@ -71,20 +67,6 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// HeroController.Update (Postfix): Roll crit value for later check.
-        /// </summary>
-        public static void RollCritValue()
-        {
-            // currently only basic attack can crit.
-            // TODO add conditional silk skill and Resilience reflect damage crit checks
-            if (GameManager.instance.inputHandler.inputActions.Attack.WasPressed)
-            {
-                Bonfire.Log.LogDebug("[StatsShared] CritRoll updated");
-                CritRoll = UnityEngine.Random.Range(1, 100);
-            }
-        }
-
-        /// <summary>
         /// DamageEnemies.DoDamage (Transpiler):
         /// Override normal getter behavior: strength will scale needle base damage for all sources except silk skills. 
         /// This way intelligence keeps its own identity as spell-oriented stat. Silk skills do still have their base 
@@ -126,24 +108,86 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// HealthManager.Hit (Prefix): Apply needle damage bonuses. PlayerData.nailDamage getter will handle base
-        /// damage update so don't use NeedleDamage here!
+        /// HealthManager.Hit (Prefix): Handle stat damage calculations before game calls HealthManager.TakeDamage
+        /// for actual health subtraction logic.
         /// </summary>
-        public static int ApplyNeedleDamageBonuses(int damage, string sourceName)
+        public static void ApplyHitDamageBonuses(HitInstance hitInstance)
         {
-            Bonfire.Log.LogDebug($"[StrengthLogic] Apply needle damage bonuses:");
-            int updated = damage;
+            if (hitInstance.Source == null) return;
 
-            if (StrengthLogic.CheckStrengthMilestone_3 && sourceName == "DownSlash")
+            string sourceName = hitInstance.Source.name;
+            var tool = hitInstance.RepresentingTool;
+
+            Bonfire.Log.LogDebug("[HealthManager.Hit] Recorded a hit => Hit source: " + sourceName);
+            Bonfire.Log.LogDebug("Damage Dealt: " + hitInstance.DamageDealt);
+            Bonfire.Log.LogDebug("Tool instance: " + tool?.name ?? "null");
+
+            // == Important ==
+            // 1. Multiplicative damage scaling: just use hitInstance.DamageDealt and scale it.
+            // 2. Additive scaling: at this point the game has already applied most buffs. Exceptions would include 
+            // Wanderer crest crit and Hunter's Crest damage amplification as game applies these during its final damage
+            // calculations in HealthManager.TakeDamage.
+            // Thus using simply 'hitInstance.DamageDealt = newValue' would not modify the base value, making any 
+            // damage buffs e.g. Flintslate for needle hits, useless. Solution is to pick one of following routes: 
+            // - find the base damage of damage source and patch it e.g. PlayerData.nailDamage getter for needle 
+            // base damage.
+            // - write a custom formula which also checks all possible buffs conditions this source can receive.
+            // - apply any increments post-buff, meaning the flat +X damage would only benefit from the few remaining
+            // modifiers such as the crest bonuses mentioned earlier.
+            if (tool != null && tool.Type == ToolItemType.Skill)
             {
-                updated *= 2; // 100% extra damage on pogos
+                // -- silk skills --
+                // 1. The "Type == ToolItemType.Skill" is enough to target only the silk skills.
+                // 2. Silk skill damage scales normally from needle upgrades, or specifically, the needle damage
+                // itself. To balance strength stat: only base game scaling works, after that intelligence stat
+                // is necessary for extra scaling. As scaling requires adjusting base needle damage, it's already
+                // done earlier in patched Playerdata.nailDamage.
 
-                Bonfire.Log.LogDebug($"- Applied pogo damage");
+                int updatedDamage = IntelligenceLogic.ApplySpellDamageBonuses(hitInstance.DamageDealt, tool);
+
+                if (IntelligenceLogic.CheckIntelligenceMilestone_2)
+                {
+                    updatedDamage = DexterityLogic.ApplyCritDamage(updatedDamage);
+                }
+
+                hitInstance.DamageDealt = updatedDamage;
             }
+            else if (tool != null && (tool.Type == ToolItemType.Red || tool.Type == ToolItemType.Blue))
+            {
+                // -- red and blue tools --
 
-            Bonfire.Log.LogDebug($"Damage after bonuses for {sourceName} = {updated}");
+                hitInstance.DamageDealt = ArtificeLogic.ApplyToolDamageBonuses(hitInstance.DamageDealt, tool);
 
-            return updated;
+                // TODO add sawtooth circlet and Pimpillo crit
+                //if (tool.name == )
+            }
+            else if (hitInstance.IsHarpoon)
+            {
+                int updatedDamage = DexterityLogic.ApplyHarpoonDamageBonuses(hitInstance.DamageDealt);
+
+                if (DexterityLogic.CheckDexterityMilestone_2)
+                    updatedDamage = DexterityLogic.ApplyCritDamage(updatedDamage);
+
+                hitInstance.DamageDealt = updatedDamage;
+            }
+            else if (hitInstance.IsNailDamage)
+            {
+                // -- basic needle hits + needle strike --
+                // 1. The sourceName with Slash/UpSlash/DownSlash/AltSlash can be used to identify the direction,
+                // slash being the normal left/right slash, and apply extra damage bonus e.g. on downward pogo 
+                // hits.
+                // 2. However needle strike for different crests use various different names. For these, the
+                // IsNailDamage is better identifier unless specific needle strike damage components
+                // need to be scaled individually.
+                // 3. IsUsingNeedleDamageMult would also apply to Silk Skills because in vanilla they do scale
+                // from needle upgrade count. However, to better balance silk skills, they require intelligence
+                // stat for scaling to avoid the issue of making strength a better scaling path for spells while
+                // still leaving all the spell-oriented milestones under intelligence stat itself, requiring to
+                // level both.
+
+                int updatedDamage = StrengthLogic.ApplyNeedleDamageBonuses(hitInstance.DamageDealt, sourceName);
+                hitInstance.DamageDealt = DexterityLogic.ApplyCritDamage(updatedDamage);
+            }
         }
     }
 }

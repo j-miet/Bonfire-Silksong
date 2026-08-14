@@ -8,6 +8,9 @@ namespace BonfireSilksong
 {
     internal class DamageEnemies_Patch
     {
+        // Override needle damage getter with custom behavior. This allows blocking strength damage scaling for
+        // specific damage sources.
+        //
         // public bool DoDamage(GameObject target, bool isFirstHit)
         [HarmonyPatch(typeof(DamageEnemies), "DoDamage", new[] { typeof(GameObject), typeof(bool) })]
         class DamageEnemies_DoDamage

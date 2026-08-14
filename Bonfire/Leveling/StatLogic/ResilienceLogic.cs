@@ -35,7 +35,10 @@ namespace BonfireSilksong
         }
 
         // Stat scaling: chance to block an enemy hit
-        public static float BlockChance(int totalRes) => (float)(0.72 / (1.0 + 12.0 * Math.Exp(-0.09 * totalRes)));
+        public static float BlockChance(int totalRes)
+        {
+            return (float)(0.72 / (1.0 + 12.0 * Math.Exp(-0.09 * totalRes)));
+        }
 
         /// <summary>
         /// LevelingGUI helper: Returns average damage blocking chance from current Resilience stat value.

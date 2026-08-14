@@ -15,7 +15,10 @@ namespace BonfireSilksong
         public static bool CheckWisdomMilestone_3 => Bonfire.Instance.Status.WisdomStat >= WisdomMilestone_3;
 
         // Stat scaling: extra silk gained when striking an enemy with needle (+1 silk for every 20 levels)
-        public static int ExtraSilk(int totalWsdm, int baseSilk) => (int)(baseSilk + Math.Floor(totalWsdm / 20f));
+        public static int ExtraSilk(int totalWsdm, int baseSilk)
+        {
+            return (int)(baseSilk + Math.Floor(totalWsdm / 20f));
+        }
 
         // Stat scaling: amount of time it takes to passively produce a single silk.
         // starts from 40 seconds timer at lvl 5 to prevents players from putting just a single point and
@@ -117,15 +120,14 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// HeroController.TakeSilk (Postfix): Refund Wispfire Lantern silk cost after attacking.
+        /// HeroController.TakeSilk (Prefix): If Wispfire Lantern silk cost should be ignored.
         /// </summary>
-        public static void WispLanternRefundCost(HeroController __instance, int amount, SilkSpool.SilkTakeSource source)
+        public static bool CheckWispLanternCostRefund(SilkSpool.SilkTakeSource source)
         {
             if (source == SilkSpool.SilkTakeSource.Wisp && CheckWisdomMilestone_1)
-            {
-                __instance.AddSilk(amount, heroEffect: false);
-                Bonfire.Log.LogDebug("[WisdomLogic] Refunded Wispfire Lantern silk cost after use");
-            }
+                return true;
+
+            return false;
         }
 
 

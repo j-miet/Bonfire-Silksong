@@ -32,6 +32,21 @@ namespace BonfireSilksong
         }
 
         /// <summary>
+        /// Apply tool damage bonus.
+        /// </summary>
+        public static int ApplyToolDamageBonuses(int baseDamage, ToolItem tool)
+        {
+            Bonfire.Log.LogDebug($"[ArtificeLogic]");
+            Bonfire.Log.LogDebug($"<Vanilla> Tool: {tool}. Damage: {baseDamage}");
+
+            int updatedDamage = ToolDamage(baseDamage, Bonfire.Instance.Status.ArtificeStat);
+
+            Bonfire.Log.LogDebug($"<Modded> Tool: {tool}. Damage: {updatedDamage}");
+
+            return updatedDamage;
+        }
+
+        /// <summary>
         /// HeroController.Update (Postfix): Passive tool regen, replenishes charges for ALL red tools 
         /// currently equipped
         /// </summary>
@@ -61,21 +76,6 @@ namespace BonfireSilksong
 
                 Bonfire.Log.LogDebug("Replenished 1 charge for all red tools");
             }
-        }
-
-        /// <summary>
-        /// HealthManager.Hit (Prefix): Apply tool damage bonus.
-        /// </summary>
-        public static int ApplyToolDamage(int baseDamage, ToolItem tool)
-        {
-            Bonfire.Log.LogDebug($"[ArtificeLogic]");
-            Bonfire.Log.LogDebug($"<Vanilla> Tool: {tool}. Damage: {baseDamage}");
-
-            int updatedDamage = ToolDamage(baseDamage, Bonfire.Instance.Status.ArtificeStat);
-
-            Bonfire.Log.LogDebug($"<Modded> Tool: {tool}. Damage: {updatedDamage}");
-
-            return updatedDamage;
         }
 
 
