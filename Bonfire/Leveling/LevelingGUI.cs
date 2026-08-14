@@ -440,10 +440,10 @@ namespace BonfireSilksong
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
             DrawInfoStatLabel("Needle Damage: " + _needleDamage);
 
-            GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
+            GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
             GUILayout.Label(
                 $"[{StrengthLogic.StrengthMilestone_1}] " +
-                "Needle strike: base value of current charge time reduced by 20%. " +
+                "Needle strike: active charge time reduced by 20%. " +
                 "Can toggle on/off automatic release when fully charged.",
                 LevelingSystem.HighLightStrenghtMileStone_1 ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
@@ -468,14 +468,15 @@ namespace BonfireSilksong
 
             GUILayout.Label(
                 $"[{StrengthLogic.StrengthMilestone_2}] " +
-                "Needle range increased by 33%. Needle strike initial charge time base value reduced by 20%",
+                "Needle range increased by 33%. Needle strike initial charge time reduced by 20%",
                 LevelingSystem.HighLightStrenghtMileStone_2 ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
+
             GUILayout.Label(
                 $"[{StrengthLogic.StrengthMilestone_3}] " +
                 "Flintslate and Flea Brew tools have infinite buff duration. " +
-                "Down slash(pogo) damage increased by 100  %." +
-                "Needle strike: base values of initial and current charge time reduced by 50%",
+                "Downslash damage increased by 100%. " +
+                "Needle strike: initial and active charge time reduction is now 40%",
                 LevelingSystem.HighLightStrenghtMileStone_3 ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
@@ -491,7 +492,7 @@ namespace BonfireSilksong
             DrawInfoStatLabel("Slash Speed: " + _attackSpeed);
             DrawInfoStatLabel("Crit Damage: " + _critDamage);
 
-            GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
+            GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
 
             GUILayout.EndVertical();
         }
@@ -505,7 +506,10 @@ namespace BonfireSilksong
             DrawInfoStatLabel("Silk Skill Damage: " + _spellDamage);
             DrawInfoStatLabel("Binding Cost: " + _bindCost);
 
+            // binding damage bonus when Claw Mirror is equipped
             GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
+
+            GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
 
             GUILayout.EndVertical();
         }
@@ -519,7 +523,7 @@ namespace BonfireSilksong
             DrawInfoStatLabel("Tool Damage: " + _toolDamage);
             DrawInfoStatLabel("Tool Regen Interval: " + _toolRegenInterval);
 
-            GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
+            GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
 
             GUILayout.EndVertical();
         }
@@ -533,7 +537,10 @@ namespace BonfireSilksong
             DrawInfoStatLabel("Extra Lifeblood Masks " + _extraMasks);
             DrawInfoStatLabel("Block Chance: " + _blockChance);
 
+            // reflect damage
             GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
+
+            GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
 
             GUILayout.EndVertical();
         }
@@ -547,7 +554,7 @@ namespace BonfireSilksong
             DrawInfoStatLabel("Silk Gained On Enemy Hit: " + _extraSilk);
             DrawInfoStatLabel("Silk Regen Interval: " + _silkRegenInterval);
 
-            GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
+            GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
             GUILayout.Label(
                 $"[{WisdomLogic.WisdomMilestone_2}] " +
                 "Wispfire Lantern silk cost removed, attack delay halved and spawn cooldown is down to 2 seconds.",
@@ -571,7 +578,7 @@ namespace BonfireSilksong
             DrawInfoStatLabel("Crit Chance: " + _critChance);
             DrawInfoStatLabel("Rosary & Shard Increase: " + _rosaryIncrease);
 
-            GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
+            GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
 
             GUILayout.EndVertical();
         }

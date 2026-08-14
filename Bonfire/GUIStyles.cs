@@ -33,6 +33,7 @@ namespace BonfireSilksong
 
         public static GUIStyle LvlInfoHeaderPrimaryStyle;
         public static GUIStyle LvlInfoHeaderSecondaryStyle;
+        public static GUIStyle LvlInfoHeaderMilestoneStyle;
         public static GUIStyle LvlInfoLabelStyle;
         public static GUIStyle LvlInfoButtonStyle;
         public static GUIStyle LvlInfoLabelDisabledStyle;
@@ -223,6 +224,17 @@ namespace BonfireSilksong
             if (LvlInfoHeaderSecondaryStyle == null)
             {
                 LvlInfoHeaderSecondaryStyle = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 17,
+                    normal = { textColor = new Color(0.35f, 0.85f, 0.6f) }
+                };
+            }
+
+            if (LvlInfoHeaderMilestoneStyle == null)
+            {
+                LvlInfoHeaderMilestoneStyle = new GUIStyle(GUI.skin.label)
                 {
                     font = TrajanNormal,
                     fontStyle = FontStyle.Bold,
