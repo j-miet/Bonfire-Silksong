@@ -6,10 +6,9 @@ using HarmonyLib;
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Logic shared between multiple stat classes.
-    /// For know it also includes the few general patcher helpers e.g. enemy hp bar data stuff.
+    /// General patch logic helpers e.g. those not tied to a specific stat implementation.
     /// </summary>
-    public static class StatsShared
+    public static class PatchHelpers
     {
         public static readonly MethodInfo PlayerDataInstanceGetter = AccessTools.PropertyGetter(
             typeof(PlayerData),
@@ -19,16 +18,16 @@ namespace BonfireSilksong
             "nailDamage");
 
         public static readonly MethodInfo CustomNailDamageGetterDamageEnemies = AccessTools.Method(
-            typeof(StatsShared),
+            typeof(PatchHelpers),
             nameof(CustomNeedleDamageGetter),
             new[] { typeof(DamageEnemies) });
         public static readonly MethodInfo CustomNailDamageGetterHitInstance = AccessTools.Method(
-            typeof(StatsShared),
+            typeof(PatchHelpers),
             nameof(CustomNeedleDamageGetter),
             new[] { typeof(HitInstance) });
 
         /// <summary>
-        /// HealthManager.OnEnable (Postfix): Add enemy hp data.
+        /// HealthManager.OnEnable (Postfix): Add enemy hp data for GUI.
         /// </summary>
         public static void AddEnemyHpData(HealthManager instance)
         {
@@ -80,7 +79,7 @@ namespace BonfireSilksong
 
             damage = StrengthLogic.UpdateNeedleBaseDamage(damage);
 
-            Bonfire.Log.LogDebug($"[StatsShared] updated needle damage={damage}");
+            Bonfire.Log.LogDebug($"[PatchHelpers] getter (DamageEnemies) updated needle damage={damage}");
 
             return damage;
         }
@@ -99,7 +98,7 @@ namespace BonfireSilksong
 
             damage = StrengthLogic.UpdateNeedleBaseDamage(damage);
 
-            Bonfire.Log.LogDebug($"[StatsShared] updated needle damage={damage}");
+            Bonfire.Log.LogDebug($"[PatchHelpers] getter (HitInstance) updated needle damage={damage}");
 
             return damage;
         }

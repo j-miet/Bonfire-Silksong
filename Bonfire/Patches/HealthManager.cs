@@ -14,7 +14,7 @@ namespace BonfireSilksong
             {
                 if (__instance != null)
                 {
-                    StatsShared.AddEnemyHpData(__instance);
+                    PatchHelpers.AddEnemyHpData(__instance);
 
                     LuckLogic.UpdateCurrencyDrops(__instance);
                 }
@@ -36,8 +36,8 @@ namespace BonfireSilksong
                 for (int i = 0; i < codes.Count; i++)
                 {
                     if (i + 1 < codes.Count &&
-                        codes[i].Calls(StatsShared.PlayerDataInstanceGetter) &&
-                        codes[i + 1].Calls(StatsShared.PlayerDataNailDamageGetter))
+                        codes[i].Calls(PatchHelpers.PlayerDataInstanceGetter) &&
+                        codes[i + 1].Calls(PatchHelpers.PlayerDataNailDamageGetter))
                     {
                         Bonfire.Log.LogInfo(
                             "[HealthManager.DoLagHits] Transpiler: found PlayerData.instance.nailDamage");
@@ -47,7 +47,7 @@ namespace BonfireSilksong
 
                         var second = new CodeInstruction(
                             OpCodes.Call,
-                            StatsShared.CustomNailDamageGetterHitInstance);
+                            PatchHelpers.CustomNailDamageGetterHitInstance);
                         second.labels.AddRange(codes[i + 1].labels);
 
                         yield return first;
@@ -68,7 +68,7 @@ namespace BonfireSilksong
         {
             static void Prefix(HitInstance hitInstance)
             {
-                StatsShared.ApplyHitDamageBonuses(hitInstance);
+                PatchHelpers.ApplyHitDamageBonuses(hitInstance);
             }
         }
     }

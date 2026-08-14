@@ -35,8 +35,8 @@ namespace BonfireSilksong
                     // is now no longer part of instructions, causing transpiler to fail and also crash the mod 
                     // patching (unless this  exception is caught, but better let this happen and fix it).
                     if (i + 1 < codes.Count &&
-                        codes[i].Calls(StatsShared.PlayerDataInstanceGetter) &&
-                        codes[i + 1].Calls(StatsShared.PlayerDataNailDamageGetter))
+                        codes[i].Calls(PatchHelpers.PlayerDataInstanceGetter) &&
+                        codes[i + 1].Calls(PatchHelpers.PlayerDataNailDamageGetter))
                     {
                         Bonfire.Log.LogInfo(
                             "[DamageEnemies.DoDamage] Transpiler: found PlayerData.instance.nailDamage");
@@ -46,7 +46,7 @@ namespace BonfireSilksong
 
                         var second = new CodeInstruction(
                             OpCodes.Call,
-                            StatsShared.CustomNailDamageGetterDamageEnemies);
+                            PatchHelpers.CustomNailDamageGetterDamageEnemies);
                         second.labels.AddRange(codes[i + 1].labels);
 
                         yield return first;

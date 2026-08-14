@@ -49,7 +49,7 @@ namespace BonfireSilksong
             {
                 Bonfire.Log.LogDebug("[HeroController.Update] Update hp data, roll crit, check sil + tool regen");
 
-                StatsShared.FlushEnemyHPData();
+                PatchHelpers.FlushEnemyHPData();
 
                 if (HeroController.instance == null || PlayerData.instance == null)
                     return;
