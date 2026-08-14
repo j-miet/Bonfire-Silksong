@@ -41,6 +41,7 @@ namespace BonfireSilksong
         public bool DeliveryQuestsRemoveTimer = false;
         public bool DeliveryQuestsRemoveDamage = false;
 
+        public bool AlwaysHaveCompassTool = false;
         public bool RefillShardsAtBench = false;
         public bool ReduceFleaGamesScoreLimit = false;
         public bool EasierSprintmasterRaces = false;

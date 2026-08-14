@@ -38,7 +38,7 @@ namespace BonfireSilksong
             GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            float w = 570f, h = 650f;
+            float w = 570f, h = 670f;
             float x = BonfireGUI.Width / 2f - w / 2f;
             float y = BonfireGUI.Height / 2f - h / 2f;
             Rect rect = new Rect(x, y, w, h);
@@ -312,6 +312,10 @@ namespace BonfireSilksong
 
             GUILayout.BeginVertical("box");
             GUILayout.Label("Other");
+
+            s.AlwaysHaveCompassTool = CustomCursor.Toggle(
+                s.AlwaysHaveCompassTool,
+                "Compass on minimap");
 
             s.RefillShardsAtBench = CustomCursor.Toggle(
                 s.RefillShardsAtBench,
