@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using System.Reflection;
 
+using GlobalSettings;
 using HarmonyLib;
 
 namespace BonfireSilksong
 {
     /// <summary>
-    /// General patch logic helpers e.g. those not tied to a specific stat implementation.
+    /// General patch logic helpers e.g. those not tied to any specific stat implementation.
     /// </summary>
     public static class PatchHelpers
     {
@@ -114,9 +115,9 @@ namespace BonfireSilksong
             string sourceName = hitInstance.Source.name;
             var tool = hitInstance.RepresentingTool;
 
-            Bonfire.Log.LogDebug("[HealthManager.Hit] Recorded a hit => Hit source: " + sourceName);
-            Bonfire.Log.LogDebug("Damage Dealt: " + hitInstance.DamageDealt);
-            Bonfire.Log.LogDebug("Tool instance: " + tool?.name ?? "null");
+            Bonfire.Log.LogInfo("[HealthManager.Hit] Recorded a hit => Hit source: " + sourceName);
+            Bonfire.Log.LogInfo("Damage Dealt: " + hitInstance.DamageDealt);
+            Bonfire.Log.LogInfo("Tool instance: " + tool?.name ?? "null");
 
             bool isCrit = LuckLogic.Crit;
 
@@ -141,34 +142,47 @@ namespace BonfireSilksong
                 // is necessary for extra scaling. As scaling requires adjusting base needle damage, it's already
                 // done earlier in patched Playerdata.nailDamage.
 
-                int updatedDamage = IntelligenceLogic.ApplySpellDamageBonuses(hitInstance.DamageDealt, tool);
-
+                int spellDamage = IntelligenceLogic.ApplySpellDamageBonuses(hitInstance.DamageDealt, tool);
                 if (IntelligenceLogic.CheckIntelligenceMilestone_2 && isCrit)
                 {
-                    updatedDamage = DexterityLogic.ApplyCritDamage(updatedDamage);
+                    spellDamage = DexterityLogic.ApplyCritDamage(spellDamage);
                 }
 
-                hitInstance.DamageDealt = updatedDamage;
+                hitInstance.DamageDealt = spellDamage;
+
+                DexterityLogic.ApplyCritHeal(isCrit);
             }
             else if (tool != null && (tool.Type == ToolItemType.Red || tool.Type == ToolItemType.Blue))
             {
                 // -- red and blue tools --
 
-                hitInstance.DamageDealt = ArtificeLogic.ApplyToolDamageBonuses(hitInstance.DamageDealt, tool);
+                int toolDamage = ArtificeLogic.ApplyToolDamageBonuses(hitInstance.DamageDealt, tool);
+                if (ArtificeLogic.CheckArtificeMilestone_2 && isCrit)
+                {
+                    // TODO apply crit damage to Sawtooth Circlet blue tool and Pimpillo red tool
+                    // -- not tested yet --
+                    if ((Gameplay.BrollySpikeTool.IsEquipped && tool.name == Gameplay.BrollySpikeTool.name) ||
+                        tool.name.ToLower().Contains("pimpilo"))
+                    {
+                        toolDamage = DexterityLogic.ApplyCritDamage(toolDamage);
+                    }
+                }
 
-                // TODO add sawtooth circlet and Pimpillo crit
-                //if (tool.name == ... && isCrit)
+                hitInstance.DamageDealt = toolDamage;
+
+                DexterityLogic.ApplyCritHeal(isCrit);
             }
-            else if (hitInstance.IsHarpoon)
+            else if (sourceName == "Harpoon Damager" || sourceName == "Harpoon Dash Damager")
             {
-                int updatedDamage = DexterityLogic.ApplyHarpoonDamageBonuses(hitInstance.DamageDealt);
-
+                int updatedDamage = DexterityLogic.ApplyClawlineDamageBonuses(hitInstance.DamageDealt);
                 if (DexterityLogic.CheckDexterityMilestone_2 && isCrit)
                 {
                     updatedDamage = DexterityLogic.ApplyCritDamage(updatedDamage);
                 }
 
                 hitInstance.DamageDealt = updatedDamage;
+
+                DexterityLogic.ApplyCritHeal(isCrit);
             }
             else if (hitInstance.IsNailDamage)
             {
@@ -186,13 +200,14 @@ namespace BonfireSilksong
                 // level both.
 
                 int updatedDamage = StrengthLogic.ApplyNeedleDamageBonuses(hitInstance.DamageDealt, sourceName);
-
                 if (isCrit)
                 {
                     updatedDamage = DexterityLogic.ApplyCritDamage(updatedDamage);
                 }
 
                 hitInstance.DamageDealt = updatedDamage;
+
+                DexterityLogic.ApplyCritHeal(isCrit);
             }
 
             LuckLogic.Crit = false;

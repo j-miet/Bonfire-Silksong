@@ -468,7 +468,7 @@ namespace BonfireSilksong
 
             GUILayout.Label(
                 $"[{StrengthLogic.StrengthMilestone_2}] " +
-                "Needle range increased by 33%. Needle strike initial charge time reduced by 20%",
+                "Needle range increased by 33%. Needle strike initial charge time reduced by 20%.",
                 LevelingSystem.HighLightStrenghtMileStone_2 ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
@@ -476,7 +476,7 @@ namespace BonfireSilksong
                 $"[{StrengthLogic.StrengthMilestone_3}] " +
                 "Flintslate and Flea Brew tools have infinite buff duration. " +
                 "Downslash damage increased by 100%. " +
-                "Needle strike: initial and active charge time reduction is now 40%",
+                "Needle strike: both initial and active charge time reduction buffed (20% -> 40%).",
                 LevelingSystem.HighLightStrenghtMileStone_3 ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
@@ -493,6 +493,26 @@ namespace BonfireSilksong
             DrawInfoStatLabel("Crit Damage: " + _critDamage);
 
             GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
+            GUILayout.Label(
+                $"[{DexterityLogic.DexterityMilestone_1}] " +
+                "Clawline damage increased by 25%. " +
+                $"Every {DexterityLogic.ClawlineHitLimit}th hit from Clawline deals 2x damage " +
+                "(Clawline produces normally 2 hits when use).",
+                LevelingSystem.HighlightDexterityMilestone_1 ?
+                    GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.Label(
+                $"[{DexterityLogic.DexterityMilestone_2}] " +
+                "Clawline silk cost removed, can now critically hit.",
+                LevelingSystem.HighlightDexterityMilestone_2 ?
+                    GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.Label(
+                $"[{DexterityLogic.DexterityMilestone_3}] " +
+                "All critical hits now heal 1 mask. Clawline's 7th hit will always heal 1 mask " +
+                "and deals 3x damage. Clawline damage bonus increased (25% -> 50%).",
+            LevelingSystem.HighlightDexterityMilestone_3 ?
+                    GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.EndVertical();
         }

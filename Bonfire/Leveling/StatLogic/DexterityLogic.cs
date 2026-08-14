@@ -5,6 +5,8 @@ namespace BonfireSilksong
 {
     public static class DexterityLogic
     {
+        public const int ClawlineHitLimit = 7;
+
         public static int DexterityMilestone_1 => 1;
         public static int DexterityMilestone_2 => 2;
         public static int DexterityMilestone_3 => 3;
@@ -33,7 +35,7 @@ namespace BonfireSilksong
 
             HeroController.instance.GetComponent<SpriteFlash>().FlashGrimmflame();
 
-            Bonfire.Log.LogDebug($"[DexterityLogic] Crit Damage = {updatedDamage}");
+            Bonfire.Log.LogInfo($"[DexterityLogic] Crit Damage = {updatedDamage}");
 
             return updatedDamage;
         }
@@ -41,23 +43,83 @@ namespace BonfireSilksong
         /// <summary>
         /// Apply Clawline damage bonuses.
         /// </summary>
-        public static int ApplyHarpoonDamageBonuses(int baseDamage)
+        public static int ApplyClawlineDamageBonuses(int baseDamage)
         {
-            _harpoonHitCounter += 1;
+            _clawlineHitCounter += 1;
+            Bonfire.Log.LogInfo("Clawline hits: " + _clawlineHitCounter);
 
             int updatedDamage = baseDamage;
 
             if (Bonfire.Instance.Status.DexterityStat < 1) return baseDamage;
 
-            if (CheckDexterityMilestone_2 && _harpoonHitCounter >= 5)
-            {
-                updatedDamage *= 2;
-                _harpoonHitCounter = 0;
+            Bonfire.Log.LogInfo($"[DexterityLogic] Apply Clawline damage bonuses");
 
-                Bonfire.Log.LogDebug($"[DexterityLogic] 4th harpoon hit, updated damage={updatedDamage}");
+            if (CheckDexterityMilestone_3)
+            {
+                updatedDamage = (int)Math.Round(updatedDamage * 1.5f);
+                Bonfire.Log.LogInfo("Applied x1.5 multiplier");
+            }
+            else if (CheckDexterityMilestone_1)
+            {
+                updatedDamage = (int)Math.Round(updatedDamage * 1.25f);
+                Bonfire.Log.LogInfo("Applied x1.25 multiplier");
             }
 
+            if (CheckDexterityMilestone_1 && _clawlineHitCounter >= ClawlineHitLimit)
+            {
+                updatedDamage *= 2;
+                Bonfire.Log.LogInfo($"Clawline {ClawlineHitLimit}. hit: applied x2 multiplier");
+
+                if (CheckDexterityMilestone_3)
+                {
+                    HeroController.instance.AddHealth(1);
+                    Bonfire.Log.LogInfo($"Clawline {ClawlineHitLimit}. hit: healed 1 mask");
+                }
+
+                _clawlineHitCounter = 0;
+            }
+
+            Bonfire.Log.LogInfo($"Clawline updated damage={updatedDamage}");
+
             return updatedDamage;
+        }
+
+        /// <summary>
+        /// Heal the player if damage was a crit.
+        /// </summary>
+        public static void ApplyCritHeal(bool wasCrit)
+        {
+            if (CheckDexterityMilestone_3 && wasCrit)
+            {
+                HeroController.instance.AddHealth(1);
+                Bonfire.Log.LogInfo("[DexterityLogic] Crit heal");
+            }
+
+            // -- original idea was to heal 2 masks from clawline and needle strike, 1 from the rest.
+            // This can stay here for now, in case crit healing needs to be adjusted for specific damage sources.
+            /*
+            string s = source.ToLower();
+
+            Bonfire.Log.LogInfo("[DexterityLogic] Crit heal");
+
+            if (CheckDexterityMilestone_3 && wasCrit)
+            {
+                if (s == "default")
+                {
+                    HeroController.instance.AddHealth(1);
+                    Bonfire.Log.LogInfo("Heal type: default");
+                }
+                else if (s == "clawline" || (isNeedle && !s.Contains("slash")))
+                {
+                    HeroController.instance.AddHealth(2);
+                    Bonfire.Log.LogInfo($"Heal type: {s}");
+                }
+                else
+                {
+                    Bonfire.Log.LogInfo("No healing");
+                }
+            }
+            */
         }
 
         /// <summary>
@@ -107,14 +169,14 @@ namespace BonfireSilksong
         /// </summary>
         public static bool CheckHarpoonCostRefund(int cost)
         {
-            bool refunded = _usedHarpoon && cost == 1 && CheckDexterityMilestone_1;
+            bool refunded = _usedHarpoon && cost == 1 && CheckDexterityMilestone_2;
 
             _usedHarpoon = false;
 
             return refunded;
         }
 
-        private static int _harpoonHitCounter = 0;
+        private static int _clawlineHitCounter = 0;
         private static bool _usedHarpoon = false;
 
         private static readonly FieldInfo AttackCooldownField = typeof(HeroController)
