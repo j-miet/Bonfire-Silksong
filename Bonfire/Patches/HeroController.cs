@@ -110,7 +110,7 @@ namespace BonfireSilksong
             }
         }
 
-        // public void TakeDamage( GameObject go, CollisionSide damageSide, int damageAmount, HazardType hazardType, 
+        // public void TakeDamage(GameObject go, CollisionSide damageSide, int damageAmount, HazardType hazardType, 
         //     DamagePropertyFlags damagePropertyFlags)
         [HarmonyPatch(typeof(HeroController), "TakeDamage")]
         class HealthManager_TakeDamage
@@ -124,7 +124,7 @@ namespace BonfireSilksong
             {
                 // safety feature to ensure that block flag is set to 'false' after TakeDamage call. 
                 // Otherwise blocking flag could get stuck on 'true', making player invulnerable.
-                StatsShared.BlockNextHit = false;
+                ResilienceLogic.BlockNextHit = false;
             }
         }
 

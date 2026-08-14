@@ -11,6 +11,7 @@ namespace BonfireSilksong
     {
         public static bool SatDownAtBench = false;
         public static bool BlueHpInit = false;
+        public static bool BlockNextHit = false;
 
         public static int ResilienceMilestone_1 => 1;
         public static int ResilienceMilestone_2 => 2;
@@ -127,7 +128,7 @@ namespace BonfireSilksong
             {
                 _hitsSinceShielded = 0;
                 LuckyShieldSetActive();
-                StatsShared.BlockNextHit = true;
+                BlockNextHit = true;
                 Bonfire.Log.LogDebug("Blocked a hit!");
             }
             else
@@ -143,9 +144,9 @@ namespace BonfireSilksong
         public static int PreventHPLossOnBlock(int amount)
         {
             if (Bonfire.Instance.Status.ResilienceStat <= 0) return amount;
-            if (StatsShared.BlockNextHit)
+            if (BlockNextHit)
             {
-                StatsShared.BlockNextHit = false;
+                BlockNextHit = false;
                 return 0;
             }
 

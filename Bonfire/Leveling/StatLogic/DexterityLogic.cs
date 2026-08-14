@@ -29,19 +29,13 @@ namespace BonfireSilksong
         /// </summary>
         public static int ApplyCritDamage(int baseDamage)
         {
-            if (StatsShared.Crit)
-            {
-                int updatedDamage = CritDamage(Bonfire.Instance.Status.DexterityStat, baseDamage);
+            int updatedDamage = CritDamage(Bonfire.Instance.Status.DexterityStat, baseDamage);
 
-                HeroController.instance.GetComponent<SpriteFlash>().FlashGrimmflame();
-                StatsShared.Crit = false;
+            HeroController.instance.GetComponent<SpriteFlash>().FlashGrimmflame();
 
-                Bonfire.Log.LogDebug($"[DexterityLogic] Crit Damage = {updatedDamage}");
+            Bonfire.Log.LogDebug($"[DexterityLogic] Crit Damage = {updatedDamage}");
 
-                return updatedDamage;
-            }
-
-            return baseDamage;
+            return updatedDamage;
         }
 
         /// <summary>

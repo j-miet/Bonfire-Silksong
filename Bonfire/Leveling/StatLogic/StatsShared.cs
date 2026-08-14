@@ -11,9 +11,6 @@ namespace BonfireSilksong
     /// </summary>
     public static class StatsShared
     {
-        public static bool Crit = false;
-        public static bool BlockNextHit = false;
-
         public static readonly MethodInfo PlayerDataInstanceGetter = AccessTools.PropertyGetter(
             typeof(PlayerData),
             "instance");
@@ -122,6 +119,8 @@ namespace BonfireSilksong
             Bonfire.Log.LogDebug("Damage Dealt: " + hitInstance.DamageDealt);
             Bonfire.Log.LogDebug("Tool instance: " + tool?.name ?? "null");
 
+            bool isCrit = LuckLogic.Crit;
+
             // == Important ==
             // 1. Multiplicative damage scaling: just use hitInstance.DamageDealt and scale it.
             // 2. Additive scaling: at this point the game has already applied most buffs. Exceptions would include 
@@ -145,7 +144,7 @@ namespace BonfireSilksong
 
                 int updatedDamage = IntelligenceLogic.ApplySpellDamageBonuses(hitInstance.DamageDealt, tool);
 
-                if (IntelligenceLogic.CheckIntelligenceMilestone_2)
+                if (IntelligenceLogic.CheckIntelligenceMilestone_2 && isCrit)
                 {
                     updatedDamage = DexterityLogic.ApplyCritDamage(updatedDamage);
                 }
@@ -159,14 +158,16 @@ namespace BonfireSilksong
                 hitInstance.DamageDealt = ArtificeLogic.ApplyToolDamageBonuses(hitInstance.DamageDealt, tool);
 
                 // TODO add sawtooth circlet and Pimpillo crit
-                //if (tool.name == )
+                //if (tool.name == ... && isCrit)
             }
             else if (hitInstance.IsHarpoon)
             {
                 int updatedDamage = DexterityLogic.ApplyHarpoonDamageBonuses(hitInstance.DamageDealt);
 
-                if (DexterityLogic.CheckDexterityMilestone_2)
+                if (DexterityLogic.CheckDexterityMilestone_2 && isCrit)
+                {
                     updatedDamage = DexterityLogic.ApplyCritDamage(updatedDamage);
+                }
 
                 hitInstance.DamageDealt = updatedDamage;
             }
@@ -186,8 +187,16 @@ namespace BonfireSilksong
                 // level both.
 
                 int updatedDamage = StrengthLogic.ApplyNeedleDamageBonuses(hitInstance.DamageDealt, sourceName);
-                hitInstance.DamageDealt = DexterityLogic.ApplyCritDamage(updatedDamage);
+
+                if (isCrit)
+                {
+                    updatedDamage = DexterityLogic.ApplyCritDamage(updatedDamage);
+                }
+
+                hitInstance.DamageDealt = updatedDamage;
             }
+
+            LuckLogic.Crit = false;
         }
     }
 }

@@ -8,6 +8,8 @@ namespace BonfireSilksong
     // not a static class because MonoBehavior is required, but should otherwise include static entities only.
     public class LuckLogic : MonoBehaviour
     {
+        public static bool Crit = false;
+
         public static int LuckMilestone_1 => 1;
         public static int LuckMilestone_2 => 2;
         public static int LuckMilestone_3 => 3;
@@ -90,7 +92,7 @@ namespace BonfireSilksong
             int critChance = CritChance(Bonfire.Instance.Status.LuckStat);
             if (critChance <= 0) // must have at least 1% crit chance
             {
-                StatsShared.Crit = false;
+                Crit = false;
                 return;
             }
 
@@ -102,7 +104,7 @@ namespace BonfireSilksong
             if (didCrit)
                 Bonfire.Log.LogDebug($"Rolled a crit.");
 
-            StatsShared.Crit = didCrit;
+            Crit = didCrit;
         }
 
         /// <summary>
@@ -113,7 +115,7 @@ namespace BonfireSilksong
             if (!result || target == null || target.layer != 11) return;
             if (!IsHeroDamage(instance)) return;
 
-            if (StatsShared.Crit)
+            if (Crit)
             {
                 // effect comes from prefab value, these can have both visual and sound included. 
                 // Prefer one with no audio + only mild visuals; you will be hearing/seeing this effect a lot if
