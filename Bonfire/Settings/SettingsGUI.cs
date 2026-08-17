@@ -9,9 +9,6 @@ namespace BonfireSilksong
     /// </summary>
     public class SettingsGUI
     {
-        public readonly Dictionary<HealthManager, float> EnemyMaxHp = new Dictionary<HealthManager, float>();
-        public readonly Dictionary<HealthManager, bool> EnemyIsBoss = new Dictionary<HealthManager, bool>();
-
         public bool PendingCrestUnlock = false;
         public bool PendingSettingsWindow = false;
         public bool PendingStatusReset = false;
@@ -138,7 +135,7 @@ namespace BonfireSilksong
 
             if (!s.EnemyHealthBarsEnabled) return;
 
-            foreach (var kvp in EnemyMaxHp)
+            foreach (var kvp in EnemyHealth.EnemyMaxHp)
             {
                 HealthManager hm = kvp.Key;
                 if (hm == null) continue;
@@ -147,8 +144,17 @@ namespace BonfireSilksong
                 if (screenPos.z < 0) continue;
 
                 float maxHp = kvp.Value;
+
+                // extra check + update for enemies whose HP might get updated after initial data check 
+                // (e.g. Act3 void enemies)
+                if (hm.hp > maxHp)
+                {
+                    EnemyHealth.EnemyMaxHp[hm] = hm.hp;
+                    maxHp = hm.hp;
+                }
+
                 float currentHp = hm.hp;
-                bool isBoss = EnemyIsBoss.TryGetValue(hm, out bool b) && b;
+                bool isBoss = EnemyHealth.EnemyIsBoss.TryGetValue(hm, out bool b) && b;
 
                 if (currentHp == maxHp && !isBoss) continue; // full HP = hide bars for normal enemies
 
