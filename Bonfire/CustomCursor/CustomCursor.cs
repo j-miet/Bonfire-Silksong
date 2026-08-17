@@ -12,9 +12,23 @@ namespace BonfireSilksong
         public const int BaseSpeed = 400;
         public const int MinSpeed = 50;
         public const int MaxSpeed = 1000;
+        public const int CursorSize = 20;
 
         public static Vector2 Position = new Vector2(BonfireGUI.Width / 2f, BonfireGUI.Height / 2f);
         public static int CursorSpeed = 400;
+
+        public static void DrawCustomCursor()
+        {
+            if (!GameManager.instance.inputHandler.gameController.IsAttached) return;
+
+            if (_cursorTexture == null)
+                _cursorTexture = CreateCursorTexture();
+
+            GUI.color = Color.white;
+            GUI.DrawTexture(
+                new Rect(Position.x - CursorSize, Position.y - CursorSize, 2 * CursorSize, 2 * CursorSize),
+                _cursorTexture);
+        }
 
         public static void ResetCursorStack()
         {
@@ -27,6 +41,7 @@ namespace BonfireSilksong
         public static void ResetCursorPosition()
         {
             Bonfire.Log.LogDebug("[CustomCursor] Resetting position");
+
             Position = new Vector2(BonfireGUI.Width / 2f, BonfireGUI.Height / 2f);
         }
 
@@ -211,6 +226,48 @@ namespace BonfireSilksong
             }
 
             return newValue;
+        }
+
+
+        private const int CursorTextureSize = 16;
+
+        private static Texture2D _cursorTexture;
+
+        // draws a white disc with black center
+        private static Texture2D CreateCursorTexture()
+        {
+            Texture2D tex = new Texture2D(CursorTextureSize, CursorTextureSize, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp
+            };
+
+            Color32[] pixels = new Color32[CursorTextureSize * CursorTextureSize];
+            Color32 clear = new Color32(0, 0, 0, 0);
+            Vector2 center = new Vector2(7.5f, 7.5f);
+
+            for (int y = 0; y < CursorTextureSize; y++)
+            {
+                for (int x = 0; x < CursorTextureSize; x++)
+                {
+                    float d = Vector2.Distance(new Vector2(x, y), center);
+                    Color32 c;
+
+                    if (d <= 1.5f)
+                        c = Color.black;
+                    else if (d <= 4.0f)
+                        c = Color.white;
+                    else
+                        c = clear;
+
+                    pixels[y * CursorTextureSize + x] = c;
+                }
+            }
+
+            tex.SetPixels32(pixels);
+            tex.Apply();
+
+            return tex;
         }
 
         // simulates cursor click by adding offsets to Rect then checking whether cursor position lands inside it.
