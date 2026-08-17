@@ -9,8 +9,6 @@ namespace BonfireSilksong
     /// </summary>
     public class BonfireGUI : MonoBehaviour
     {
-        public const int CursorTextureSize = 16;
-
         public static BonfireGUI Instance;
         public static LevelingGUI Leveling;
         public static SettingsGUI Settings;
@@ -24,8 +22,8 @@ namespace BonfireSilksong
         public static float Width => 1920f;
         public static float Height => 1080f;
 
+
         private bool _benchCheck = false;
-        private Texture2D _cursorTexture;
 
         // check if game is in inventory screen.
         private static bool InInventory()
@@ -40,51 +38,12 @@ namespace BonfireSilksong
             return open != null && open.Value;
         }
 
-        // draws a white disc with black center
-        private static Texture2D CreateCursorTexture()
-        {
-            Texture2D tex = new Texture2D(CursorTextureSize, CursorTextureSize, TextureFormat.RGBA32, false)
-            {
-                filterMode = FilterMode.Point,
-                wrapMode = TextureWrapMode.Clamp
-            };
-
-            Color32[] pixels = new Color32[CursorTextureSize * CursorTextureSize];
-            Color32 clear = new Color32(0, 0, 0, 0);
-            Vector2 center = new Vector2(7.5f, 7.5f);
-
-            for (int y = 0; y < CursorTextureSize; y++)
-            {
-                for (int x = 0; x < CursorTextureSize; x++)
-                {
-                    float d = Vector2.Distance(new Vector2(x, y), center);
-                    Color32 c;
-
-                    if (d <= 1.5f)
-                        c = Color.black;
-                    else if (d <= 4.0f)
-                        c = Color.white;
-                    else
-                        c = clear;
-
-                    pixels[y * CursorTextureSize + x] = c;
-                }
-            }
-
-            tex.SetPixels32(pixels);
-            tex.Apply();
-
-            return tex;
-        }
-
         private void Awake()
         {
             Instance = this;
             Settings = new SettingsGUI();
             Teleport = new TeleportGUI();
             Leveling = new LevelingGUI();
-
-            _cursorTexture = CreateCursorTexture();
         }
 
         private void OnGUI()
@@ -111,7 +70,7 @@ namespace BonfireSilksong
 
                 Teleport.DrawBenchFastTravelUI();
 
-                DrawCustomCursor();
+                CustomCursor.DrawCustomCursor();
 
                 GUI.matrix = oldMatrix;
 
@@ -164,10 +123,12 @@ namespace BonfireSilksong
                 !HeroController.instance.IsPaused() &&
                 PlayerData.instance.atBench)
             {
-                DrawCustomCursor();
+                CustomCursor.DrawCustomCursor();
             }
 
             Settings.DrawEnemyHealthBars();
+
+            RangeIndicator.UpdateFading();
 
             GUI.matrix = oldMatrix;
         }
@@ -191,17 +152,6 @@ namespace BonfireSilksong
                     Teleport.CloseFastTravelMenu();
                 }
             }
-        }
-
-        private void DrawCustomCursor()
-        {
-            if (!GameManager.instance.inputHandler.gameController.IsAttached) return;
-
-            int size = 20;
-            GUI.color = Color.white;
-            GUI.DrawTexture(
-                new Rect(CustomCursor.Position.x - size, CustomCursor.Position.y - size, 2 * size, 2 * size),
-                _cursorTexture);
         }
 
         private void DrawBenchUI()
