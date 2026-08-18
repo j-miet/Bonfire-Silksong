@@ -60,11 +60,6 @@ namespace BonfireSilksong
                 }
             }
 
-            static void Prefix(DamageEnemies __instance, GameObject target)
-            {
-                LuckLogic.CheckIfCrit(__instance, target);
-            }
-
             static void Postfix(DamageEnemies __instance, GameObject target, bool __result)
             {
                 LuckLogic.PlayCritVisualOnEnemyHit(__instance, target, __result);

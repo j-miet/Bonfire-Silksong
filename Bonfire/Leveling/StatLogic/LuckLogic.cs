@@ -74,20 +74,18 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// DamageEnemies.DoDamage (Prefix): Check if hit was a crit and update StatsShared.Crit flag.
+        /// HealthManager.Hit (Prefix): Check if hit was a crit and update StatsShared.Crit flag.
         /// </summary>
-        public static void CheckIfCrit(DamageEnemies __instance, GameObject target)
+        public static void CheckIfCrit(HitInstance hit)
         {
             // Actual crit handling sequence:
-            // - DamageEnemies.DoDamage Prefix rolls crit chance and sets crit true/false (-> this method's logic 
-            // inside patcher)
-            // - Actual DamageEnemies.DoDamage calls Hit at some point
-            // - HealthManager.Hit checks and handles player's perspective by adding damage and displaying visual 
-            // effect on player
-            // - DamageEnemies.DoDamage Postfix adds the effect on enemy that got hit (PlayCritVisualOnEnemyHit's logic)
+            // - DamageEnemies.DoDamage calls Hit at some point
+            // - HealthManager.Hit checks crit roll and handles player's perspective by adding damage and displaying 
+            // visual effect on player though DexterityStat logic.
+            // - DamageEnemies.DoDamage Postfix displays a brief visual effect on enemy that got hit using the
+            // PlayCritVisualOnEnemyHit method.
 
-            if (target == null || target.layer != 11) return;
-            if (!IsHeroDamage(__instance)) return;
+            if (!hit.IsHeroDamage) return;
 
             int critChance = CritChance(Bonfire.Instance.Status.LuckStat);
             if (critChance <= 0) // must have at least 1% crit chance
@@ -112,9 +110,6 @@ namespace BonfireSilksong
         /// </summary>
         public static void PlayCritVisualOnEnemyHit(DamageEnemies instance, GameObject target, bool result)
         {
-            if (!result || target == null || target.layer != 11) return;
-            if (!IsHeroDamage(instance)) return;
-
             if (Crit)
             {
                 // effect comes from prefab value, these can have both visual and sound included. 
@@ -129,7 +124,7 @@ namespace BonfireSilksong
 
 
         private readonly static FieldInfo IsHeroDamageField = typeof(DamageEnemies)
-                .GetField("isHeroDamage", BindingFlags.Instance | BindingFlags.NonPublic);
+            .GetField("isHeroDamage", BindingFlags.Instance | BindingFlags.NonPublic);
         private readonly static FieldInfo SourceIsHeroField = typeof(DamageEnemies)
             .GetField("sourceIsHero", BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -146,16 +141,6 @@ namespace BonfireSilksong
             FieldInfo fi = enemy.GetType().GetField("shellShardDrops", BindingFlags.NonPublic | BindingFlags.Instance);
             object shards = fi.GetValue(enemy);
             return shards == null ? 0 : (int)shards;
-        }
-
-        // crit visuals
-        // the visual effect in HealthManager_Hit (FlashGrimmflame) only applies to the player. To also display 
-        // effect on the enemy, DoDamage needs to explicitly check if damage was inflicted by player.
-        private static bool IsHeroDamage(DamageEnemies instance)
-        {
-            bool a = (bool)(IsHeroDamageField?.GetValue(instance) ?? false);
-            bool b = (bool)(SourceIsHeroField?.GetValue(instance) ?? false);
-            return a || b;
         }
     }
 }
