@@ -85,16 +85,24 @@ namespace BonfireSilksong
         private string _totalLuck;
 
         private string _needleDamage;
+
         private string _attackSpeed;
         private string _critDamage;
+
         private string _spellDamage;
         private string _bindCost;
+        private string _tauntDamage;
+        private string _tauntRange;
+
         private string _toolDamage;
         private string _toolRegenInterval;
+
         private string _extraMasks;
         private string _blockChance;
+
         private string _extraSilk;
         private string _silkRegenInterval;
+
         private string _critChance;
         private string _rosaryIncrease;
 
@@ -359,7 +367,7 @@ namespace BonfireSilksong
             GUI.color = Color.white;
             _infoScrollPos = GUILayout.BeginScrollView(_infoScrollPos);
 
-            float firstRowHeight = 500f;
+            float firstRowHeight = 820f;
             float secondRowHeight = 400f;
             float thirdRowHeight = 400f;
 
@@ -497,7 +505,7 @@ namespace BonfireSilksong
                 $"[{DexterityLogic.DexterityMilestone_1}] " +
                 "Clawline damage increased by 25%. " +
                 $"Every {DexterityLogic.ClawlineHitLimit}th hit from Clawline deals 2x damage " +
-                "(Clawline produces normally 2 hits when use).",
+                "(default Clawline attack counts as 2 hits).",
                 LevelingSystem.HighlightDexterityMilestone_1 ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
@@ -526,10 +534,50 @@ namespace BonfireSilksong
             DrawInfoStatLabel("Silk Skill Damage: " + _spellDamage);
             DrawInfoStatLabel("Binding Cost: " + _bindCost);
 
-            // binding damage bonus when Claw Mirror is equipped
-            GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
+            if (LevelingSystem.HighlightIntelligenceMilestone_1)
+            {
+                GUI.enabled = IntelligenceLogic.CheckIntelligenceMilestone_1;
+
+                GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
+                DrawInfoStatLabel("Taunt Damage: " + _tauntDamage);
+                DrawInfoStatLabel("Taunt Range: " + _tauntRange);
+
+                GUI.enabled = true;
+            }
 
             GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
+            GUILayout.Label(
+                $"[{IntelligenceLogic.IntelligenceMilestone_1}] " +
+                "Using 'Challenge' taunt now deals damage in a circular area around you. " +
+                "Damage and area scales off of intelligence stat. " +
+                "Taunt does not benefit from Silk Skill damage bonuses.",
+                LevelingSystem.HighlightIntelligenceMilestone_1 ?
+                    GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.Label(
+                $"[{IntelligenceLogic.IntelligenceMilestone_2}] " +
+                "While equipping Dead Bug's Purse/Shell Satchel tool, " +
+                "Bind heals 1 mask and costs 1/3 of current cost, but you get following bonuses:\n" +
+                "- Silk Skills: cost reduced by 1, damage increased by 50% multiplicatively.\n" +
+                "- Claw Mirror: procs additional time (similar to Multibinder effect), " +
+                "binding speed increased by 33%.\n" +
+                "- Taunt: area increased by 50%.",
+                LevelingSystem.HighlightIntelligenceMilestone_2 ?
+                    GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.Label(
+                $"[{IntelligenceLogic.IntelligenceMilestone_3}] " +
+                "Silk skills, Claw Mirror and Taunt can crit. Equipping Claw Mirror increases binding speed by 33%.",
+            LevelingSystem.HighlightIntelligenceMilestone_3 ?
+                    GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.Label(
+                $"[{IntelligenceLogic.IntelligenceMilestone_4}] " +
+                "Silk skill cost reduced by 1. Claw Mirror damage now also scales off of intelligence while " +
+                "keeping Artifice scaling. " +
+                "Taunt gains +5 damage from each strand of silk in spool.",
+                LevelingSystem.HighlightIntelligenceMilestone_4 ?
+                    GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.EndVertical();
         }
@@ -680,6 +728,10 @@ namespace BonfireSilksong
             _spellDamage =
                 IntelligenceLogic.SpellDamage(100, s.IntelligenceStat + ls.IntelligenceIncrease).ToString() + "%";
             _bindCost = IntelligenceLogic.BindCost(s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
+            _tauntDamage =
+                IntelligenceLogic.TauntDamage(s.IntelligenceStat + ls.IntelligenceIncrease, isGUI: true).ToString();
+            _tauntRange =
+                IntelligenceLogic.TauntRange(s.IntelligenceStat + ls.IntelligenceIncrease, isGUI: true).ToString();
 
             _toolDamage =
                 ArtificeLogic.ToolDamage(100, s.ArtificeStat + ls.ArtificeIncrease).ToString() + "%";

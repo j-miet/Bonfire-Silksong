@@ -14,7 +14,7 @@ namespace BonfireSilksong
             {
                 if (__instance != null)
                 {
-                    PatchHelpers.AddEnemyHpData(__instance);
+                    EnemyHealth.AddEnemyHpData(__instance);
 
                     LuckLogic.UpdateCurrencyDrops(__instance);
                 }
@@ -62,13 +62,15 @@ namespace BonfireSilksong
             }
         }
 
+        // Use ref here because HitInstance is struct and its damage value won't update otherwise.
+        //
         // public IHitResponder.HitResponse Hit(HitInstance hitInstance)
         [HarmonyPatch(typeof(HealthManager), "Hit")]
         class HealthManager_Hit
         {
-            static void Prefix(HitInstance hitInstance)
+            static void Prefix(ref HitInstance hitInstance)
             {
-                PatchHelpers.ApplyHitDamageBonuses(hitInstance);
+                PatchHelpers.ApplyHitDamageBonuses(ref hitInstance);
             }
         }
     }

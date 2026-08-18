@@ -167,7 +167,7 @@ namespace BonfireSilksong
 
             if (IsNotGamePlayState()) return;
 
-            IntelligenceLogic.UpdateBindCostFSM();
+            IntelligenceLogic.UpdateBindFSMValues();
 
             AtBenchCheck();
 

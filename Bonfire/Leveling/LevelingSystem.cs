@@ -49,6 +49,9 @@ namespace BonfireSilksong
         public static bool HighlightIntelligenceMilestone_3 =>
             Bonfire.Instance.Status.IntelligenceStat + Instance.IntelligenceIncrease
             >= IntelligenceLogic.IntelligenceMilestone_3;
+        public static bool HighlightIntelligenceMilestone_4 =>
+            Bonfire.Instance.Status.IntelligenceStat + Instance.IntelligenceIncrease
+            >= IntelligenceLogic.IntelligenceMilestone_4;
 
         public static bool HighlightArtificeMilestone_1 =>
             Bonfire.Instance.Status.ArtificeStat + Instance.ArtificeIncrease >= ArtificeLogic.ArtificeMilestone_1;

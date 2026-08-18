@@ -49,7 +49,7 @@ namespace BonfireSilksong
             {
                 Bonfire.Log.LogDebug("[HeroController.Update] Update hp data, roll crit, check sil + tool regen");
 
-                PatchHelpers.FlushEnemyHPData();
+                EnemyHealth.FlushEnemyHPData();
 
                 if (HeroController.instance == null || PlayerData.instance == null)
                     return;
@@ -161,6 +161,32 @@ namespace BonfireSilksong
             {
                 if (__result)
                     DexterityLogic.UsedHarpoon();
+            }
+        }
+
+        [HarmonyPatch(typeof(HeroController), "SilkTaunted")]
+        class HeroController_SilkTaunted
+        {
+            static void Postfix()
+            {
+                IntelligenceLogic.DealTauntDamage();
+
+                if (IntelligenceLogic.CheckIntelligenceMilestone_1)
+                    RangeIndicator.Display(
+                        IntelligenceLogic.TauntRange(Bonfire.Instance.Status.IntelligenceStat, isGUI: true));
+            }
+        }
+
+        [HarmonyPatch(typeof(HeroController), "RingTaunted")]
+        class HeroController_RingTaunted
+        {
+            static void Postfix()
+            {
+                IntelligenceLogic.DealTauntDamage();
+
+                if (IntelligenceLogic.CheckIntelligenceMilestone_1)
+                    RangeIndicator.Display(
+                        IntelligenceLogic.TauntRange(Bonfire.Instance.Status.IntelligenceStat, isGUI: true));
             }
         }
     }

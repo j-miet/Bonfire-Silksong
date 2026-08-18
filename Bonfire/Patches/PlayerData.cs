@@ -76,5 +76,24 @@ namespace BonfireSilksong
                 amount = ResilienceLogic.PreventHPLossOnBlock(amount);
             }
         }
+
+        [HarmonyPatch(typeof(PlayerData), "SilkSkillCost", MethodType.Getter)]
+        class PlayerData_SilkSkillCost
+        {
+            static void Postfix(ref int __result)
+            {
+                if (IntelligenceLogic.CheckWeakBindRequirement())
+                {
+                    if (__result > 0)
+                        __result -= 1;
+                }
+
+                if (IntelligenceLogic.CheckIntelligenceMilestone_4)
+                {
+                    if (__result > 0)
+                        __result -= 1;
+                }
+            }
+        }
     }
 }
