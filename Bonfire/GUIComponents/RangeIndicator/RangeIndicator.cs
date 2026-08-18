@@ -3,22 +3,23 @@ using UnityEngine;
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Draws a circle indicator, currently used for Challenge Taunt skill to display its effect range.
+    /// Draws a disc visual i.e. circle edge + inner disc fill. Currently used for Challenge Taunt skill to display its 
+    /// effect range.
     /// </summary>
     public class RangeIndicator
     {
         /// <summary>
-        /// Display a circle texture around the player. Use with UpdateFading.
+        /// Display a disc texture around the player. Use with UpdateFading.
         /// </summary>
         public static void Display(float radius)
         {
             if (_rangeCircle == null)
             {
-                CreateRangeCircle(radius);
+                CreateRangeDisc(radius);
             }
             else
             {
-                SetCircleRadius(radius);
+                SetDiscRadius(radius);
             }
 
             _rangeCircle.enabled = true;
@@ -44,10 +45,13 @@ namespace BonfireSilksong
 
             float alpha = remaining / RangeDisplayTime;
 
-            Color color = new Color(1f, 1f, 1f, alpha);
+            // the circle has more alpha to clearly show the outer edge.
+            Color circleColor = new Color(1f, 1f, 1f, alpha);
+            Color discColor = new Color(1f, 1f, 1f, alpha * 0.2f);
 
-            _rangeCircle.startColor = color;
-            _rangeCircle.endColor = color;
+            _rangeCircle.startColor = circleColor;
+            _rangeCircle.endColor = circleColor;
+            _rangeDisc.material.color = discColor;
         }
 
 
@@ -56,11 +60,16 @@ namespace BonfireSilksong
         private static LineRenderer _rangeCircle;
         private static float _rangeIndicatorUntil;
 
-        private static void CreateRangeCircle(float radius)
-        {
-            GameObject obj = new GameObject("TauntRangeIndicator");
+        private static MeshRenderer _rangeDisc;
+        private static MeshFilter _rangeDiscMesh;
 
-            _rangeCircle = obj.AddComponent<LineRenderer>();
+        private static void CreateRangeDisc(float radius)
+        {
+            // first create the outer edge i.e. the circle
+            GameObject circleObj = new GameObject("TauntRangeCircle");
+            circleObj.transform.SetParent(HeroController.instance.transform, false);
+
+            _rangeCircle = circleObj.AddComponent<LineRenderer>();
 
             int positionCount = 128;
             float width = 0.1f;
@@ -75,13 +84,66 @@ namespace BonfireSilksong
                 color = Color.white
             };
 
-            SetCircleRadius(radius);
+            // after outer circle, create the inner disc
+            GameObject discObj = new GameObject("TauntRangeDisc");
+            discObj.transform.SetParent(circleObj.transform, false);
 
-            // keep circle always around the player.
-            obj.transform.SetParent(HeroController.instance.transform, false);
+            _rangeDiscMesh = discObj.AddComponent<MeshFilter>();
+            _rangeDisc = discObj.AddComponent<MeshRenderer>();
+
+            _rangeDisc.material = new Material(Shader.Find("Sprites/Default"))
+            {
+                color = new Color(1f, 1f, 1f, 0.2f)
+            };
+
+            CreateDiscMesh(radius);
+
+            SetDiscRadius(radius);
         }
 
-        private static void SetCircleRadius(float newRadius)
+        private static void CreateDiscMesh(float radius)
+        {
+            int segments = 128;
+
+            Vector3[] vertices = new Vector3[segments + 1]; // segments + disc center
+            int[] triangles = new int[segments * 3];
+
+            vertices[0] = Vector3.zero;
+
+            for (int i = 0; i < segments; i++)
+            {
+                float segment = (float)i / segments;
+                float angle = segment * Mathf.PI * 2f;
+
+                vertices[i + 1] = new Vector3(
+                    Mathf.Cos(angle) * radius,
+                    Mathf.Sin(angle) * radius,
+                    0f
+                );
+            }
+
+            for (int i = 0; i < segments; i++)
+            {
+                // this yields i+1 except at the final index (segments-1) it gives 0, which next + 1 below uses to
+                // wrap around and close the circle.
+                int next = (i + 1) % segments;
+
+                triangles[i * 3] = 0;
+                triangles[i * 3 + 1] = i + 1;
+                triangles[i * 3 + 2] = next + 1;
+            }
+
+            Mesh mesh = new Mesh
+            {
+                vertices = vertices,
+                triangles = triangles
+            };
+            mesh.RecalculateBounds();
+
+            _rangeDiscMesh.mesh = mesh;
+        }
+
+        private static void SetDiscRadius(float newRadius)
         {
             int positionCount = _rangeCircle.positionCount;
 
@@ -99,6 +161,8 @@ namespace BonfireSilksong
                     )
                 );
             }
+
+            CreateDiscMesh(newRadius);
         }
     }
 }
