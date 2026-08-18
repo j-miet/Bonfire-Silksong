@@ -54,7 +54,7 @@ namespace BonfireSilksong
 
             int updatedDamage = NeedleDamage(baseDamage, Bonfire.Instance.Status.StrengthStat);
 
-            Bonfire.Log.LogDebug($"[PlayerData.nailDamage] <Bonfire> needle base damage: {updatedDamage}");
+            Bonfire.Log.LogDebug($"[PlayerData.nailDamage] <Modded> needle base damage: {updatedDamage}");
             return updatedDamage;
         }
 
