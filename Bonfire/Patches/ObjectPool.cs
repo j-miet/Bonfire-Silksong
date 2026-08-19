@@ -1,0 +1,25 @@
+using HarmonyLib;
+using UnityEngine;
+
+namespace BonfireSilksong
+{
+    internal class ObjectPool_Patch
+    {
+        // public static GameObject Spawn(GameObject prefab, Transform parent, Vector3 position, Quaternion rotation
+        //      bool stealActiveSpawned)
+        [HarmonyPatch(typeof(ObjectPool), "Spawn", new[] {
+            typeof(GameObject),
+            typeof(Transform),
+            typeof(Vector3),
+            typeof(Quaternion),
+            typeof(bool)
+        })]
+        class ObjectPool_Spawn
+        {
+            static void Postfix(GameObject __result)
+            {
+                ArtificeLogic.ScaleSawtoothCircletRange(__result);
+            }
+        }
+    }
+}
