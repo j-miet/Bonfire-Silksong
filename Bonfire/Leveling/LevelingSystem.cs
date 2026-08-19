@@ -59,6 +59,8 @@ namespace BonfireSilksong
             Bonfire.Instance.Status.ArtificeStat + Instance.ArtificeIncrease >= ArtificeLogic.ArtificeMilestone_2;
         public static bool HighlightArtificeMilestone_3 =>
             Bonfire.Instance.Status.ArtificeStat + Instance.ArtificeIncrease >= ArtificeLogic.ArtificeMilestone_3;
+        public static bool HighlightArtificeMilestone_4 =>
+            Bonfire.Instance.Status.ArtificeStat + Instance.ArtificeIncrease >= ArtificeLogic.ArtificeMilestone_4;
 
         public static bool HighlightResilienceMilestone_1 =>
             Bonfire.Instance.Status.ResilienceStat + Instance.ResilienceIncrease

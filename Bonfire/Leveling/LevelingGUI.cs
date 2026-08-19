@@ -9,21 +9,6 @@ namespace BonfireSilksong
     /// </summary>
     public class LevelingGUI
     {
-        // user interface measures
-        public const float LevelingAreaRectTopX = 20f;
-        public const float LevelingAreaRectTopY = 275f;
-        public const float LevelingAreaDefaultRectWidth = 530f;
-        public const float LevelingAreaDefaultRectHeight = 350f;
-        public const float LevelingAreaTextAndButtonsHeight = 155f;
-
-        public const float InfoAreaRectTopX = 800f;
-        public const float InfoAreaRectTopY = 95f;
-        public const float InfoAreaRectWidth = 999f;
-        public const float InfoAreaRectHeight = 900f;
-        // offset of 22f seems to be just enough to prevent the horizontal scroll bar from appearing while also
-        // preventing extra unused area between right box cell and vertical scroll bar from getting generated.
-        public const float ColWidth = InfoAreaRectWidth / 3f - 22f;
-
         public void DrawLevelingUI()
         {
             CustomCursor.BeginArea(new Rect(
@@ -66,6 +51,25 @@ namespace BonfireSilksong
                 200f));
         }
 
+
+        // user interface measures
+        private const float LevelingAreaRectTopX = 20f;
+        private const float LevelingAreaRectTopY = 275f;
+        private const float LevelingAreaDefaultRectWidth = 530f;
+        private const float LevelingAreaDefaultRectHeight = 350f;
+        private const float LevelingAreaTextAndButtonsHeight = 155f;
+
+        private const float InfoAreaRectTopX = 600f;
+        private const float InfoAreaRectTopY = 110f;
+        private const float InfoAreaRectWidth = 1200f;
+        private const float InfoAreaRectHeight = 885f;
+        // offset of 22f seems to be just enough to prevent the horizontal scroll bar from appearing while also
+        // preventing extra unused area between right box cell and vertical scroll bar from getting generated.
+        private const float ColWidth = InfoAreaRectWidth / 3f - 22f;
+
+        private const float FirstRowHeight = 820f;
+        private const float SecondRowHeight = 700f;
+        private const float ThirdRowHeight = 400f;
 
         private Vector2 _infoScrollPos;
 
@@ -367,26 +371,22 @@ namespace BonfireSilksong
             GUI.color = Color.white;
             _infoScrollPos = GUILayout.BeginScrollView(_infoScrollPos);
 
-            float firstRowHeight = 820f;
-            float secondRowHeight = 400f;
-            float thirdRowHeight = 400f;
-
             GUILayout.BeginHorizontal("box");
-            DrawStrengthInfo(firstRowHeight);
-            DrawDexterityInfo(firstRowHeight);
-            DrawIntelligenceInfo(firstRowHeight);
+            DrawStrengthInfo(FirstRowHeight);
+            DrawDexterityInfo(FirstRowHeight);
+            DrawIntelligenceInfo(FirstRowHeight);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("box");
-            DrawArtificeInfo(secondRowHeight);
-            DrawResilienceInfo(secondRowHeight);
-            DrawWisdomInfo(secondRowHeight);
+            DrawArtificeInfo(SecondRowHeight);
+            DrawResilienceInfo(SecondRowHeight);
+            DrawWisdomInfo(SecondRowHeight);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("box");
-            DrawLuckInfo(thirdRowHeight);
-            DrawInfoFillerBox(thirdRowHeight);   // draw 2 filler boxes to fill empty grid cells on 3rd row
-            DrawInfoFillerBox(thirdRowHeight);
+            DrawLuckInfo(ThirdRowHeight);
+            DrawInfoFillerBox(ThirdRowHeight);   // draw 2 filler boxes to fill empty grid cells on 3rd row
+            DrawInfoFillerBox(ThirdRowHeight);
             GUILayout.EndHorizontal();
 
             GUI.color = Color.white;
@@ -592,6 +592,35 @@ namespace BonfireSilksong
             DrawInfoStatLabel("Tool Regen Interval: " + _toolRegenInterval);
 
             GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
+            GUILayout.Label(
+                $"[{ArtificeLogic.ArtificeMilestone_1}] " +
+                "Silkshot silk cost removed. Sawtooth Circlet and Pimpillo can critically hit.",
+                LevelingSystem.HighlightArtificeMilestone_1 ?
+                    GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.Label(
+                $"[{ArtificeLogic.ArtificeMilestone_2}] " +
+                "Sawtooth Circlet gives 1 silk when used. " +
+                "Rosary Cannon keeps limited charges during use, but will always replenish them fully " +
+                "when initial animation starts.",
+                LevelingSystem.HighlightArtificeMilestone_2 ?
+                    GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.Label(
+                $"[{ArtificeLogic.ArtificeMilestone_3}] " +
+                "Silkshot has infinite charges. Sawtooth Circlet horizontal range increased by 50%.",
+            LevelingSystem.HighlightArtificeMilestone_3 ?
+                    GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.Label(
+                $"[{ArtificeLogic.ArtificeMilestone_4}] " +
+                "Using an offensive red tool has 33% chance to spawn a copy of itself. " +
+                "Neither original nor copy cost charges.\n" +
+                "Following tools cannot utilize this effect: Silkshot, Delver's Drill, Rosary Cannon, " +
+                "Voltvessels Spear (Bolas do work), Snare Setter.\n" +
+                "Rosary Cannon: get +2 flat damage which is applied before Artifice stat multiplier.",
+                LevelingSystem.HighlightArtificeMilestone_4 ?
+                    GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.EndVertical();
         }

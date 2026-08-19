@@ -12,7 +12,10 @@ namespace BonfireSilksong
         // specific damage sources.
         //
         // public bool DoDamage(GameObject target, bool isFirstHit)
-        [HarmonyPatch(typeof(DamageEnemies), "DoDamage", new[] { typeof(GameObject), typeof(bool) })]
+        [HarmonyPatch(typeof(DamageEnemies), "DoDamage", new[] {
+            typeof(GameObject),
+            typeof(bool)
+        })]
         class DamageEnemies_DoDamage
         {
             static IEnumerable<CodeInstruction> Transpiler(

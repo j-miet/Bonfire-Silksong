@@ -1,4 +1,5 @@
 using GlobalEnums;
+using GlobalSettings;
 using HarmonyLib;
 using UnityEngine;
 
@@ -129,7 +130,9 @@ namespace BonfireSilksong
         }
 
         // public void SilkGain(HitInstance hitInstance)
-        [HarmonyPatch(typeof(HeroController), "SilkGain", new[] { typeof(HitInstance) })]
+        [HarmonyPatch(typeof(HeroController), "SilkGain", new[] {
+            typeof(HitInstance)
+        })]
         class HeroController_SilkGain
         {
             static void Postfix(HitInstance hitInstance)
@@ -139,7 +142,10 @@ namespace BonfireSilksong
         }
 
         // public void TakeSilk(int amount, SilkSpool.SilkTakeSource source)
-        [HarmonyPatch(typeof(HeroController), "TakeSilk", new[] { typeof(int), typeof(SilkSpool.SilkTakeSource) })]
+        [HarmonyPatch(typeof(HeroController), "TakeSilk", new[] {
+            typeof(int),
+            typeof(SilkSpool.SilkTakeSource)
+        })]
         class HeroController_TakeSilk
         {
             static bool Prefix(int amount, SilkSpool.SilkTakeSource source)
@@ -148,6 +154,9 @@ namespace BonfireSilksong
                     return false;
 
                 if (DexterityLogic.CheckHarpoonCostRefund(amount))
+                    return false;
+
+                if (ArtificeLogic.CheckSilkshotSilkCostRefund(amount))
                     return false;
 
                 return true;
@@ -172,8 +181,10 @@ namespace BonfireSilksong
                 IntelligenceLogic.DealTauntDamage();
 
                 if (IntelligenceLogic.CheckIntelligenceMilestone_1)
+                {
                     RangeIndicator.Display(
                         IntelligenceLogic.TauntRange(Bonfire.Instance.Status.IntelligenceStat, isGUI: true));
+                }
             }
         }
 
@@ -185,8 +196,91 @@ namespace BonfireSilksong
                 IntelligenceLogic.DealTauntDamage();
 
                 if (IntelligenceLogic.CheckIntelligenceMilestone_1)
+                {
                     RangeIndicator.Display(
                         IntelligenceLogic.TauntRange(Bonfire.Instance.Status.IntelligenceStat, isGUI: true));
+                }
+            }
+        }
+
+        // public bool CanDoubleJump(bool checkControlState)
+        [HarmonyPatch(typeof(HeroController), "CanDoubleJump")]
+        class HeroController_CanDoubleJump
+        {
+            static void Postfix(ref bool __result)
+            {
+                if (Gameplay.BrollySpikeTool.IsEquipped &&
+                    ArtificeLogic.CheckArtificeMilestone_2 &&
+                    __result)
+                {
+                    if (!ArtificeLogic.HitEnemyWithSawtoothCirclet)
+                        ArtificeLogic.HitEnemyWithSawtoothCirclet = true;
+                }
+            }
+        }
+
+        // public bool CanDoubleJump(bool checkControlState)
+        [HarmonyPatch(typeof(HeroController), "CanFloat")]
+        class HeroController_CanFloat
+        {
+            static void Postfix(ref bool __result)
+            {
+                if (Gameplay.BrollySpikeTool.IsEquipped &&
+                    ArtificeLogic.CheckArtificeMilestone_2 &&
+                    __result)
+                {
+                    if (!ArtificeLogic.HitEnemyWithSawtoothCirclet)
+                        ArtificeLogic.HitEnemyWithSawtoothCirclet = true;
+                }
+            }
+        }
+
+        // private bool CanThrowTool(ToolItem tool, AttackToolBinding binding, bool reportFailure)
+        [HarmonyPatch(typeof(HeroController), "CanThrowTool", new[] {
+            typeof(ToolItem),
+            typeof(AttackToolBinding),
+            typeof(bool)
+        })]
+        class HeroController_CanThrowTool
+        {
+            static bool Prefix(ToolItem tool, ref bool __result)
+            {
+                if (ArtificeLogic.CanUseTool(tool))
+                {
+                    __result = true;
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        // private bool ThrowTool(bool isAutoThrow)
+        [HarmonyPatch(typeof(HeroController), "ThrowTool")]
+        class HeroController_ThrowTool
+        {
+            private static int _extraToolThrows;
+
+            static void Prefix(bool isAutoThrow, out ToolItem __state)
+            {
+                __state = ArtificeLogic.GetThrownToolItem();
+
+                if (!isAutoThrow && __state != null)
+                    _extraToolThrows = ArtificeLogic.GetToolCopyCount(__state);
+            }
+
+            static void Postfix(ToolItem __state)
+            {
+                if (__state == null) return;
+
+                if (_extraToolThrows <= 0)
+                {
+                    ArtificeLogic.CheckToolChargeRefund(__state);
+                    return;
+                }
+
+                ArtificeLogic.SetThrowFieldValues(__state);
+                _extraToolThrows--;
             }
         }
     }

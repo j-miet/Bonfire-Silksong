@@ -9,6 +9,7 @@ namespace BonfireSilksong
     /// </summary>
     public static class PatchHelpers
     {
+        // PlayerData.instance.nailDamage
         public static readonly MethodInfo PlayerDataInstanceGetter = AccessTools.PropertyGetter(
             typeof(PlayerData),
             "instance");
@@ -104,7 +105,9 @@ namespace BonfireSilksong
                 // is necessary for extra scaling. As scaling requires adjusting base needle damage, it's already
                 // done earlier in patched Playerdata.nailDamage.
 
-                int spellDamage = IntelligenceLogic.ApplySpellDamageBonuses(hitInstance.DamageDealt, tool);
+                int spellDamage = hitInstance.DamageDealt;
+
+                spellDamage = IntelligenceLogic.ApplySpellDamageBonuses(spellDamage, tool);
 
                 if (IntelligenceLogic.CheckIntelligenceMilestone_3 && isCrit)
                 {
@@ -117,7 +120,14 @@ namespace BonfireSilksong
             {
                 // -- red and blue tools --
 
-                int toolDamage = ArtificeLogic.ApplyToolDamageBonuses(hitInstance.DamageDealt, tool);
+                int toolDamage = hitInstance.DamageDealt;
+
+                if (tool.name == "Rosary Cannon" && ArtificeLogic.CheckArtificeMilestone_4)
+                {
+                    toolDamage += 2;
+                }
+
+                toolDamage = ArtificeLogic.ApplyToolDamageBonuses(toolDamage, tool);
 
                 if (IntelligenceLogic.CheckIntelligenceMilestone_3)
                 {
@@ -126,28 +136,37 @@ namespace BonfireSilksong
 
                 if (isCrit)
                 {
-                    if (ArtificeLogic.CheckArtificeMilestone_2 &&
+                    if (IntelligenceLogic.CheckWeakBindRequirement() &&
+                        (tool.name == "Dazzle Bind" || tool.name == "Dazzle Bind Upgraded"))
+                    {
+                        // Claw Mirror
+
+                        toolDamage = DexterityLogic.ApplyCritDamage(toolDamage);
+                    }
+                    else if (ArtificeLogic.CheckArtificeMilestone_1 &&
                         (tool.name == "Pimpilo" || tool.name == "Brolly Spike"))
                     {
-                        // TODO: need to test this
                         // Pimpillo and Sawtooth Circlet
 
                         toolDamage = DexterityLogic.ApplyCritDamage(toolDamage);
                     }
-                    else if (IntelligenceLogic.CheckWeakBindRequirement() &&
-                        (tool.name == "Dazzle Bind" || tool.name == "Dazzle Bind Upgraded"))
-                    {
-                        // Claw Mirror 
+                }
 
-                        toolDamage = DexterityLogic.ApplyCritDamage(toolDamage);
-                    }
+                if (tool.name == "Brolly Spike" &&
+                    ArtificeLogic.CheckArtificeMilestone_2 &&
+                    ArtificeLogic.HitEnemyWithSawtoothCirclet)
+                {
+                    HeroController.instance.AddSilk(1, false);
+                    ArtificeLogic.HitEnemyWithSawtoothCirclet = false;
                 }
 
                 hitInstance.DamageDealt = toolDamage;
             }
             else if (sourceName == "Harpoon Damager" || sourceName == "Harpoon Dash Damager")
             {
-                int clawLineDamage = DexterityLogic.ApplyClawlineDamageBonuses(hitInstance.DamageDealt);
+                int clawLineDamage = hitInstance.DamageDealt;
+
+                clawLineDamage = DexterityLogic.ApplyClawlineDamageBonuses(clawLineDamage);
 
                 if (DexterityLogic.CheckDexterityMilestone_2 && isCrit)
                 {
@@ -166,12 +185,12 @@ namespace BonfireSilksong
                 // IsNailDamage is better identifier unless specific needle strike damage components
                 // need to be scaled individually.
                 // 3. IsUsingNeedleDamageMult would also apply to Silk Skills because in vanilla they do scale
-                // from needle upgrade count. However, to better balance silk skills, they require intelligence
-                // stat for scaling to avoid the issue of making strength a better scaling path for spells while
-                // still leaving all the spell-oriented milestones under intelligence stat itself, requiring to
-                // level both.
+                // from needle upgrade count. However after base game upgrade scaling, this becomes solely intelligence 
+                // stat's responsibility.
 
-                int needleDamage = StrengthLogic.ApplyNeedleDamageBonuses(hitInstance.DamageDealt, sourceName);
+                int needleDamage = hitInstance.DamageDealt;
+
+                needleDamage = StrengthLogic.ApplyNeedleDamageBonuses(needleDamage, sourceName);
 
                 if (isCrit)
                 {
@@ -182,6 +201,9 @@ namespace BonfireSilksong
             }
             else if (sourceName == "Bonfire-Taunt")
             {
+                // taunt has no scaling from game's own mechanics so hitInstance.DamageDealt is always a constant
+                // which TauntDamage already accesses internally.
+
                 int tauntDamage = IntelligenceLogic.TauntDamage(Bonfire.Instance.Status.IntelligenceStat);
 
                 if (IntelligenceLogic.CheckIntelligenceMilestone_3 && isCrit)

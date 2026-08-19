@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Reflection;
 
 using BepInEx.Logging;
@@ -170,6 +171,38 @@ namespace BonfireSilksong
             Log.LogDebug("[Debug] Visited scenes");
             foreach (var s in PlayerData.instance.scenesVisited)
                 Log.LogDebug("Scene: " + s);
+        }
+
+        /// <summary>
+        /// Iterates over a Transform objects children recursively until no more Transform are found.
+        /// </summary>
+        /// <param name="root">Root transform</param>
+        /// <param name="indent">Custom indentation</param>
+        public static void DumpHierarchy(Transform root, string indent = "")
+        {
+            if (root == null)
+                return;
+
+            Component[] components = root.GetComponents<Component>();
+
+            string componentNames = string.Join(
+                ", ",
+                components
+                    .Where(c => c != null)
+                    .Select(c => c.GetType().Name)
+            );
+
+            Bonfire.Log.LogDebug(
+                $"{indent}{root.name} | " +
+                $"scale={root.localScale} | " +
+                $"pos={root.localPosition} | " +
+                $"components=[{componentNames}]"
+            );
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                DumpHierarchy(root.GetChild(i), indent + "  ");
+            }
         }
 
 
