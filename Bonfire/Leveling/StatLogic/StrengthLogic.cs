@@ -7,14 +7,26 @@ namespace BonfireSilksong
 {
     public static class StrengthLogic
     {
-        public static int StrengthMilestone_1 => 1;
-        public static int StrengthMilestone_2 => 2;
-        public static int StrengthMilestone_3 => 3;
-        public static bool CheckStrengthMilestone_1 => Bonfire.Instance.Status.StrengthStat >= StrengthMilestone_1;
-        public static bool CheckStrengthMilestone_2 => Bonfire.Instance.Status.StrengthStat >= StrengthMilestone_2;
-        public static bool CheckStrengthMilestone_3 => Bonfire.Instance.Status.StrengthStat >= StrengthMilestone_3;
+        public static int StrengthMilestone(int m)
+        {
+            switch (m)
+            {
+                case 1: return 1;
+                case 2: return 2;
+                case 3: return 3;
+                default: return 999;
+            }
+        }
 
-        // Stat scaling: needle damage
+        public static bool CheckStrengthMilestone(int m)
+        {
+            var s = Bonfire.Instance.Status.StrengthStat + LevelingSystem.MilestoneBonus;
+            return s >= StrengthMilestone(m);
+        }
+
+        /// <summary>
+        /// Needle damage.
+        /// </summary>
         public static int NeedleDamage(int baseDamage, int totalStr)
         {
             return (int)Math.Round(
@@ -30,7 +42,7 @@ namespace BonfireSilksong
             Bonfire.Log.LogDebug($"[StrengthLogic] Apply needle damage bonuses:");
             int updated = damage;
 
-            if (CheckStrengthMilestone_3 && sourceName == "DownSlash")
+            if (CheckStrengthMilestone(3) && sourceName == "DownSlash")
             {
                 updated *= 2; // 100% extra damage on pogos
 
@@ -63,7 +75,7 @@ namespace BonfireSilksong
         /// </summary>
         public static void UpdateNeedleRange(NailAttackBase instance)
         {
-            if (!CheckStrengthMilestone_2) return;
+            if (!CheckStrengthMilestone(2)) return;
 
             Vector3 scale = instance.transform.localScale;
 
@@ -78,7 +90,7 @@ namespace BonfireSilksong
         /// </summary>
         public static void RefreshFlintslateBuffDuration(HeroNailImbuement instance)
         {
-            if (!CheckStrengthMilestone_3) return;
+            if (!CheckStrengthMilestone(3)) return;
             if (instance.CurrentElement != NailElements.Fire) return;
 
             ImbuementTimeLeftField.SetValue(instance, 999f);
@@ -89,7 +101,7 @@ namespace BonfireSilksong
         /// </summary>
         public static void RefreshFleaBrewBuffDuration(HeroController instance)
         {
-            if (CheckStrengthMilestone_3 && instance.IsUsingQuickening)
+            if (CheckStrengthMilestone(3) && instance.IsUsingQuickening)
             {
                 QuickeningTimeLeftField.SetValue(instance, 999f);
             }
@@ -101,9 +113,9 @@ namespace BonfireSilksong
         /// </summary>
         public static float UpdateNeedleChargeBeginTime(float result)
         {
-            if (CheckStrengthMilestone_3)
+            if (CheckStrengthMilestone(3))
                 result *= 0.6f;
-            else if (CheckStrengthMilestone_2)
+            else if (CheckStrengthMilestone(2))
                 result *= 0.8f;
 
             return result;
@@ -114,9 +126,9 @@ namespace BonfireSilksong
         /// </summary>
         public static float UpdateNeedleChargeTime(float result)
         {
-            if (CheckStrengthMilestone_3)
+            if (CheckStrengthMilestone(3))
                 result *= 0.6f;
-            else if (CheckStrengthMilestone_1)
+            else if (CheckStrengthMilestone(1))
                 result *= 0.8f;
 
             CurrentChargeLimit = result;
@@ -130,7 +142,7 @@ namespace BonfireSilksong
         /// </summary>
         public static void ReleaseNeedleChargeAutomatically()
         {
-            if (!CheckStrengthMilestone_1 || !Bonfire.Instance.Status.AutoReleaseNeedleStrike) return;
+            if (!CheckStrengthMilestone(1) || !Bonfire.Instance.Status.AutoReleaseNeedleStrike) return;
 
             if ((float)NailChargeTimerField.GetValue(HeroController.instance) > CurrentChargeLimit)
             {

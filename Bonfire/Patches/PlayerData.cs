@@ -88,7 +88,7 @@ namespace BonfireSilksong
                         __result -= 1;
                 }
 
-                if (IntelligenceLogic.CheckIntelligenceMilestone_4)
+                if (IntelligenceLogic.CheckIntelligenceMilestone(4))
                 {
                     if (__result > 0)
                         __result -= 1;

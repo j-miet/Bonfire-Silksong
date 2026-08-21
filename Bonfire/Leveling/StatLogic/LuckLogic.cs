@@ -10,14 +10,26 @@ namespace BonfireSilksong
     {
         public static bool Crit = false;
 
-        public static int LuckMilestone_1 => 1;
-        public static int LuckMilestone_2 => 2;
-        public static int LuckMilestone_3 => 3;
-        public static bool CheckLuckMilestone_1 => Bonfire.Instance.Status.LuckStat >= LuckMilestone_1;
-        public static bool CheckLuckMilestone_2 => Bonfire.Instance.Status.LuckStat >= LuckMilestone_2;
-        public static bool CheckLuckMilestone_3 => Bonfire.Instance.Status.LuckStat >= LuckMilestone_3;
+        public static int LuckMilestone(int m)
+        {
+            switch (m)
+            {
+                case 1: return 1;
+                case 2: return 2;
+                case 3: return 3;
+                default: return 999;
+            }
+        }
 
-        // Stat scaling: crit chance
+        public static bool CheckLuckMilestone(int m)
+        {
+            var s = Bonfire.Instance.Status.LuckStat + LevelingSystem.MilestoneBonus;
+            return s >= LuckMilestone(m);
+        }
+
+        /// <summary>
+        /// Crit chance (independent from game's own crit calculations e.g. from Magnetite Dice or Wanderer's Crest)
+        /// </summary>
         public static int CritChance(int totalLck)
         {
             if (totalLck <= 0) return 0;
@@ -25,8 +37,10 @@ namespace BonfireSilksong
             return (int)Math.Round(60.0 / (1.0 + 15.0 * Math.Exp(-0.08 * totalLck)));
         }
 
-        // Stat scaling: rosary (and shell shard) drop multiplier from enemies.
-        // Multiplier per level is additive 5% to current stat e.g. 1x -> 1.05x -> 1.10x -> 1.15x etc.
+        /// <summary>
+        /// Rosary (and shell shard) drop multiplier from enemies.
+        /// Multiplier per level is additive 5% to current stat e.g. 1x -> 1.05x -> 1.10x -> 1.15x etc.
+        /// </summary>
         public static int IncreaseRosaries(int droppedRosaries, int totalLck)
         {
             return (int)(droppedRosaries * (1f + (totalLck / 20f)));

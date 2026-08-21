@@ -7,20 +7,34 @@ namespace BonfireSilksong
     {
         public const int ClawlineHitLimit = 7;
 
-        public static int DexterityMilestone_1 => 1;
-        public static int DexterityMilestone_2 => 2;
-        public static int DexterityMilestone_3 => 3;
-        public static bool CheckDexterityMilestone_1 => Bonfire.Instance.Status.DexterityStat >= DexterityMilestone_1;
-        public static bool CheckDexterityMilestone_2 => Bonfire.Instance.Status.DexterityStat >= DexterityMilestone_2;
-        public static bool CheckDexterityMilestone_3 => Bonfire.Instance.Status.DexterityStat >= DexterityMilestone_3;
+        public static int DexterityMilestone(int m)
+        {
+            switch (m)
+            {
+                case 1: return 1;
+                case 2: return 2;
+                case 3: return 3;
+                default: return 999;
+            }
+        }
 
-        // Stat scaling: needle attack speed
+        public static bool CheckDexterityMilestone(int m)
+        {
+            var s = Bonfire.Instance.Status.DexterityStat + LevelingSystem.MilestoneBonus;
+            return s >= DexterityMilestone(m);
+        }
+
+        /// <summary>
+        /// Stat scaling: needle attack speed.
+        /// </summary>
         public static float AttackSpeed(int totalDex)
         {
             return (float)Math.Round(2.7 / (1.0 + 1.82 * Math.Exp(-0.08 * (totalDex + 1))) - 0.01, 2);
         }
 
-        // Stat scaling: needle crit damage
+        /// <summary>
+        /// Needle crit damage.
+        /// </summary>
         public static int CritDamage(int totalDex, int needleDamage)
         {
             return (int)(needleDamage * (1.2 + Math.Log(totalDex + 1)));
@@ -54,23 +68,23 @@ namespace BonfireSilksong
 
             Bonfire.Log.LogDebug($"[DexterityLogic] Apply Clawline damage bonuses");
 
-            if (CheckDexterityMilestone_3)
+            if (CheckDexterityMilestone(3))
             {
                 updatedDamage = (int)Math.Round(updatedDamage * 1.5f);
                 Bonfire.Log.LogDebug("Applied x1.5 multiplier");
             }
-            else if (CheckDexterityMilestone_1)
+            else if (CheckDexterityMilestone(1))
             {
                 updatedDamage = (int)Math.Round(updatedDamage * 1.25f);
                 Bonfire.Log.LogDebug("Applied x1.25 multiplier");
             }
 
-            if (CheckDexterityMilestone_1 && _clawlineHitCounter >= ClawlineHitLimit)
+            if (CheckDexterityMilestone(1) && _clawlineHitCounter >= ClawlineHitLimit)
             {
                 updatedDamage *= 2;
                 Bonfire.Log.LogDebug($"Clawline {ClawlineHitLimit}. hit: applied x2 multiplier");
 
-                if (CheckDexterityMilestone_3)
+                if (CheckDexterityMilestone(3))
                 {
                     HeroController.instance.AddHealth(1);
                     Bonfire.Log.LogDebug($"Clawline {ClawlineHitLimit}. hit: healed 1 mask");
@@ -89,7 +103,7 @@ namespace BonfireSilksong
         /// </summary>
         public static void ApplyCritHeal(bool wasCrit)
         {
-            if (CheckDexterityMilestone_3 && wasCrit)
+            if (CheckDexterityMilestone(3) && wasCrit)
             {
                 HeroController.instance.AddHealth(1);
                 Bonfire.Log.LogDebug("[DexterityLogic] Crit heal");
@@ -169,7 +183,7 @@ namespace BonfireSilksong
         /// </summary>
         public static bool CheckHarpoonCostRefund(int cost)
         {
-            bool refunded = _usedHarpoon && cost == 1 && CheckDexterityMilestone_2;
+            bool refunded = _usedHarpoon && cost == 1 && CheckDexterityMilestone(2);
 
             _usedHarpoon = false;
 

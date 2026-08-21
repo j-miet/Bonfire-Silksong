@@ -7,35 +7,52 @@ using UnityEngine;
 
 namespace BonfireSilksong
 {
+    public enum BlueState
+    {
+        THORNED,
+        BLUEBLOODED,
+        DISABLED
+    }
+
     public static class ResilienceLogic
     {
+        public const int ReflectBaseDamage = 5;
+
+        public static BlueState BlueMaskMode = BlueState.DISABLED;
+
         public static bool SatDownAtBench = false;
         public static bool BlueHpInit = false;
         public static bool BlockNextHit = false;
 
-        public static int ResilienceMilestone_1 => 1;
-        public static int ResilienceMilestone_2 => 2;
-        public static int ResilienceMilestone_3 => 3;
-        public static int ResilienceMilestone_4 => 4;
-        public static bool CheckResilienceMilestone_1 =>
-            Bonfire.Instance.Status.ResilienceStat >= ResilienceMilestone_1;
-        public static bool CheckResilienceMilestone_2 =>
-            Bonfire.Instance.Status.ResilienceStat >= ResilienceMilestone_2;
-        public static bool CheckResilienceMilestone_3 =>
-            Bonfire.Instance.Status.ResilienceStat >= ResilienceMilestone_3;
-        public static bool CheckResilienceMilestone_4 =>
-            Bonfire.Instance.Status.ResilienceStat >= ResilienceMilestone_4;
+        public static int ResilienceMilestone(int m)
+        {
+            switch (m)
+            {
+                case 1: return 1;
+                case 2: return 2;
+                case 3: return 3;
+                default: return 999;
+            }
+        }
 
-        // Stat scaling: extra lifeblood masks. Caps at 8 on level 40; using a single plasmium from phial will then
-        // activate overdose regen effect
+        public static bool CheckResilienceMilestone(int m)
+        {
+            var s = Bonfire.Instance.Status.ResilienceStat + LevelingSystem.MilestoneBonus;
+            return s >= ResilienceMilestone(m);
+        }
+
+        /// <summary>
+        /// Extra lifeblood masks.
+        /// </summary>
         public static int ExtraMasks(int totalRes)
         {
-            if (totalRes >= 40) return 8;
-
+            // TODO buff mask scaling, this should realistically give >15 masks with higher investments
             return (int)Math.Round(8.0 * (1.0 - Math.Exp(-0.055 * (totalRes - 1))));
         }
 
-        // Stat scaling: chance to block an enemy hit
+        /// <summary>
+        /// Chance to block an enemy hit.
+        /// </summary>
         public static float BlockChance(int totalRes)
         {
             return (float)(0.72 / (1.0 + 12.0 * Math.Exp(-0.09 * totalRes)));
@@ -55,11 +72,81 @@ namespace BonfireSilksong
         }
 
         /// <summary>
+        /// Reflect damage.
+        /// </summary>
+        public static int ReflectDamage(int totalRes, bool isGUI = false)
+        {
+            int damage = 5 * ExtraMasks(totalRes);
+
+            if (IsInBlueStateAndPlasmified(BlueState.THORNED))
+            {
+                damage += 10 * PlayerData.instance.health;
+            }
+
+            if (isGUI && IsInBlueStateAndPlasmified(BlueState.THORNED))
+            {
+                return damage += 10 * PlayerData.instance.health;
+            }
+
+            Bonfire.Log.LogDebug($"[ResilienceLogic] Challenge taunt final damage: {damage}");
+
+            return damage;
+        }
+
+        public static float ReflectArea()
+        {
+            BlueState thorned = BlueState.THORNED;
+            float range = ReflectDamageRange;
+
+            if (IsInBlueState(thorned) && CheckResilienceMilestone(2))
+                range += 1f;
+
+            if (IsInBlueStateAndPlasmified(thorned))
+                range += 2f;
+
+            return range;
+        }
+
+        public static int GetBlueBloodedMilestoneBonus(int totalRes)
+        {
+            if (totalRes < 0) return 0;
+
+            BlueState s = BlueState.BLUEBLOODED;
+
+            if (IsInBlueStateAndPlasmified(s))
+            {
+                return 10;
+            }
+            else if (IsInBlueState(s) && CheckResilienceMilestone(2))
+            {
+                return 5;
+            }
+            else if (IsInBlueState(s))
+            {
+                return 3;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        public static bool IsInBlueState(BlueState state)
+        {
+            return CheckResilienceMilestone(1) && BlueMaskMode == state;
+        }
+
+        public static bool IsInBlueStateAndPlasmified(BlueState state)
+        {
+            return HeroController.instance.IsInLifebloodState && CheckResilienceMilestone(3) && BlueMaskMode == state;
+        }
+
+        /// <summary>
         /// Update blue mask count from Resilience stat.
         /// </summary>
         public static void CallUpdateBlueHP()
         {
-            Bonfire.Log.LogDebug("[ResilienceLogic] Called");
+            Bonfire.Log.LogDebug("[ResilienceLogic] CallUpdateBlueHP");
             Bonfire.Instance.StartCoroutine(UpdateBlueHP());
         }
 
@@ -97,7 +184,14 @@ namespace BonfireSilksong
         {
             if (instance.cState.evading || instance.cState.invulnerable) return;
 
-            Bonfire.Log.LogDebug("[ResilienceLogic] Took damage from hazard type: " + hazardType);
+            Bonfire.Log.LogInfo("[ResilienceLogic] Took damage from hazard type: " + hazardType);
+
+            // handle reflect damage here after iframe checks. 
+            // Also HazardType arg should be kept in case this code needs to be called elsewhere.
+            // Finally give 1 silk.
+            DealReflectDamage(hazardType);
+            if (IsInBlueState(BlueState.THORNED))
+                HeroController.instance.AddSilk(1, false);
 
             if (hazardType != HazardType.ENEMY) return; // only block enemy attacks
 
@@ -153,8 +247,55 @@ namespace BonfireSilksong
             return amount;
         }
 
+        public static void DealReflectDamage(HazardType hazardType)
+        {
+            if (hazardType != HazardType.ENEMY) return;
+
+            Bonfire.Log.LogInfo("[ResilienceLogic] Reflecting damage to enemies.");
+
+            if (!IsInBlueState(BlueState.THORNED))
+                return;
+
+            var hc = HeroController.instance;
+
+            float range = ReflectArea(); // for now keep this fixed, might add range increases to later milestones
+
+            foreach (var e in EnemyHealth.EnemyMaxHp.Keys)
+            {
+                if (e == null)
+                    continue;
+
+                float dist = Vector2.Distance(hc.transform.position, e.transform.position);
+                if (dist > range)
+                    continue;
+
+                HealthManager hm = e.GetComponent<HealthManager>();
+
+                if (hm == null)
+                    continue;
+
+                HitInstance hit = CreateReflectHitInstance(hc);
+
+                hm.Hit(hit);
+            }
+        }
+
+        /// <summary>
+        /// Sets internal cancel flag true which forcefully interrupts current blue hp update loop. This should be only 
+        /// called by LevelingSystem's Apply and Respec methods.
+        /// </summary>
+        public static void CancelBlueHPUpdate()
+        {
+            _cancelBlueHPUpdate = true;
+        }
+
+
+        private const float ReflectDamageRange = 3f;
+
+        private static bool _cancelBlueHPUpdate = false;
         private static bool _blueHpAddingInProgress = false;
         private static int _hitsSinceShielded = 0;
+
         private readonly static FieldInfo SpawnedLuckyDiceShieldEffect = typeof(HeroController)
             .GetField("spawnedLuckyDiceShieldEffect", BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -178,9 +319,12 @@ namespace BonfireSilksong
             // update loop, ongoing update loop should be cancelled.
             if (PlayerData.instance.isInventoryOpen ||
                 GameManager.instance.isPaused ||
-                SatDownAtBench)
+                SatDownAtBench ||
+                _cancelBlueHPUpdate)
             {
                 _blueHpAddingInProgress = false;
+                _cancelBlueHPUpdate = false;
+
                 return true;
             }
 
@@ -188,22 +332,26 @@ namespace BonfireSilksong
         }
 
         // handles blue health updates for Resilience stat by clearing existing masks then applies update count after.
-        // Includes multiple intermediary checks which exit the routine if either inventory or pause menu is opened.
+        // Includes multiple intermediary checks which exit the routine if either inventory or pause menu is opened,
+        // or if previous loop needs to forcefully cancelled after applying a level/respeccing.
         // It's important to immediately call this method again if this happens: this is already done in LateUpdate 
         // callback.
         //
         // Previously a much simpler logic was used: HeroController_UpdateBlueHealth patch would simply set PlayerData's
         // healthBlue equal to Resilience stat mask amount. This would work just fine except the visuals lagged a 
         // single mask behind. Thus all of the extra code logic is to fix that small but annoying issue + make sure the 
-        // masks are also properly preserved after menu interactions. It might still break occasionally if
-        // player spams inventory and/or pause on and off repeatedly.
+        // masks are also properly preserved after menu interactions. It might still break occasionally if for example
+        // player spams inventory and/or pause on and off repeatedly. But for normal gameplay the current system should 
+        // be very consistent.
         private static IEnumerator UpdateBlueHP()
         {
-            Bonfire.Log.LogDebug("[UpdateBlueHP] blue hp refresh");
+            Bonfire.Log.LogDebug("[ResilienceLogic] Blue hp refresh");
             yield return new WaitForSecondsRealtime(0.25f);
 
             if (_blueHpAddingInProgress) yield break;
+
             _blueHpAddingInProgress = true;
+            _cancelBlueHPUpdate = false;
 
             if (BlueHpCheckCancelState())
             {
@@ -219,48 +367,55 @@ namespace BonfireSilksong
 
             // removes existing blue hp before applying new values: closing the inventory automatically sets healthBlue 
             // = 0 while closing pause menu doesn't so it's important to do it here manually. HeroCtrl-MaxHealth fsm 
-            // then removes mask visual. This way SendEvent for AddBlueHealth can just add the hp without caring 
-            // about previous blue mask state.
+            // then ensures that mask visuals are also removed. This way SendEvent for AddQueuedBlueHealth can just add 
+            // the hp without caring about previous blue mask state.
             // For future updates: if there will be new ways to obtain blue masks which are added during bench visits 
             // e.g. tools similar to Hollow Knight's lifeblood charms, then healthBlue = 0 would override these. In 
             // that case, just introduce a new variable to track base game masks separately then set 
-            // healthBlue = base masks and keep current SendEvent logic for modded masks. Even better: updates could
-            // make update logic less complex, leading to a complete removal of this Do-It-Yourself implementation.
+            // healthBlue = base masks and keep current SendEvent logic for modded masks. 
+            // Even better: DLCs could make this logic less complex, possibly allowing the reuse of the original idea 
+            // of Postfix patching the HeroController.UpdateBlueHealth which is exactly what Hollow Knight uses.
+            // -- Updated in mod version 0.9.0: replaced AddBlueHealth with AddQueuedBlueHealth. This will immediately
+            // load all masks simultaneously so using a for-loop and its multiple yield waits can now be avoided.
             PlayerData.instance.healthBlue = 0;
             HeroController.instance.proxyFSM.SendEvent("HeroCtrl-MaxHealth");
             // HeroController.MaxHealth also sends EventRegister.SendEvent(EventRegisterEvents.HeroHealedToMax), but 
-            // apparently it's not needed to reset blue mask state
+            // apparently it's not needed to reset blue mask state.
 
             if (BlueHpCheckCancelState()) yield break;
 
             yield return new WaitForSecondsRealtime(0.25f);
 
             int masks = ExtraMasks(Bonfire.Instance.Status.ResilienceStat);
-
-            if (masks >= 1)
-            {
-                for (int i = 0; i < masks; i++)
-                {
-                    if (BlueHpCheckCancelState()) yield break;
-
-                    EventRegister.SendEvent(EventRegisterEvents.AddBlueHealth);
-                    yield return new WaitForSecondsRealtime(0.15f);
-
-                    if (HeroController.instance.IsInLifebloodState)
-                    {
-                        HeroController.instance.EnterLifebloodStateQuick();
-                        yield return new WaitForSecondsRealtime(0.25f);
-
-                        _blueHpAddingInProgress = false;
-
-                        yield break;
-                    }
-                }
-            }
+            GameManager.instance.QueuedBlueHealth = masks;
+            EventRegister.SendEvent(EventRegisterEvents.AddQueuedBlueHealth);
 
             if (BlueHpCheckCancelState()) yield break;
 
+            yield return new WaitForSecondsRealtime(0.25f);
+
+            GameManager.instance.QueuedBlueHealth = 0;
+
             _blueHpAddingInProgress = false;
+        }
+
+        private static HitInstance CreateReflectHitInstance(HeroController instance)
+        {
+            instance.gameObject.name = "Bonfire-Reflect";
+
+            return new HitInstance
+            {
+                DamageDealt = ReflectBaseDamage,
+                Source = instance.gameObject,
+                AttackType = AttackTypes.Generic,
+                IsFirstHit = false,
+                HitEffectsType = EnemyHitEffectsProfile.EffectsTypes.Full,
+                Direction = 0f,
+                MagnitudeMultiplier = 1f,
+                Multiplier = 1f,
+                IsHeroDamage = true,
+                SilkGeneration = HitSilkGeneration.Full
+            };
         }
     }
 }

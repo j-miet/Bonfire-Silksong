@@ -46,11 +46,36 @@ namespace BonfireSilksong
         }
 
         [HarmonyPatch(typeof(ListenForJumpV2), "OnUpdate")]
-        class ListenForJump_OnUpdateV2
+        class ListenForJumpV2_OnUpdate
         {
             static bool Prefix()
             {
                 if (!CursorPatchLogic.AllowInput()) return false;
+
+                return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(ListenForQuickCast), "OnUpdate")]
+        class ListenForQuickCast_OnUpdate
+        {
+            static bool Prefix()
+            {
+                if (ResilienceLogic.IsInBlueState(BlueState.BLUEBLOODED))
+                    return false;
+
+                return true;
+            }
+        }
+
+
+        [HarmonyPatch(typeof(ListenForQuickCastV2), "OnUpdate")]
+        class ListenForQuickCastV2_OnUpdate
+        {
+            static bool Prefix()
+            {
+                if (ResilienceLogic.IsInBlueState(BlueState.BLUEBLOODED))
+                    return false;
 
                 return true;
             }

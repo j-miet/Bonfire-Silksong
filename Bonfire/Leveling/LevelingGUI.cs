@@ -442,6 +442,8 @@ namespace BonfireSilksong
         // info boxes for all stats
         private void DrawStrengthInfo(float height)
         {
+            string s = "strength";
+
             GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.Height(height));
             GUILayout.Label("Strength", GUIStyles.LabelStyle);
 
@@ -450,15 +452,15 @@ namespace BonfireSilksong
 
             GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
             GUILayout.Label(
-                $"[{StrengthLogic.StrengthMilestone_1}] " +
+                $"[{StrengthLogic.StrengthMilestone(1)}] " +
                 "Needle strike: active charge time reduced by 20%. " +
                 "Can toggle on/off automatic release when fully charged.",
-                LevelingSystem.HighLightStrenghtMileStone_1 ?
+                LevelingSystem.HighLightStatMilestone(s, 1) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
-            if (LevelingSystem.HighLightStrenghtMileStone_1)
+            if (LevelingSystem.HighLightStatMilestone(s, 1))
             {
-                GUI.enabled = StrengthLogic.CheckStrengthMilestone_1;
+                GUI.enabled = StrengthLogic.CheckStrengthMilestone(1);
 
                 string autoStrike = "Needle strike auto-release: " +
                     $"{(Bonfire.Instance.Status.AutoReleaseNeedleStrike ? "ENABLED" : "DISABLED")}";
@@ -475,17 +477,17 @@ namespace BonfireSilksong
             }
 
             GUILayout.Label(
-                $"[{StrengthLogic.StrengthMilestone_2}] " +
+                $"[{StrengthLogic.StrengthMilestone(2)}] " +
                 "Needle range increased by 33%. Needle strike initial charge time reduced by 20%.",
-                LevelingSystem.HighLightStrenghtMileStone_2 ?
+                LevelingSystem.HighLightStatMilestone(s, 2) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{StrengthLogic.StrengthMilestone_3}] " +
+                $"[{StrengthLogic.StrengthMilestone(3)}] " +
                 "Flintslate and Flea Brew tools have infinite buff duration. " +
                 "Downslash damage increased by 100%. " +
                 "Needle strike: both initial and active charge time reduction buffed (20% -> 40%).",
-                LevelingSystem.HighLightStrenghtMileStone_3 ?
+                LevelingSystem.HighLightStatMilestone(s, 3) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.EndVertical();
@@ -493,6 +495,8 @@ namespace BonfireSilksong
 
         private void DrawDexterityInfo(float height)
         {
+            string s = "dexterity";
+
             GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.Height(height));
             GUILayout.Label("Dexterity", GUIStyles.LabelStyle);
 
@@ -502,24 +506,24 @@ namespace BonfireSilksong
 
             GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
             GUILayout.Label(
-                $"[{DexterityLogic.DexterityMilestone_1}] " +
+                $"[{DexterityLogic.DexterityMilestone(1)}] " +
                 "Clawline damage increased by 25%. " +
                 $"Every {DexterityLogic.ClawlineHitLimit}th hit from Clawline deals 2x damage " +
                 "(default Clawline attack counts as 2 hits).",
-                LevelingSystem.HighlightDexterityMilestone_1 ?
+                LevelingSystem.HighLightStatMilestone(s, 1) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{DexterityLogic.DexterityMilestone_2}] " +
+                $"[{DexterityLogic.DexterityMilestone(2)}] " +
                 "Clawline silk cost removed, can now critically hit.",
-                LevelingSystem.HighlightDexterityMilestone_2 ?
+                LevelingSystem.HighLightStatMilestone(s, 2) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{DexterityLogic.DexterityMilestone_3}] " +
+                $"[{DexterityLogic.DexterityMilestone(3)}] " +
                 "All critical hits now heal 1 mask. Clawline's 7th hit will always heal 1 mask " +
                 "and deals 3x damage. Clawline damage bonus increased (25% -> 50%).",
-            LevelingSystem.HighlightDexterityMilestone_3 ?
+            LevelingSystem.HighLightStatMilestone(s, 3) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.EndVertical();
@@ -527,6 +531,8 @@ namespace BonfireSilksong
 
         private void DrawIntelligenceInfo(float height)
         {
+            string s = "intelligence";
+
             GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.Height(height));
             GUILayout.Label("Intelligence", GUIStyles.LabelStyle);
 
@@ -534,9 +540,9 @@ namespace BonfireSilksong
             DrawInfoStatLabel("Silk Skill Damage: " + _spellDamage);
             DrawInfoStatLabel("Binding Cost: " + _bindCost);
 
-            if (LevelingSystem.HighlightIntelligenceMilestone_1)
+            if (LevelingSystem.HighLightStatMilestone(s, 1))
             {
-                GUI.enabled = IntelligenceLogic.CheckIntelligenceMilestone_1;
+                GUI.enabled = IntelligenceLogic.CheckIntelligenceMilestone(1);
 
                 GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
                 DrawInfoStatLabel("Taunt Damage: " + _tauntDamage);
@@ -547,36 +553,36 @@ namespace BonfireSilksong
 
             GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
             GUILayout.Label(
-                $"[{IntelligenceLogic.IntelligenceMilestone_1}] " +
+                $"[{IntelligenceLogic.IntelligenceMilestone(1)}] " +
                 "Using 'Challenge' taunt now deals damage in a circular area around you. " +
                 "Damage and area scales off of intelligence stat. " +
                 "Taunt does not benefit from Silk Skill damage bonuses.",
-                LevelingSystem.HighlightIntelligenceMilestone_1 ?
+                LevelingSystem.HighLightStatMilestone(s, 1) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{IntelligenceLogic.IntelligenceMilestone_2}] " +
+                $"[{IntelligenceLogic.IntelligenceMilestone(2)}] " +
                 "While equipping Dead Bug's Purse/Shell Satchel tool, " +
                 "Bind heals 1 mask and costs 1/3 of current cost, but you get following bonuses:\n" +
                 "- Silk Skills: cost reduced by 1, damage increased by 50% multiplicatively.\n" +
                 "- Claw Mirror: procs additional time (similar to Multibinder effect), " +
                 "binding speed increased by 33%.\n" +
                 "- Taunt: area increased by 50%.",
-                LevelingSystem.HighlightIntelligenceMilestone_2 ?
+                LevelingSystem.HighLightStatMilestone(s, 2) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{IntelligenceLogic.IntelligenceMilestone_3}] " +
+                $"[{IntelligenceLogic.IntelligenceMilestone(3)}] " +
                 "Silk skills, Claw Mirror and Taunt can crit. Equipping Claw Mirror increases binding speed by 33%.",
-            LevelingSystem.HighlightIntelligenceMilestone_3 ?
+            LevelingSystem.HighLightStatMilestone(s, 3) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{IntelligenceLogic.IntelligenceMilestone_4}] " +
+                $"[{IntelligenceLogic.IntelligenceMilestone(4)}] " +
                 "Silk skill cost reduced by 1. Claw Mirror damage now also scales off of intelligence while " +
                 "keeping Artifice scaling. " +
                 "Taunt gains +5 damage from each strand of silk in spool.",
-                LevelingSystem.HighlightIntelligenceMilestone_4 ?
+                LevelingSystem.HighLightStatMilestone(s, 4) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.EndVertical();
@@ -584,6 +590,8 @@ namespace BonfireSilksong
 
         private void DrawArtificeInfo(float height)
         {
+            string s = "artifice";
+
             GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.Height(height));
             GUILayout.Label("Artifice", GUIStyles.LabelStyle);
 
@@ -593,33 +601,33 @@ namespace BonfireSilksong
 
             GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
             GUILayout.Label(
-                $"[{ArtificeLogic.ArtificeMilestone_1}] " +
+                $"[{ArtificeLogic.ArtificeMilestone(1)}] " +
                 "Silkshot silk cost removed. Sawtooth Circlet and Pimpillo can critically hit.",
-                LevelingSystem.HighlightArtificeMilestone_1 ?
+                LevelingSystem.HighLightStatMilestone(s, 1) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{ArtificeLogic.ArtificeMilestone_2}] " +
+                $"[{ArtificeLogic.ArtificeMilestone(2)}] " +
                 "Sawtooth Circlet gives 1 silk when used. " +
                 "Rosary Cannon keeps limited charges during use, but will always replenish them fully " +
                 "when initial animation starts.",
-                LevelingSystem.HighlightArtificeMilestone_2 ?
+                LevelingSystem.HighLightStatMilestone(s, 2) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{ArtificeLogic.ArtificeMilestone_3}] " +
+                $"[{ArtificeLogic.ArtificeMilestone(3)}] " +
                 "Silkshot has infinite charges. Sawtooth Circlet horizontal range increased by 50%.",
-            LevelingSystem.HighlightArtificeMilestone_3 ?
+            LevelingSystem.HighLightStatMilestone(s, 3) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{ArtificeLogic.ArtificeMilestone_4}] " +
+                $"[{ArtificeLogic.ArtificeMilestone(4)}] " +
                 "Using an offensive red tool has 33% chance to spawn a copy of itself. " +
                 "Neither original nor copy cost charges.\n" +
                 "Following tools cannot utilize this effect: Silkshot, Delver's Drill, Rosary Cannon, " +
                 "Voltvessels Spear (Bolas do work), Snare Setter.\n" +
-                "Rosary Cannon: get +2 flat damage which is applied before Artifice stat multiplier.",
-                LevelingSystem.HighlightArtificeMilestone_4 ?
+                "Rosary Cannon: +2 flat damage which is applied before Artifice stat multiplier.",
+                LevelingSystem.HighLightStatMilestone(s, 4) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.EndVertical();
@@ -636,6 +644,7 @@ namespace BonfireSilksong
 
             // reflect damage
             GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
+            DrawInfoStatLabel("Reflect Damage: " + "...");
 
             GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
 
@@ -644,6 +653,8 @@ namespace BonfireSilksong
 
         private void DrawWisdomInfo(float height)
         {
+            string s = "wisdom";
+
             GUILayout.BeginVertical("box", GUILayout.Width(ColWidth), GUILayout.Height(height));
             GUILayout.Label("Wisdom", GUIStyles.LabelStyle);
 
@@ -653,14 +664,14 @@ namespace BonfireSilksong
 
             GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
             GUILayout.Label(
-                $"[{WisdomLogic.WisdomMilestone_2}] " +
+                $"[{WisdomLogic.WisdomMilestone(2)}] " +
                 "Wispfire Lantern silk cost removed, attack delay halved and spawn cooldown is down to 2 seconds.",
-                LevelingSystem.HighlightWisdomMilestone_2 ?
+                LevelingSystem.HighLightStatMilestone(s, 2) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
             GUILayout.Label(
-                $"[{WisdomLogic.WisdomMilestone_3}] " +
+                $"[{WisdomLogic.WisdomMilestone(3)}] " +
                 "Wispfire Lantern attack cooldown down to 1/3 of original, spawns a wisp every second.",
-                LevelingSystem.HighlightWisdomMilestone_3 ?
+                LevelingSystem.HighLightStatMilestone(s, 3) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.EndVertical();

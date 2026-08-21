@@ -12,20 +12,23 @@ namespace BonfireSilksong
 
         public static bool BindCostInit = false;
 
-        public static int IntelligenceMilestone_1 => 1;
-        public static int IntelligenceMilestone_2 => 2;
-        public static int IntelligenceMilestone_3 => 3;
-        public static int IntelligenceMilestone_4 => 4;
-        public static bool CheckIntelligenceMilestone_1 =>
-            Bonfire.Instance.Status.IntelligenceStat >= IntelligenceMilestone_1;
-        public static bool CheckIntelligenceMilestone_2 =>
-            Bonfire.Instance.Status.IntelligenceStat >= IntelligenceMilestone_2;
-        public static bool CheckIntelligenceMilestone_3 =>
-            Bonfire.Instance.Status.IntelligenceStat >= IntelligenceMilestone_3;
-        public static bool CheckIntelligenceMilestone_4 =>
-            Bonfire.Instance.Status.IntelligenceStat >= IntelligenceMilestone_4;
+        public static int IntelligenceMilestone(int m)
+        {
+            switch (m)
+            {
+                case 1: return 1;
+                case 2: return 2;
+                case 3: return 3;
+                case 4: return 4;
+                default: return 999;
+            }
+        }
 
-        // -- primary --
+        public static bool CheckIntelligenceMilestone(int m)
+        {
+            var s = Bonfire.Instance.Status.IntelligenceStat + LevelingSystem.MilestoneBonus;
+            return s >= IntelligenceMilestone(m);
+        }
 
         /// <summary>
         /// Silk skill damage.
@@ -63,7 +66,8 @@ namespace BonfireSilksong
         {
             int damage = TauntBaseDamage;
 
-            if (totalInt < 1) return damage;
+            if (totalInt < 0) return 0;
+            if (totalInt == 1) return damage;
 
             if (totalInt <= 10)
             {
@@ -74,7 +78,7 @@ namespace BonfireSilksong
                 damage += 5 + totalInt - 10;
             }
 
-            if (CheckIntelligenceMilestone_4)
+            if (CheckIntelligenceMilestone(4))
             {
                 // game has already deducted one silk at this point, apply the damage bonus with initial silk value.
                 // however GUI must access the actual silk amount
@@ -136,7 +140,7 @@ namespace BonfireSilksong
 
             int updatedDamage = baseDamage;
 
-            if (CheckIntelligenceMilestone_4)
+            if (CheckIntelligenceMilestone(4))
             {
                 updatedDamage = SpellDamage(baseDamage, Bonfire.Instance.Status.IntelligenceStat);
                 Bonfire.Log.LogDebug("Applied int scaling");
@@ -160,7 +164,7 @@ namespace BonfireSilksong
         {
             Bonfire.Log.LogDebug("[IntelligenceLogic] Used Challenge Taunt ability");
 
-            if (!CheckIntelligenceMilestone_1)
+            if (!CheckIntelligenceMilestone(1))
                 return;
 
             var hc = HeroController.instance;
@@ -196,7 +200,7 @@ namespace BonfireSilksong
         {
             // current condition: equip Dead Bug's Purse or Shell Satchel if in Steel Soul mode.
             if ((Gameplay.DeadPurseTool.IsEquipped || Gameplay.ShellSatchelTool.IsEquipped) &&
-                CheckIntelligenceMilestone_2)
+                CheckIntelligenceMilestone(2))
             {
                 return true;
             }
@@ -319,7 +323,7 @@ namespace BonfireSilksong
 
                 if (bindTime != null)
                 {
-                    if (CheckIntelligenceMilestone_3 &&
+                    if (CheckIntelligenceMilestone(3) &&
                     (ToolItemManager.IsToolEquipped("Dazzle Bind") ||
                     ToolItemManager.IsToolEquipped("Dazzle Bind Upgraded")))
                     {

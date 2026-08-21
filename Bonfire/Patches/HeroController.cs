@@ -180,7 +180,7 @@ namespace BonfireSilksong
             {
                 IntelligenceLogic.DealTauntDamage();
 
-                if (IntelligenceLogic.CheckIntelligenceMilestone_1)
+                if (IntelligenceLogic.CheckIntelligenceMilestone(1))
                 {
                     RangeIndicator.Display(
                         IntelligenceLogic.TauntRange(Bonfire.Instance.Status.IntelligenceStat, isGUI: true));
@@ -195,7 +195,7 @@ namespace BonfireSilksong
             {
                 IntelligenceLogic.DealTauntDamage();
 
-                if (IntelligenceLogic.CheckIntelligenceMilestone_1)
+                if (IntelligenceLogic.CheckIntelligenceMilestone(1))
                 {
                     RangeIndicator.Display(
                         IntelligenceLogic.TauntRange(Bonfire.Instance.Status.IntelligenceStat, isGUI: true));
@@ -210,7 +210,7 @@ namespace BonfireSilksong
             static void Postfix(ref bool __result)
             {
                 if (Gameplay.BrollySpikeTool.IsEquipped &&
-                    ArtificeLogic.CheckArtificeMilestone_2 &&
+                    ArtificeLogic.CheckArtificeMilestone(2) &&
                     __result)
                 {
                     if (!ArtificeLogic.HitEnemyWithSawtoothCirclet)
@@ -226,7 +226,7 @@ namespace BonfireSilksong
             static void Postfix(ref bool __result)
             {
                 if (Gameplay.BrollySpikeTool.IsEquipped &&
-                    ArtificeLogic.CheckArtificeMilestone_2 &&
+                    ArtificeLogic.CheckArtificeMilestone(2) &&
                     __result)
                 {
                     if (!ArtificeLogic.HitEnemyWithSawtoothCirclet)

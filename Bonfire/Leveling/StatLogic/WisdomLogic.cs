@@ -7,12 +7,23 @@ namespace BonfireSilksong
 {
     public static class WisdomLogic
     {
-        public static int WisdomMilestone_1 => 1;
-        public static int WisdomMilestone_2 => 2;
-        public static int WisdomMilestone_3 => 3;
-        public static bool CheckWisdomMilestone_1 => Bonfire.Instance.Status.WisdomStat >= WisdomMilestone_1;
-        public static bool CheckWisdomMilestone_2 => Bonfire.Instance.Status.WisdomStat >= WisdomMilestone_2;
-        public static bool CheckWisdomMilestone_3 => Bonfire.Instance.Status.WisdomStat >= WisdomMilestone_3;
+        public static int WisdomMilestone(int m)
+        {
+            switch (m)
+            {
+                case 1: return 1;
+                case 2: return 2;
+                case 3: return 3;
+                case 4: return 3;
+                default: return 999;
+            }
+        }
+
+        public static bool CheckWisdomMilestone(int m)
+        {
+            var s = Bonfire.Instance.Status.WisdomStat + LevelingSystem.MilestoneBonus;
+            return s >= WisdomMilestone(m);
+        }
 
         // Stat scaling: extra silk gained when striking an enemy with needle (+1 silk for every 20 levels)
         public static int ExtraSilk(int totalWsdm, int baseSilk)
@@ -79,7 +90,7 @@ namespace BonfireSilksong
         {
             var hc = HeroController.instance;
 
-            if (CheckWisdomMilestone_1 && hc.playerData.silk <= 0)
+            if (CheckWisdomMilestone(1) && hc.playerData.silk <= 0)
                 hc.AddSilk(1, heroEffect: false);
         }
 
@@ -101,12 +112,12 @@ namespace BonfireSilksong
             float delayNew = 0.3f;
             float cdNew = 4f;
 
-            if (CheckWisdomMilestone_2)
+            if (CheckWisdomMilestone(2))
             {
                 delayNew = 0.1f;
                 cdNew = 1f;
             }
-            else if (CheckWisdomMilestone_1)
+            else if (CheckWisdomMilestone(1))
             {
                 delayNew = 0.15f;
                 cdNew = 2f;
@@ -124,7 +135,7 @@ namespace BonfireSilksong
         /// </summary>
         public static bool CheckWispLanternCostRefund(SilkSpool.SilkTakeSource source)
         {
-            if (source == SilkSpool.SilkTakeSource.Wisp && CheckWisdomMilestone_1)
+            if (source == SilkSpool.SilkTakeSource.Wisp && CheckWisdomMilestone(1))
                 return true;
 
             return false;

@@ -11,16 +11,27 @@ namespace BonfireSilksong
     {
         public static bool HitEnemyWithSawtoothCirclet = false;
 
-        public static int ArtificeMilestone_1 => 1;
-        public static int ArtificeMilestone_2 => 2;
-        public static int ArtificeMilestone_3 => 3;
-        public static int ArtificeMilestone_4 => 4;
-        public static bool CheckArtificeMilestone_1 => Bonfire.Instance.Status.ArtificeStat >= ArtificeMilestone_1;
-        public static bool CheckArtificeMilestone_2 => Bonfire.Instance.Status.ArtificeStat >= ArtificeMilestone_2;
-        public static bool CheckArtificeMilestone_3 => Bonfire.Instance.Status.ArtificeStat >= ArtificeMilestone_3;
-        public static bool CheckArtificeMilestone_4 => Bonfire.Instance.Status.ArtificeStat >= ArtificeMilestone_4;
+        public static int ArtificeMilestone(int m)
+        {
+            switch (m)
+            {
+                case 1: return 1;
+                case 2: return 2;
+                case 3: return 3;
+                case 4: return 4;
+                default: return 999;
+            }
+        }
 
-        // Stat scaling: tool damage
+        public static bool CheckArtificeMilestone(int m)
+        {
+            var s = Bonfire.Instance.Status.ArtificeStat + LevelingSystem.MilestoneBonus;
+            return s >= ArtificeMilestone(m);
+        }
+
+        /// <summary>
+        /// Tool damage.
+        /// </summary>
         public static int ToolDamage(int baseDamage, int totalArt)
         {
             if (totalArt <= 0) return baseDamage;
@@ -28,9 +39,11 @@ namespace BonfireSilksong
             return (int)Math.Round(baseDamage * (1.0 + 2.0 / (1.0 + 15.0 * Math.Exp(-0.1 * totalArt))));
         }
 
-        // Stat scaling: amount of time it takes to passively replenish a single tool charge (without costing any 
-        // shards). Starts from 60 seconds timer at lvl 5: this prevents player from putting just a single point for 
-        // such an impactful upgrade
+        /// <summary>
+        /// Amount of time it takes to passively replenish a single tool charge (without costing any shards). Starts 
+        /// from 60 seconds timer at lvl 5: this prevents player from putting just a single point for such an impactful 
+        /// upgrade.
+        /// </summary>
         public static int ToolRegenInterval(int totalArt)
         {
             if (totalArt < 5) return -1;
@@ -62,7 +75,7 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// HeroController.Update (Postfix): Passive tool regen, replenishes charges for ALL red tools 
+        /// HeroController.Update (Postfix): Passive tool regen, replenishes 1 charge for ALL red tools 
         /// currently equipped
         /// </summary>
         public static void CheckToolRegen(float dt)
@@ -99,13 +112,13 @@ namespace BonfireSilksong
         /// </summary>
         public static bool CanUseTool(ToolItem tool)
         {
-            if (IsSilkshotTool(tool) && CheckArtificeMilestone_1)
+            if (IsSilkshotTool(tool) && CheckArtificeMilestone(1))
             {
                 _isUsingSilkshot = true;
 
                 return true;
             }
-            else if (tool.name == "Rosary Cannon" && CheckArtificeMilestone_2)
+            else if (tool.name == "Rosary Cannon" && CheckArtificeMilestone(2))
             {
                 return true;
             }
@@ -118,7 +131,7 @@ namespace BonfireSilksong
         /// </summary>
         public static bool CheckSilkshotSilkCostRefund(int cost)
         {
-            bool refunded = _isUsingSilkshot && cost == 1 && CheckArtificeMilestone_1;
+            bool refunded = _isUsingSilkshot && cost == 1 && CheckArtificeMilestone(1);
 
             _isUsingSilkshot = false;
 
@@ -140,11 +153,15 @@ namespace BonfireSilksong
         /// </summary>
         public static int GetToolCopyCount(ToolItem tool)
         {
-            if (!CheckArtificeMilestone_4) return 0;
+            if (!CheckArtificeMilestone(4)) return 0;
 
             var t = tool;
 
-            // following tools can't be copied, Hornet will just lock into directional animation if copying is forced.
+            // Following tools can't be copied, Hornet will just lock into directional animation if copying is forced.
+            // All of these except 'Lighting Rod', which is Voltvessels, wouldn't work in vanilla anyway. For
+            // Voltvessels, the Bola works but Spear doesn't, latter has probably some additional logic involved 
+            // because even with Quick Sling equipped it has much slower animation compared to other tools. Could try
+            // to pinpoint the exact sequence later, however it's not a priority right now.
             if (IsSilkshotTool(t) ||
                 t.name == "Rosary Cannon" ||
                 t.name == "Screw Attack" ||
@@ -152,7 +169,7 @@ namespace BonfireSilksong
                 t.name == "Flea Brew" ||
                 t.name == "Lifeblood Syringe" ||
                 t.name == "Silk Snare" ||
-                (t.name == "Lightning Rod" && !PlayerData.instance.LightningToolToggle)) // Spear doesn't work, Bolas do
+                (t.name == "Lightning Rod" && !PlayerData.instance.LightningToolToggle))
             {
                 return 0;
             }
@@ -166,7 +183,7 @@ namespace BonfireSilksong
                 copies++;
                 _toolRefunds += 2;
 
-                Bonfire.Log.LogInfo("Copied current tool.");
+                Bonfire.Log.LogDebug("Copied current tool.");
             }
 
             if (Gameplay.QuickSlingTool.IsEquipped)
@@ -177,7 +194,7 @@ namespace BonfireSilksong
                     copies++;
                     _toolRefunds += 2;
 
-                    Bonfire.Log.LogInfo("Copied secondary projectile from Quick Sling tool.");
+                    Bonfire.Log.LogDebug("Copied secondary projectile from Quick Sling tool.");
                 }
 
                 copies++;
@@ -191,15 +208,15 @@ namespace BonfireSilksong
         /// </summary>
         public static void CheckToolChargeRefund(ToolItem tool)
         {
-            if (IsSilkshotTool(tool) && CheckArtificeMilestone_3)
+            if (IsSilkshotTool(tool) && CheckArtificeMilestone(3))
             {
                 tool.CollectFree(1);
             }
-            else if (tool != null && tool.name == "Rosary Cannon" && CheckArtificeMilestone_2)
+            else if (tool != null && tool.name == "Rosary Cannon" && CheckArtificeMilestone(2))
             {
                 tool.CollectFree(1000);
             }
-            else if (_toolRefunds > 0 && CheckArtificeMilestone_4)
+            else if (_toolRefunds > 0 && CheckArtificeMilestone(4))
             {
                 tool.CollectFree(_toolRefunds);
                 _toolRefunds = 0;
@@ -224,7 +241,7 @@ namespace BonfireSilksong
         /// </summary>
         public static void ScaleSawtoothCircletRange(GameObject instance)
         {
-            if (instance == null || !CheckArtificeMilestone_3)
+            if (instance == null || !CheckArtificeMilestone(3))
                 return;
 
             Transform visual = instance.transform.Find(
@@ -249,14 +266,14 @@ namespace BonfireSilksong
             {
                 visual.localScale = new Vector3(1.05f * rangeMultpilier, -0.94f, 1.0f);
 
-                Bonfire.Log.LogInfo($"Brolly Spike visual scale: {visual.localScale}");
+                Bonfire.Log.LogDebug($"Brolly Spike visual scale: {visual.localScale}");
             }
 
             if (damager != null)
             {
                 damager.localScale = new Vector3(2.33f * rangeMultpilier, -0.47f, 1.0f);
 
-                Bonfire.Log.LogInfo($"Brolly Spike damager scale: {damager.localScale}");
+                Bonfire.Log.LogDebug($"Brolly Spike damager scale: {damager.localScale}");
             }
         }
 

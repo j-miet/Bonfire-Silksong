@@ -1,3 +1,4 @@
+using System;
 using System.Reflection;
 
 using HarmonyLib;
@@ -79,9 +80,9 @@ namespace BonfireSilksong
             string sourceName = hitInstance.Source.name;
             var tool = hitInstance.RepresentingTool;
 
-            Bonfire.Log.LogDebug("[HealthManager.Hit] Recorded a hit => Hit source: " + sourceName);
-            Bonfire.Log.LogDebug("Damage Dealt: " + hitInstance.DamageDealt);
-            Bonfire.Log.LogDebug("Tool instance: " + tool?.name ?? "null");
+            Bonfire.Log.LogInfo("[HealthManager.Hit] Recorded a hit => Hit source: " + sourceName);
+            Bonfire.Log.LogInfo("Damage Dealt: " + hitInstance.DamageDealt);
+            Bonfire.Log.LogInfo("Tool instance: " + tool?.name ?? "null");
 
             LuckLogic.CheckIfCrit(hitInstance);
             bool isCrit = LuckLogic.Crit;
@@ -109,7 +110,7 @@ namespace BonfireSilksong
 
                 spellDamage = IntelligenceLogic.ApplySpellDamageBonuses(spellDamage, tool);
 
-                if (IntelligenceLogic.CheckIntelligenceMilestone_3 && isCrit)
+                if (IntelligenceLogic.CheckIntelligenceMilestone(3) && isCrit)
                 {
                     spellDamage = DexterityLogic.ApplyCritDamage(spellDamage);
                 }
@@ -122,14 +123,14 @@ namespace BonfireSilksong
 
                 int toolDamage = hitInstance.DamageDealt;
 
-                if (tool.name == "Rosary Cannon" && ArtificeLogic.CheckArtificeMilestone_4)
+                if (tool.name == "Rosary Cannon" && ArtificeLogic.CheckArtificeMilestone(4))
                 {
                     toolDamage += 2;
                 }
 
                 toolDamage = ArtificeLogic.ApplyToolDamageBonuses(toolDamage, tool);
 
-                if (IntelligenceLogic.CheckIntelligenceMilestone_3)
+                if (IntelligenceLogic.CheckIntelligenceMilestone(3))
                 {
                     toolDamage = IntelligenceLogic.ApplyClawMirrorDamageBonuses(toolDamage, tool);
                 }
@@ -143,7 +144,7 @@ namespace BonfireSilksong
 
                         toolDamage = DexterityLogic.ApplyCritDamage(toolDamage);
                     }
-                    else if (ArtificeLogic.CheckArtificeMilestone_1 &&
+                    else if (ArtificeLogic.CheckArtificeMilestone(1) &&
                         (tool.name == "Pimpilo" || tool.name == "Brolly Spike"))
                     {
                         // Pimpillo and Sawtooth Circlet
@@ -153,7 +154,7 @@ namespace BonfireSilksong
                 }
 
                 if (tool.name == "Brolly Spike" &&
-                    ArtificeLogic.CheckArtificeMilestone_2 &&
+                    ArtificeLogic.CheckArtificeMilestone(2) &&
                     ArtificeLogic.HitEnemyWithSawtoothCirclet)
                 {
                     HeroController.instance.AddSilk(1, false);
@@ -168,7 +169,7 @@ namespace BonfireSilksong
 
                 clawLineDamage = DexterityLogic.ApplyClawlineDamageBonuses(clawLineDamage);
 
-                if (DexterityLogic.CheckDexterityMilestone_2 && isCrit)
+                if (DexterityLogic.CheckDexterityMilestone(2) && isCrit)
                 {
                     clawLineDamage = DexterityLogic.ApplyCritDamage(clawLineDamage);
                 }
@@ -201,17 +202,35 @@ namespace BonfireSilksong
             }
             else if (sourceName == "Bonfire-Taunt")
             {
-                // taunt has no scaling from game's own mechanics so hitInstance.DamageDealt is always a constant
-                // which TauntDamage already accesses internally.
+                // custom damage type: handles all primary damage logic in TauntDamage.
 
                 int tauntDamage = IntelligenceLogic.TauntDamage(Bonfire.Instance.Status.IntelligenceStat);
 
-                if (IntelligenceLogic.CheckIntelligenceMilestone_3 && isCrit)
+                if (IntelligenceLogic.CheckIntelligenceMilestone(3) && isCrit)
                 {
                     tauntDamage = DexterityLogic.ApplyCritDamage(tauntDamage);
                 }
 
                 hitInstance.DamageDealt = tauntDamage;
+            }
+            else if (sourceName == "Bonfire-Reflect")
+            {
+                // custom damage type: handles all primary damage logic in ReflectDamage
+
+                int reflectDamage = ResilienceLogic.ReflectDamage(Bonfire.Instance.Status.ResilienceStat);
+
+                if (ResilienceLogic.IsInBlueStateAndPlasmified(BlueState.THORNED) && isCrit)
+                {
+                    reflectDamage = DexterityLogic.ApplyCritDamage(reflectDamage);
+                }
+
+                hitInstance.DamageDealt = reflectDamage;
+            }
+
+            // while in 'Thorned' state, all non-reflect damage is reduced by 99% but is always at least 1.
+            if (ResilienceLogic.BlueMaskMode == BlueState.THORNED && sourceName != "Bonfire-Reflect")
+            {
+                hitInstance.DamageDealt = (int)Math.Max(Math.Round(hitInstance.DamageDealt * 0.01), 1);
             }
 
             DexterityLogic.ApplyCritHeal(isCrit);
