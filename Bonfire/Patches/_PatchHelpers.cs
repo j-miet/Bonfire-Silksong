@@ -37,7 +37,7 @@ namespace BonfireSilksong
         {
             int damage = PlayerData.instance.nailDamage;
 
-            if (instance.RepresentingTool != null && instance.RepresentingTool.Type == ToolItemType.Skill)
+            if (instance.RepresentingTool?.Type == ToolItemType.Skill)
             {
                 return damage;
             }
@@ -57,7 +57,7 @@ namespace BonfireSilksong
         {
             int damage = PlayerData.instance.nailDamage;
 
-            if (hitInstance.RepresentingTool != null && hitInstance.RepresentingTool.Type == ToolItemType.Skill)
+            if (hitInstance.RepresentingTool?.Type == ToolItemType.Skill)
             {
                 return damage;
             }
@@ -98,7 +98,7 @@ namespace BonfireSilksong
             // - write a custom formula which also checks all possible buffs conditions this source can receive.
             // - apply any increments post-buff, meaning the flat +X damage would only benefit from the few remaining
             // modifiers such as the crest bonuses mentioned earlier.
-            if (tool != null && tool.Type == ToolItemType.Skill)
+            if (tool?.Type == ToolItemType.Skill)
             {
                 // -- silk skills --
                 // 1. The "Type == ToolItemType.Skill" is enough to target only the silk skills.
@@ -235,9 +235,14 @@ namespace BonfireSilksong
             }
 
             // while in reflect state, all non-reflect damage is reduced by 99% but is always at least 1.
+            // Only exception is the Memory Crystal blue tool which fits the 'sacrifice hp to deal damage' theme.
             if (ResilienceLogic.IsInBlueState(BlueState.REFLECT) && sourceName != "Bonfire-Reflect")
             {
-                hitInstance.DamageDealt = (int)Math.Max(Math.Round(hitInstance.DamageDealt * 0.01), 1);
+                if (tool?.name != "Revenge Crystal")
+                {
+                    hitInstance.DamageDealt = (int)Math.Max(Math.Round(hitInstance.DamageDealt * 0.01), 1);
+                    Bonfire.Log.LogDebug($"Reflect state enabled, damage reduced to {hitInstance.DamageDealt}");
+                }
             }
 
             DexterityLogic.ApplyCritHeal(isCrit);
