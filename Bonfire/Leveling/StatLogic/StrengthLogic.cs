@@ -20,8 +20,9 @@ namespace BonfireSilksong
 
         public static bool CheckStrengthMilestone(int m)
         {
-            var s = Bonfire.Instance.Status.StrengthStat + LevelingSystem.MilestoneBonus;
-            return s >= StrengthMilestone(m);
+            var s = Bonfire.Instance.Status.StrengthStat;
+            int b = LevelingSystem.MilestoneBonus;
+            return s + b >= StrengthMilestone(m) && s >= 1;
         }
 
         /// <summary>

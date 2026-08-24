@@ -1,3 +1,5 @@
+using System;
+
 using GlobalEnums;
 using GlobalSettings;
 using HarmonyLib;
@@ -163,6 +165,41 @@ namespace BonfireSilksong
             }
         }
 
+        // public void AddHealth(int amount)
+        [HarmonyPatch(typeof(HeroController), "AddHealth")]
+        class HeroController_AddHealth
+        {
+            static bool Prefix(ref int amount)
+            {
+                // This wasn't originally intended, but it can stay:
+                // If player has Weak Bind and is in reflect blue state, this check will override 
+                // CheckWeakBindRequirement and thus allow the extra bind from Claw Mirror to heal. So you get 2 heals,
+                // or even 3 with Multibinder.
+                if (ResilienceLogic.IsInBlueStateAndPlasmified(BlueState.REFLECT))
+                    return true;
+
+                if (ResilienceLogic.ReflectStateHealedBlueMasks())
+                    return false;
+
+                if (IntelligenceLogic.CheckWeakBindRequirement())
+                {
+                    amount = (int)Math.Round(amount * 0.33f);
+
+                    // don't allow healing from the additional Claw Mirror bind. With this, first bind does nothing
+                    // but any following ones heal normally.
+                    if (IntelligenceLogic.ExtraBind)
+                    {
+                        IntelligenceLogic.ExtraBind = false;
+                        return false;
+                    }
+
+                    return true;
+                }
+
+                return true;
+            }
+        }
+
         [HarmonyPatch(typeof(HeroController), "CanHarpoonDash")]
         class HeroController_CanHarpoonDash
         {
@@ -180,7 +217,8 @@ namespace BonfireSilksong
             {
                 IntelligenceLogic.DealTauntDamage();
 
-                if (IntelligenceLogic.CheckIntelligenceMilestone(1))
+                if (IntelligenceLogic.CheckIntelligenceMilestone(1) &&
+                    Bonfire.Instance.Status.ShowCustomRangeIndicator)
                 {
                     RangeIndicator.Display(
                         IntelligenceLogic.TauntRange(Bonfire.Instance.Status.IntelligenceStat, isGUI: true));
@@ -195,7 +233,8 @@ namespace BonfireSilksong
             {
                 IntelligenceLogic.DealTauntDamage();
 
-                if (IntelligenceLogic.CheckIntelligenceMilestone(1))
+                if (IntelligenceLogic.CheckIntelligenceMilestone(1) &&
+                    Bonfire.Instance.Status.ShowCustomRangeIndicator)
                 {
                     RangeIndicator.Display(
                         IntelligenceLogic.TauntRange(Bonfire.Instance.Status.IntelligenceStat, isGUI: true));
@@ -261,12 +300,22 @@ namespace BonfireSilksong
         {
             private static int _extraToolThrows;
 
-            static void Prefix(bool isAutoThrow, out ToolItem __state)
+            static bool Prefix(bool isAutoThrow, out ToolItem __state)
             {
                 __state = ArtificeLogic.GetThrownToolItem();
 
+                if (__state.name == "Lifeblood Syringe" &&
+                    !HeroController.instance.IsInLifebloodState &&
+                    !ResilienceLogic.IsInAnyBlueState() &&
+                    !ResilienceLogic.CheckResilienceMilestone(3))
+                {
+                    return false;
+                }
+
                 if (!isAutoThrow && __state != null)
                     _extraToolThrows = ArtificeLogic.GetToolCopyCount(__state);
+
+                return true;
             }
 
             static void Postfix(ToolItem __state)
@@ -281,6 +330,24 @@ namespace BonfireSilksong
 
                 ArtificeLogic.SetThrowFieldValues(__state);
                 _extraToolThrows--;
+            }
+        }
+
+        [HarmonyPatch(typeof(HeroController), "HitMaxBlueHealth")]
+        class HeroController_HitMaxBlueHealth
+        {
+            static void Postfix()
+            {
+                // When in glass cannon state, block entering the Plasmified state without using Plasmium Phial.
+                if (ResilienceLogic.IsInAnyBlueState() &&
+                    !ResilienceLogic.CheckResilienceMilestone(3))
+                {
+                    HeroController.instance.ResetLifebloodState();
+
+                    // when game attempts to enter Plasmified state, but it gets immediately cancelled, the blue hp
+                    // value seems to get incremented by 1 and ending up to 9 health. This forces is back.
+                    PlayerData.instance.healthBlue = 8;
+                }
             }
         }
     }

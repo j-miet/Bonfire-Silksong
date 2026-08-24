@@ -25,8 +25,9 @@ namespace BonfireSilksong
 
         public static bool CheckArtificeMilestone(int m)
         {
-            var s = Bonfire.Instance.Status.ArtificeStat + LevelingSystem.MilestoneBonus;
-            return s >= ArtificeMilestone(m);
+            var s = Bonfire.Instance.Status.ArtificeStat;
+            int b = LevelingSystem.MilestoneBonus;
+            return s + b >= ArtificeMilestone(m) && s >= 1;
         }
 
         /// <summary>
@@ -59,7 +60,10 @@ namespace BonfireSilksong
             Bonfire.Log.LogDebug($"[ArtificeLogic]");
             Bonfire.Log.LogDebug($"<Vanilla> Tool: {tool}. Damage: {baseDamage}");
 
-            int updatedDamage = ToolDamage(baseDamage, Bonfire.Instance.Status.ArtificeStat);
+            int updatedDamage = baseDamage;
+
+            if (!ResilienceLogic.IsInBlueState(BlueState.GLASSCANNON))
+                updatedDamage = ToolDamage(baseDamage, Bonfire.Instance.Status.ArtificeStat);
 
             Bonfire.Log.LogDebug($"<Modded> Tool: {tool}. Damage: {updatedDamage}");
 

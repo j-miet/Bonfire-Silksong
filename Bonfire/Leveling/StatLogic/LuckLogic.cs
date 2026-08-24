@@ -23,8 +23,9 @@ namespace BonfireSilksong
 
         public static bool CheckLuckMilestone(int m)
         {
-            var s = Bonfire.Instance.Status.LuckStat + LevelingSystem.MilestoneBonus;
-            return s >= LuckMilestone(m);
+            var s = Bonfire.Instance.Status.LuckStat;
+            int b = LevelingSystem.MilestoneBonus;
+            return s + b >= LuckMilestone(m) && s >= 1;
         }
 
         /// <summary>
@@ -34,7 +35,14 @@ namespace BonfireSilksong
         {
             if (totalLck <= 0) return 0;
 
-            return (int)Math.Round(60.0 / (1.0 + 15.0 * Math.Exp(-0.08 * totalLck)));
+            int critChance = 0;
+
+            if (ResilienceLogic.IsInBlueStateAndPlasmified(BlueState.GLASSCANNON))
+                critChance += 10;
+
+            critChance += (int)Math.Round(60.0 / (1.0 + 15.0 * Math.Exp(-0.08 * totalLck)));
+
+            return critChance;
         }
 
         /// <summary>
@@ -101,6 +109,12 @@ namespace BonfireSilksong
 
             if (!hit.IsHeroDamage) return;
 
+            if (ResilienceLogic.GlassCannonButNotPlasmified)
+            {
+                Crit = false;
+                return;
+            }
+
             int critChance = CritChance(Bonfire.Instance.Status.LuckStat);
             if (critChance <= 0) // must have at least 1% crit chance
             {
@@ -122,7 +136,7 @@ namespace BonfireSilksong
         /// <summary>
         /// DamageEnemies.DoDamage (Postfix): Display a crit visual effect on enemy hit.
         /// </summary>
-        public static void PlayCritVisualOnEnemyHit(DamageEnemies instance, GameObject target, bool result)
+        public static void PlayCritVisualOnEnemyHit(GameObject target)
         {
             if (Crit)
             {
@@ -136,11 +150,6 @@ namespace BonfireSilksong
             }
         }
 
-
-        private readonly static FieldInfo IsHeroDamageField = typeof(DamageEnemies)
-            .GetField("isHeroDamage", BindingFlags.Instance | BindingFlags.NonPublic);
-        private readonly static FieldInfo SourceIsHeroField = typeof(DamageEnemies)
-            .GetField("sourceIsHero", BindingFlags.Instance | BindingFlags.NonPublic);
 
         // helpers for getting current rosary and shell shard values
         private static int GetRosaries(string size, HealthManager enemy)

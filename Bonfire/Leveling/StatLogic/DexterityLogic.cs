@@ -20,8 +20,9 @@ namespace BonfireSilksong
 
         public static bool CheckDexterityMilestone(int m)
         {
-            var s = Bonfire.Instance.Status.DexterityStat + LevelingSystem.MilestoneBonus;
-            return s >= DexterityMilestone(m);
+            var s = Bonfire.Instance.Status.DexterityStat;
+            int b = LevelingSystem.MilestoneBonus;
+            return s + b >= DexterityMilestone(m) && s >= 1;
         }
 
         /// <summary>
@@ -45,7 +46,14 @@ namespace BonfireSilksong
         /// </summary>
         public static int ApplyCritDamage(int baseDamage)
         {
-            int updatedDamage = CritDamage(Bonfire.Instance.Status.DexterityStat, baseDamage);
+            int updatedDamage = baseDamage;
+
+            if (ResilienceLogic.GlassCannonButNotPlasmified)
+            {
+                return updatedDamage;
+            }
+
+            updatedDamage = CritDamage(Bonfire.Instance.Status.DexterityStat, baseDamage);
 
             HeroController.instance.GetComponent<SpriteFlash>().FlashGrimmflame();
 

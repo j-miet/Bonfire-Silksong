@@ -42,7 +42,8 @@ namespace BonfireSilksong
                 return damage;
             }
 
-            damage = StrengthLogic.UpdateNeedleBaseDamage(damage);
+            if (!ResilienceLogic.IsInBlueState(BlueState.GLASSCANNON))
+                damage = StrengthLogic.UpdateNeedleBaseDamage(damage);
 
             Bonfire.Log.LogDebug($"[PatchHelpers] getter (DamageEnemies) updated needle damage={damage}");
 
@@ -219,7 +220,7 @@ namespace BonfireSilksong
 
                 int reflectDamage = ResilienceLogic.ReflectDamage(Bonfire.Instance.Status.ResilienceStat);
 
-                if (ResilienceLogic.IsInBlueStateAndPlasmified(BlueState.THORNED) && isCrit)
+                if (ResilienceLogic.IsInBlueStateAndPlasmified(BlueState.REFLECT) && isCrit)
                 {
                     reflectDamage = DexterityLogic.ApplyCritDamage(reflectDamage);
                 }
@@ -227,14 +228,19 @@ namespace BonfireSilksong
                 hitInstance.DamageDealt = reflectDamage;
             }
 
-            // while in 'Thorned' state, all non-reflect damage is reduced by 99% but is always at least 1.
-            if (ResilienceLogic.BlueMaskMode == BlueState.THORNED && sourceName != "Bonfire-Reflect")
+            if (ResilienceLogic.IsInBlueState(BlueState.GLASSCANNON))
+            {
+                hitInstance.DamageDealt = ResilienceLogic.ApplyGlassCannonDamageBonus(hitInstance.DamageDealt);
+
+            }
+
+            // while in reflect state, all non-reflect damage is reduced by 99% but is always at least 1.
+            if (ResilienceLogic.IsInBlueState(BlueState.REFLECT) && sourceName != "Bonfire-Reflect")
             {
                 hitInstance.DamageDealt = (int)Math.Max(Math.Round(hitInstance.DamageDealt * 0.01), 1);
             }
 
             DexterityLogic.ApplyCritHeal(isCrit);
-
             LuckLogic.Crit = false;
         }
     }

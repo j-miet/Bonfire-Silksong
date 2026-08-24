@@ -1,3 +1,4 @@
+using System;
 using HarmonyLib;
 
 namespace BonfireSilksong
@@ -74,6 +75,9 @@ namespace BonfireSilksong
             static void Prefix(ref int amount)
             {
                 amount = ResilienceLogic.PreventHPLossOnBlock(amount);
+
+                if (amount > 0)
+                    amount = ResilienceLogic.UpdateBlueStateDamageTaken(amount);
             }
         }
 

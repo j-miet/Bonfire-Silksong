@@ -230,7 +230,9 @@ namespace BonfireSilksong
         {
             SaveSettings();
             Init();
+
             LevelingSystem.Instance.RefreshRelicsDeposited();
+            LevelingSystem.MilestoneBonus = ResilienceLogic.GetGlassCannonMilestoneBonus(Status.ResilienceStat);
 
             //Log.LogDebug("[Bonfire] Current scene: " + GameManager.instance.GetSceneNameString());
 

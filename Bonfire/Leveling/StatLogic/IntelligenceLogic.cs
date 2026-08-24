@@ -11,6 +11,7 @@ namespace BonfireSilksong
         public const int TauntBaseDamage = 5;
 
         public static bool BindCostInit = false;
+        public static bool ExtraBind = false;
 
         public static int IntelligenceMilestone(int m)
         {
@@ -26,8 +27,9 @@ namespace BonfireSilksong
 
         public static bool CheckIntelligenceMilestone(int m)
         {
-            var s = Bonfire.Instance.Status.IntelligenceStat + LevelingSystem.MilestoneBonus;
-            return s >= IntelligenceMilestone(m);
+            var s = Bonfire.Instance.Status.IntelligenceStat;
+            int b = LevelingSystem.MilestoneBonus;
+            return s + b >= IntelligenceMilestone(m) && s >= 1;
         }
 
         /// <summary>
@@ -66,7 +68,7 @@ namespace BonfireSilksong
         {
             int damage = TauntBaseDamage;
 
-            if (totalInt < 0) return 0;
+            if (totalInt <= 0) return 0;
             if (totalInt == 1) return damage;
 
             if (totalInt <= 10)
@@ -97,6 +99,8 @@ namespace BonfireSilksong
         /// </summary>
         public static float TauntRange(int totalInt, bool isGUI = false)
         {
+            if (totalInt <= 0) return 0;
+
             float range = 5f + (int)(0.15 * totalInt);
 
             if (CheckWeakBindRequirement())
@@ -116,7 +120,10 @@ namespace BonfireSilksong
             Bonfire.Log.LogDebug($"[IntelligenceLogic]");
             Bonfire.Log.LogDebug($"<Vanilla> Silk Skill: {spell}. Damage: {baseDamage}");
 
-            int updatedDamage = SpellDamage(baseDamage, Bonfire.Instance.Status.IntelligenceStat);
+            int updatedDamage = baseDamage;
+
+            if (!ResilienceLogic.IsInBlueState(BlueState.GLASSCANNON))
+                updatedDamage = SpellDamage(baseDamage, Bonfire.Instance.Status.IntelligenceStat);
 
             if (CheckWeakBindRequirement())
             {
@@ -238,13 +245,13 @@ namespace BonfireSilksong
                 return;
 
             _startedBinding = true;
+            ExtraBind = false;
 
             if (HeroController.instance == null)
                 return;
 
             FsmInt silkCost;
             FsmInt silkCostWitch;
-            FsmInt healAmount;
             FsmFloat bindTime;
             FsmInt bindAmount;
 
@@ -298,15 +305,21 @@ namespace BonfireSilksong
                 bindAmount = fsm.FsmVariables.GetFsmInt("Bind Amount");
                 if (bindAmount != null)
                 {
-                    if (CheckWeakBindRequirement())
+                    if (CheckWeakBindRequirement() &&
+                        (ToolItemManager.IsToolEquipped("Dazzle Bind") ||
+                        ToolItemManager.IsToolEquipped("Dazzle Bind Upgraded"))
+                        )
                     {
                         bindAmount.Value += 1;
+                        ExtraBind = true;
 
                         Bonfire.Log.LogDebug($"Updated bind amount to {bindAmount.Value}");
                     }
                 }
 
-                // heal amount
+                // - OBSOLETE, better to directly patch HeroController.AddHealth as this doesn't work Multibinder tool's
+                // heal amount.
+                /*
                 healAmount = fsm.FsmVariables.GetFsmInt("Heal Amount");
                 if (healAmount != null)
                 {
@@ -317,6 +330,7 @@ namespace BonfireSilksong
                         Bonfire.Log.LogDebug($"Heal amount reduced, amount={healAmount.Value}");
                     }
                 }
+                */
 
                 // duration
                 bindTime = fsm.FsmVariables.GetFsmFloat("Bind Time");
@@ -349,6 +363,9 @@ namespace BonfireSilksong
             if (PlayerData.instance.IsAnyCursed) return result;
 
             int cost = BindCost(Bonfire.Instance.Status.IntelligenceStat);
+
+            if (CheckWeakBindRequirement())
+                cost = (int)Math.Round(cost * 0.33f);
 
             return cost;
         }

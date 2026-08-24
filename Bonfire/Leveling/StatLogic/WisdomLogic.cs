@@ -21,8 +21,9 @@ namespace BonfireSilksong
 
         public static bool CheckWisdomMilestone(int m)
         {
-            var s = Bonfire.Instance.Status.WisdomStat + LevelingSystem.MilestoneBonus;
-            return s >= WisdomMilestone(m);
+            var s = Bonfire.Instance.Status.WisdomStat;
+            int b = LevelingSystem.MilestoneBonus;
+            return s + b >= WisdomMilestone(m) && s >= 1;
         }
 
         // Stat scaling: extra silk gained when striking an enemy with needle (+1 silk for every 20 levels)

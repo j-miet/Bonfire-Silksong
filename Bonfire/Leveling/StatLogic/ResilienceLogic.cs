@@ -9,20 +9,23 @@ namespace BonfireSilksong
 {
     public enum BlueState
     {
-        THORNED,
-        BLUEBLOODED,
-        DISABLED
+        DISABLED,
+        REFLECT,
+        GLASSCANNON,
     }
 
     public static class ResilienceLogic
     {
         public const int ReflectBaseDamage = 5;
 
-        public static BlueState BlueMaskMode = BlueState.DISABLED;
-
         public static bool SatDownAtBench = false;
         public static bool BlueHpInit = false;
         public static bool BlockNextHit = false;
+        public static bool UsedPlasmiumPhial = false;
+
+        public static bool GlassCannonButNotPlasmified =>
+            Bonfire.Instance.Status.BlueMaskMode == (int)BlueState.GLASSCANNON &&
+            !IsInBlueStateAndPlasmified(BlueState.GLASSCANNON);
 
         public static int ResilienceMilestone(int m)
         {
@@ -30,24 +33,32 @@ namespace BonfireSilksong
             {
                 case 1: return 1;
                 case 2: return 2;
-                case 3: return 3;
+                case 3: return 35;
                 default: return 999;
             }
         }
 
         public static bool CheckResilienceMilestone(int m)
         {
-            var s = Bonfire.Instance.Status.ResilienceStat + LevelingSystem.MilestoneBonus;
-            return s >= ResilienceMilestone(m);
+            var s = Bonfire.Instance.Status.ResilienceStat;
+            int b = LevelingSystem.MilestoneBonus;
+            return s + b >= ResilienceMilestone(m) && s >= 1;
         }
 
         /// <summary>
-        /// Extra lifeblood masks.
+        /// Extra lifeblood masks. Capped at 8 because at 9 the game transitions into Plasmified state.
         /// </summary>
-        public static int ExtraMasks(int totalRes)
+        public static int BlueMasks(int totalRes)
         {
-            // TODO buff mask scaling, this should realistically give >15 masks with higher investments
-            return (int)Math.Round(8.0 * (1.0 - Math.Exp(-0.055 * (totalRes - 1))));
+            if (totalRes <= 0) return 0;
+            else if (totalRes < 4) return 1;
+            else if (totalRes < 9) return 2;
+            else if (totalRes < 15) return 3;
+            else if (totalRes < 20) return 4;
+            else if (totalRes < 25) return 5;
+            else if (totalRes < 30) return 6;
+            else if (totalRes < 35) return 7;
+            else return 8;
         }
 
         /// <summary>
@@ -74,71 +85,222 @@ namespace BonfireSilksong
         /// <summary>
         /// Reflect damage.
         /// </summary>
-        public static int ReflectDamage(int totalRes, bool isGUI = false)
+        public static int ReflectDamage(int totalRes, bool isGUI = false, bool GUIPlasmified = false)
         {
-            int damage = 5 * ExtraMasks(totalRes);
+            BlueState state = BlueState.REFLECT;
+            if (totalRes <= 0 || !IsInBlueState(state))
+                return 0;
 
-            if (IsInBlueStateAndPlasmified(BlueState.THORNED))
+            int damage = 5 + 3 * BlueMasks(totalRes) + 5 * (PlayerData.instance.maxHealthBase - 5);
+
+            if (IsInBlueStateAndPlasmified(state) || (isGUI && GUIPlasmified))
             {
                 damage += 10 * PlayerData.instance.health;
             }
 
-            if (isGUI && IsInBlueStateAndPlasmified(BlueState.THORNED))
-            {
-                return damage += 10 * PlayerData.instance.health;
-            }
-
-            Bonfire.Log.LogDebug($"[ResilienceLogic] Challenge taunt final damage: {damage}");
+            // skip log printing when GUI calls this
+            if (!isGUI)
+                Bonfire.Log.LogDebug($"[ResilienceLogic] Reflect damage: {damage}");
 
             return damage;
         }
 
-        public static float ReflectArea()
+        /// <summary>
+        /// Reflect effect area.
+        /// </summary>
+        public static float ReflectArea(bool isGUI = false, bool GUIPlasmified = false)
         {
-            BlueState thorned = BlueState.THORNED;
-            float range = ReflectDamageRange;
+            BlueState state = BlueState.REFLECT;
+            if (!IsInBlueState(state))
+                return 0;
 
-            if (IsInBlueState(thorned) && CheckResilienceMilestone(2))
+            float range = ReflectDamageArea;
+
+            if (IsInBlueState(state) && CheckResilienceMilestone(2))
                 range += 1f;
 
-            if (IsInBlueStateAndPlasmified(thorned))
-                range += 2f;
+            if (IsInBlueStateAndPlasmified(state) || (isGUI && GUIPlasmified))
+                range += 3f;
+
+            if (!isGUI)
+                Bonfire.Log.LogDebug($"[ResilienceLogic] Reflect effect area: {range}");
 
             return range;
         }
 
-        public static int GetBlueBloodedMilestoneBonus(int totalRes)
+        /// <summary>
+        /// Handle reflect damage output while in reflect blue state.
+        /// </summary>
+        public static void HandleReflectDamageHitLogic(HazardType hazard)
         {
-            if (totalRes < 0) return 0;
+            if (IsInBlueState(BlueState.REFLECT))
+            {
+                DealReflectDamage();
 
-            BlueState s = BlueState.BLUEBLOODED;
+                if (Bonfire.Instance.Status.ShowCustomRangeIndicator)
+                    RangeIndicator.Display(ReflectArea(isGUI: true));
 
-            if (IsInBlueStateAndPlasmified(s))
-            {
-                return 10;
+                if (hazard == HazardType.ENEMY)
+                    HeroController.instance.AddSilk(1, false);
             }
-            else if (IsInBlueState(s) && CheckResilienceMilestone(2))
+        }
+
+        /// <summary>
+        /// Amount of blue hp healed with bind while in damage reflect state.
+        /// </summary>
+        public static bool ReflectStateHealedBlueMasks()
+        {
+            if (IsInBlueState(BlueState.REFLECT) && !HeroController.instance.IsInLifebloodState)
             {
-                return 5;
+                int masks = 1;
+
+                if (CheckResilienceMilestone(2))
+                    masks += 1;
+
+
+                int updated = PlayerData.instance.healthBlue + masks;
+                int res = BlueMasks(Bonfire.Instance.Status.ResilienceStat);
+
+                if (updated > res)
+                    masks -= updated - res;
+
+                Bonfire.Log.LogDebug("[ResilienceLogic] Blue hp healed in Reflect state: " + masks);
+
+                GameManager.instance.QueuedBlueHealth = masks;
+                EventRegister.SendEvent(EventRegisterEvents.AddQueuedBlueHealth);
+
+                return true;
             }
-            else if (IsInBlueState(s))
+
+            return false;
+        }
+
+        /// <summary>
+        /// Apply damage bonuses while in glass cannon state.
+        /// </summary>
+        public static int ApplyGlassCannonDamageBonus(int baseDamage)
+        {
+            int damage = (int)Math.Round(baseDamage * 1.5f * GlassCannonDamageMaskBonus());
+
+            if (CheckResilienceMilestone(2) || IsInBlueState(BlueState.GLASSCANNON))
             {
-                return 3;
+                damage += 10;
+                Bonfire.Log.LogDebug($"[ResilienceLogic] Applied glass cannon flat bonus");
+            }
+
+            return damage;
+        }
+
+        /// <summary>
+        /// Get hp + blue mask damage bonuses in glass cannon state (separated from ApplyGlassCannonDamageBonus for 
+        /// GUI utilization).
+        /// </summary>
+        public static float GlassCannonDamageMaskBonus(bool isGUI = false, bool GUIPlasmified = false)
+        {
+            BlueState state = BlueState.GLASSCANNON;
+            if (!IsInBlueState(state))
+                return 0;
+
+            float bonus = 1f;
+
+            if (IsInBlueStateAndPlasmified(state) || (isGUI && GUIPlasmified))
+            {
+                bonus += PlayerData.instance.health * 0.2f + (PlayerData.instance.maxHealthBase - 5) * 0.08f;
             }
             else
             {
-                return 0;
+                bonus += PlayerData.instance.healthBlue * 0.07f + (PlayerData.instance.maxHealthBase - 5) * 0.08f;
             }
+
+            if (!isGUI)
+                Bonfire.Log.LogDebug($"[ResilienceLogic] Glass cannon mask bonus: {bonus}");
+
+            return bonus;
+        }
+
+        /// <summary>
+        /// Get current milestone reduction bonus when in glass cannon state.
+        /// </summary>
+        public static int GetGlassCannonMilestoneBonus(int totalRes, bool isGUI = false, bool GUIPlasmified = false)
+        {
+            BlueState s = BlueState.GLASSCANNON;
+
+            if (totalRes <= 0 || !IsInBlueState(s)) return 0;
+
+            int m;
+
+            if (IsInBlueStateAndPlasmified(s) || (isGUI && GUIPlasmified))
+            {
+                m = 10;
+            }
+            else if (IsInBlueState(s) && CheckResilienceMilestone(2))
+            {
+                m = 5;
+            }
+            else if (IsInBlueState(s))
+            {
+                m = 3;
+            }
+            else
+            {
+                m = 0;
+            }
+
+            if (!isGUI)
+                Bonfire.Log.LogDebug($"[ResilienceLogic] Glass cannon milestone bonus: {m}");
+
+            return m;
         }
 
         public static bool IsInBlueState(BlueState state)
         {
-            return CheckResilienceMilestone(1) && BlueMaskMode == state;
+            return CheckResilienceMilestone(1) && Bonfire.Instance.Status.BlueMaskMode == (int)state;
+        }
+
+        public static bool IsInAnyBlueState()
+        {
+            return IsInBlueState(BlueState.REFLECT) || IsInBlueState(BlueState.GLASSCANNON);
         }
 
         public static bool IsInBlueStateAndPlasmified(BlueState state)
         {
-            return HeroController.instance.IsInLifebloodState && CheckResilienceMilestone(3) && BlueMaskMode == state;
+            return HeroController.instance.IsInLifebloodState &&
+                CheckResilienceMilestone(3) &&
+                Bonfire.Instance.Status.BlueMaskMode == (int)state;
+        }
+
+        /// <summary>
+        /// Update damage taken based on current blue state.
+        /// </summary>
+        public static int UpdateBlueStateDamageTaken(int amount)
+        {
+            int damageTaken = amount;
+
+            if (IsInBlueStateAndPlasmified(BlueState.GLASSCANNON))
+            {
+                damageTaken += 2;
+            }
+            else if (IsInBlueStateAndPlasmified(BlueState.REFLECT))
+            {
+                // revert the -1 damage taken below: IsInBlueStateAndPlasmified must be checked first before 
+                // IsInBlueState as the latter will always get accepted if the former is true. 
+                // However while Plasmified, healthBlue should technically equal to 0 because game tracks normal hp
+                // instead so this might not be necessary, but it can stay here as a safety check.
+                damageTaken = amount;
+            }
+            else if (IsInAnyBlueState() && PlayerData.instance.healthBlue <= 0)
+            {
+                // if player has no blue masks left while in blue state, damage taken is 10x.
+                damageTaken *= 10;
+            }
+            else if (IsInAnyBlueState())
+            {
+                damageTaken = Math.Max(1, amount - 1);
+            }
+
+            Bonfire.Log.LogDebug($"[ResilienceLogic] Damage taken in blue state: {damageTaken}");
+
+            return damageTaken;
         }
 
         /// <summary>
@@ -163,17 +325,12 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// HeroController.UpdateBlueHealth (Postfix): Update lifeblood mask count.
+        /// Sets internal cancel flag true which forcefully interrupts current blue hp update loop. This should be only 
+        /// called by LevelingSystem's Apply and Respec methods.
         /// </summary>
-        public static void CustomUpdateBlueHealth()
+        public static void CancelBlueHPUpdate()
         {
-            if (!BlueHpInit)
-            {
-                BlueHpInit = true;
-                return;
-            }
-
-            CallUpdateBlueHP();
+            _cancelBlueHPUpdate = true;
         }
 
         /// <summary>
@@ -184,14 +341,9 @@ namespace BonfireSilksong
         {
             if (instance.cState.evading || instance.cState.invulnerable) return;
 
-            Bonfire.Log.LogInfo("[ResilienceLogic] Took damage from hazard type: " + hazardType);
+            Bonfire.Log.LogDebug("[ResilienceLogic] Took damage from hazard type: " + hazardType);
 
-            // handle reflect damage here after iframe checks. 
-            // Also HazardType arg should be kept in case this code needs to be called elsewhere.
-            // Finally give 1 silk.
-            DealReflectDamage(hazardType);
-            if (IsInBlueState(BlueState.THORNED))
-                HeroController.instance.AddSilk(1, false);
+            HandleReflectDamageHitLogic(hazardType); // reflect damage logic, triggered only outside iframes
 
             if (hazardType != HazardType.ENEMY) return; // only block enemy attacks
 
@@ -247,13 +399,71 @@ namespace BonfireSilksong
             return amount;
         }
 
-        public static void DealReflectDamage(HazardType hazardType)
+        /// <summary>
+        /// HeroController.UpdateBlueHealth (Postfix): Update lifeblood mask count.
+        /// </summary>
+        public static void CustomUpdateBlueHealth()
         {
-            if (hazardType != HazardType.ENEMY) return;
+            // game calls HeroController.UpdateBlueHealth twice when loading into save, this prevents the first call.
+            // if future updates somehow require more than a single block, BlueHpInit should become an int counter
+            // instead.
+            if (!BlueHpInit)
+            {
+                BlueHpInit = true;
+                return;
+            }
 
-            Bonfire.Log.LogInfo("[ResilienceLogic] Reflecting damage to enemies.");
+            CallUpdateBlueHP();
+        }
 
-            if (!IsInBlueState(BlueState.THORNED))
+
+        private const float ReflectDamageArea = 2f;
+
+        private static bool _cancelBlueHPUpdate = false;
+        private static bool _blueHpAddingInProgress = false;
+        private static int _hitsSinceShielded = 0;
+
+        private readonly static FieldInfo SpawnedLuckyDiceShieldEffect = typeof(HeroController)
+            .GetField("spawnedLuckyDiceShieldEffect", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        // helper for HandleBlockCheck to display same effect what Magnetite Dice tool uses on blocked hits.
+        private static void LuckyShieldSetActive()
+        {
+            var hc = HeroController.instance;
+            var effect = (GameObject)SpawnedLuckyDiceShieldEffect?.GetValue(hc);
+
+            if (effect != null)
+            {
+                effect.SetActive(false);
+                effect.SetActive(true);
+            }
+        }
+
+        private static HitInstance CreateReflectHitInstance(HeroController instance)
+        {
+            instance.gameObject.name = "Bonfire-Reflect";
+
+            return new HitInstance
+            {
+                DamageDealt = ReflectBaseDamage,
+                Source = instance.gameObject,
+                AttackType = AttackTypes.Generic,
+                IsFirstHit = false,
+                HitEffectsType = EnemyHitEffectsProfile.EffectsTypes.Full,
+                Direction = 0f,
+                MagnitudeMultiplier = 1f,
+                Multiplier = 1f,
+                IsHeroDamage = true,
+                SilkGeneration = HitSilkGeneration.Full
+            };
+        }
+
+        // Create a reflect damage HitInstance and apply it on enemies in range.
+        private static void DealReflectDamage()
+        {
+            Bonfire.Log.LogDebug("[ResilienceLogic] Reflecting damage to enemies.");
+
+            if (!IsInBlueState(BlueState.REFLECT))
                 return;
 
             var hc = HeroController.instance;
@@ -277,38 +487,6 @@ namespace BonfireSilksong
                 HitInstance hit = CreateReflectHitInstance(hc);
 
                 hm.Hit(hit);
-            }
-        }
-
-        /// <summary>
-        /// Sets internal cancel flag true which forcefully interrupts current blue hp update loop. This should be only 
-        /// called by LevelingSystem's Apply and Respec methods.
-        /// </summary>
-        public static void CancelBlueHPUpdate()
-        {
-            _cancelBlueHPUpdate = true;
-        }
-
-
-        private const float ReflectDamageRange = 3f;
-
-        private static bool _cancelBlueHPUpdate = false;
-        private static bool _blueHpAddingInProgress = false;
-        private static int _hitsSinceShielded = 0;
-
-        private readonly static FieldInfo SpawnedLuckyDiceShieldEffect = typeof(HeroController)
-            .GetField("spawnedLuckyDiceShieldEffect", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        // helper for HandleBlockCheck to display same effect what Magnetite Dice tool uses on blocked hits.
-        private static void LuckyShieldSetActive()
-        {
-            var hc = HeroController.instance;
-            var effect = (GameObject)SpawnedLuckyDiceShieldEffect?.GetValue(hc);
-
-            if (effect != null)
-            {
-                effect.SetActive(false);
-                effect.SetActive(true);
             }
         }
 
@@ -386,7 +564,7 @@ namespace BonfireSilksong
 
             yield return new WaitForSecondsRealtime(0.25f);
 
-            int masks = ExtraMasks(Bonfire.Instance.Status.ResilienceStat);
+            int masks = BlueMasks(Bonfire.Instance.Status.ResilienceStat);
             GameManager.instance.QueuedBlueHealth = masks;
             EventRegister.SendEvent(EventRegisterEvents.AddQueuedBlueHealth);
 
@@ -397,25 +575,6 @@ namespace BonfireSilksong
             GameManager.instance.QueuedBlueHealth = 0;
 
             _blueHpAddingInProgress = false;
-        }
-
-        private static HitInstance CreateReflectHitInstance(HeroController instance)
-        {
-            instance.gameObject.name = "Bonfire-Reflect";
-
-            return new HitInstance
-            {
-                DamageDealt = ReflectBaseDamage,
-                Source = instance.gameObject,
-                AttackType = AttackTypes.Generic,
-                IsFirstHit = false,
-                HitEffectsType = EnemyHitEffectsProfile.EffectsTypes.Full,
-                Direction = 0f,
-                MagnitudeMultiplier = 1f,
-                Multiplier = 1f,
-                IsHeroDamage = true,
-                SilkGeneration = HitSilkGeneration.Full
-            };
         }
     }
 }
