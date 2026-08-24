@@ -709,8 +709,8 @@ namespace BonfireSilksong
                 "low-risk playstyle whereas with Hollow you want to minimize hits taken at all cost." +
                 "\n" +
                 "<Vengeful>\n " +
-                "- reflect damage back to enemies around you when it. All your non-reflect damage is reduced by 99%, " +
-                "always dealing at least 1 damage.\n" +
+                "- Reflect damage back to enemies around you when it. All your non-reflect damage is reduced by 99%, " +
+                "but always dealing at least 1 damage. Only exception to this rule is the Memory Crystal blue tool.\n" +
                 "- Base damage is 5. Damage scales from 1. Resilience stat extra blue masks count (max 8) and " +
                 "2. mask upgrades (max 5).\n" +
                 "- Bind now heals 1 blue mask.\n" +

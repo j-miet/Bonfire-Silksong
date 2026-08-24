@@ -106,8 +106,7 @@ namespace BonfireSilksong
                 return;
             }
 
-            if (HeroController.instance != null &&
-                HeroController.instance.cState != null)
+            if (HeroController.instance?.cState != null)
             {
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = PlayerData.instance.atBench || GameManager.instance.isPaused;
