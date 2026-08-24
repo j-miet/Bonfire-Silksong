@@ -60,22 +60,22 @@ namespace BonfireSilksong
         /// </summary>
         public static void BenchFSM(Transform spawnPoint)
         {
-            Bonfire.Log.LogDebug("[Debug] Bench Control");
+            Log.LogDebug("[Debug] Bench Control");
             if (spawnPoint == null) return;
 
             var benchFSM = FSMUtility.LocateFSM(spawnPoint.gameObject, "Bench Control");
             if (benchFSM == null)
             {
-                Bonfire.Log.LogDebug("No Bench Control FSM found on spawnPoint");
+                Log.LogDebug("No Bench Control FSM found on spawnPoint");
                 return;
             }
 
-            Bonfire.Log.LogDebug("'Bench Control' FSM States");
+            Log.LogDebug("'Bench Control' FSM States");
             foreach (var state in benchFSM.FsmStates)
             {
-                Bonfire.Log.LogDebug($"- State: {state.Name}");
+                Log.LogDebug($"- State: {state.Name}");
                 foreach (var transition in state.Transitions)
-                    Bonfire.Log.LogDebug($"  - Event: {transition.EventName} => {transition.ToState}");
+                    Log.LogDebug($"  - Event: {transition.EventName} => {transition.ToState}");
             }
         }
 
@@ -84,7 +84,7 @@ namespace BonfireSilksong
         /// </summary>
         public static void BlueHpVariableFSM()
         {
-            Bonfire.Log.LogDebug("[Debug] Blue Health variables");
+            Log.LogDebug("[Debug] Blue Health variables");
             var gameCameras = GameCameras.instance.gameObject;
             foreach (var fsm in gameCameras.GetComponentsInChildren<PlayMakerFSM>(includeInactive: true))
             {
@@ -192,7 +192,7 @@ namespace BonfireSilksong
                     .Select(c => c.GetType().Name)
             );
 
-            Bonfire.Log.LogDebug(
+            Log.LogDebug(
                 $"{indent}{root.name} | " +
                 $"scale={root.localScale} | " +
                 $"pos={root.localPosition} | " +
