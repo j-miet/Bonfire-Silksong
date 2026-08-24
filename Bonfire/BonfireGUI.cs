@@ -104,9 +104,9 @@ namespace BonfireSilksong
             }
             else
             {
-                Settings.PendingCrestUnlock = false;
-                Settings.PendingSettingsWindow = false;
-                Settings.PendingStatusReset = false;
+                SettingsGUI.PendingCrestUnlock = false;
+                SettingsGUI.PendingSettingsWindow = false;
+                SettingsGUI.PendingStatusReset = false;
             }
 
             if (!PlayerData.instance.atBench && _benchCheck)

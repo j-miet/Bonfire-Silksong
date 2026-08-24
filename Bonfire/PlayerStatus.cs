@@ -31,10 +31,19 @@ namespace BonfireSilksong
         // leveling GUI
         public int LevelingInfoStyle = 0;
 
-        // stat flags
+        // stat milestones
         public bool AutoReleaseNeedleStrike = false;
+        public int BlueMaskMode = 0;
 
         // settings
+        // - custom cursor
+        public int CustomCursorSpeed = 400;
+        public bool DisplayGameCursorWithGamepad = false;
+
+        // - other
+        public bool ShowCustomRangeIndicator = true;
+
+        // - gameplay
         public bool EnemyHealthBarsEnabled = false;
         public bool EnemyHpBarColorProgression = false;
 
@@ -52,9 +61,5 @@ namespace BonfireSilksong
         public bool UnlockedFastTravel = false;
         public bool VisitedAbyssSecondTime = false;
         public int BenchMenuStyle = 1;
-
-        // custom cursor
-        public int CustomCursorSpeed = 400;
-        public bool DisplayGameCursorWithGamepad = false;
     }
 }

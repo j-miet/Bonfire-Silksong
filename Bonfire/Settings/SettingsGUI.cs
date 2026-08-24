@@ -7,9 +7,9 @@ namespace BonfireSilksong
     /// </summary>
     public class SettingsGUI
     {
-        public bool PendingCrestUnlock = false;
-        public bool PendingSettingsWindow = false;
-        public bool PendingStatusReset = false;
+        public static bool PendingSettingsWindow = false;
+        public static bool PendingCrestUnlock = false;
+        public static bool PendingStatusReset = false;
 
         public void DrawExtraSettingsButton()
         {
@@ -33,7 +33,7 @@ namespace BonfireSilksong
             GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            float w = 570f, h = 670f;
+            float w = 590f, h = 670f;
             float x = BonfireGUI.Width / 2f - w / 2f;
             float y = BonfireGUI.Height / 2f - h / 2f;
             Rect rect = new Rect(x, y, w, h);
@@ -50,9 +50,12 @@ namespace BonfireSilksong
             CustomCursor.BeginGroup(rect);
 
             CustomCursor.BeginArea(new Rect(10, 10, rect.width - 20, rect.height - 20));
+            _settingsScrollPos = GUILayout.BeginScrollView(_settingsScrollPos);
 
             GUILayout.Label("Settings", GUIStyles.LabelStyle);
             DrawExtraSettingsContent();
+
+            GUILayout.EndScrollView();
 
             CustomCursor.EndArea();
 
@@ -215,6 +218,8 @@ namespace BonfireSilksong
         private static Color _progHigh;
         private static Texture2D _tex;
 
+        private Vector2 _settingsScrollPos;
+
         private static Texture2D SolidTex()
         {
             if (_tex == null)
@@ -290,6 +295,16 @@ namespace BonfireSilksong
 
             GUILayout.Space(10);
 
+            GUILayout.BeginVertical("box");
+            GUILayout.Label("Custom");
+
+            s.ShowCustomRangeIndicator = CustomCursor.Toggle(
+                s.ShowCustomRangeIndicator,
+                "Display damage range indicator in Taunt/Reflect.");
+
+            GUILayout.EndVertical();
+            GUILayout.Space(10);
+
             GUI.backgroundColor = Color.white;
             GUILayout.BeginVertical("box");
             GUILayout.Label("Enemy HP bars");
@@ -304,7 +319,7 @@ namespace BonfireSilksong
             GUILayout.Label("/");
             GUILayout.Label("boss", GUIStyles.BossHpStyle);
             GUILayout.Label("→");
-            GUILayout.Label("global hotkey is LeftControl + H)");
+            GUILayout.Label("default hotkey is LeftControl + H)");
             GUILayout.EndVertical();
 
             GUILayout.BeginHorizontal(GUILayout.Width(370));
