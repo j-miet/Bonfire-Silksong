@@ -82,8 +82,8 @@ namespace BonfireSilksong
             var tool = hitInstance.RepresentingTool;
 
             Bonfire.Log.LogInfo("[HealthManager.Hit] Recorded a hit => Hit source: " + sourceName);
-            Bonfire.Log.LogInfo("Damage Dealt: " + hitInstance.DamageDealt);
-            Bonfire.Log.LogInfo("Tool instance: " + tool?.name ?? "null");
+            Bonfire.Log.LogInfo("- Damage Dealt: " + hitInstance.DamageDealt);
+            Bonfire.Log.LogInfo("- Tool instance: " + tool?.name ?? "null");
 
             LuckLogic.CheckIfCrit(hitInstance);
             bool isCrit = LuckLogic.Crit;
@@ -100,66 +100,86 @@ namespace BonfireSilksong
             // modifiers such as the crest bonuses mentioned earlier.
             if (tool?.Type == ToolItemType.Skill)
             {
-                // -- silk skills --
-                // 1. The "Type == ToolItemType.Skill" is enough to target only the silk skills.
-                // 2. Silk skill damage scales normally from needle upgrades, or specifically, the needle damage
-                // itself. To balance strength stat: only base game scaling works, after that intelligence stat
-                // is necessary for extra scaling. As scaling requires adjusting base needle damage, it's already
-                // done earlier in patched Playerdata.nailDamage.
-
                 int spellDamage = hitInstance.DamageDealt;
 
-                spellDamage = IntelligenceLogic.ApplySpellDamageBonuses(spellDamage, tool);
-
-                if (IntelligenceLogic.CheckIntelligenceMilestone(3) && isCrit)
+                if (WisdomLogic.IsSilkNailsEnabled && tool.name == "Silk Boss Needle")
                 {
-                    spellDamage = DexterityLogic.ApplyCritDamage(spellDamage);
+                    // Silk Nails: summon a weaker version of Pale Nails automatically when an enemy is nearby.
+                    // This also disables use of Pale Nails so it's important to separate damage buff checks.
+                    spellDamage = WisdomLogic.SilkNailsDamage(Bonfire.Instance.Status.WisdomStat);
+                }
+                else
+                {
+                    // -- silk skills --
+                    // 1. The "Type == ToolItemType.Skill" is enough to target only the silk skills.
+                    // 2. Silk skill damage scales normally from needle upgrades, or specifically, the needle damage
+                    // itself. To balance strength stat: only base game scaling works, after that intelligence stat
+                    // is necessary for extra scaling. As scaling requires adjusting base needle damage, it's already
+                    // done earlier in patched Playerdata.nailDamage.
+
+                    spellDamage = IntelligenceLogic.ApplySpellDamageBonuses(spellDamage, tool);
+
+                    if (IntelligenceLogic.CheckIntelligenceMilestone(3) && isCrit)
+                    {
+                        spellDamage = DexterityLogic.ApplyCritDamage(spellDamage);
+                    }
                 }
 
                 hitInstance.DamageDealt = spellDamage;
             }
-            else if (tool != null && (tool.Type == ToolItemType.Red || tool.Type == ToolItemType.Blue))
+            else if (tool != null &&
+                    (tool.Type == ToolItemType.Red || tool.Type == ToolItemType.Blue) &&
+                    tool.name != "Silk Nails")
             {
-                // -- red and blue tools --
-
                 int toolDamage = hitInstance.DamageDealt;
 
-                if (tool.name == "Rosary Cannon" && ArtificeLogic.CheckArtificeMilestone(4))
+                if (WisdomLogic.IsCogflyWarriorEnabled && tool.name == "Cogwork Flier")
                 {
-                    toolDamage += 2;
+                    // Cogfly Warrior: cogfly which has Wisdom scaling and thus uses neither the original tool's damage
+                    // nor tool bonuses.
+                    toolDamage = WisdomLogic.CogflyWarriorDamage(Bonfire.Instance.Status.WisdomStat);
                 }
-
-                toolDamage = ArtificeLogic.ApplyToolDamageBonuses(toolDamage, tool);
-
-                if (IntelligenceLogic.CheckIntelligenceMilestone(3))
+                else
                 {
-                    toolDamage = IntelligenceLogic.ApplyClawMirrorDamageBonuses(toolDamage, tool);
-                }
+                    // -- red and blue tools --
 
-                if (isCrit)
-                {
-                    if (IntelligenceLogic.CheckWeakBindRequirement() &&
-                        (tool.name == "Dazzle Bind" || tool.name == "Dazzle Bind Upgraded"))
+                    if (tool.name == "Rosary Cannon" && ArtificeLogic.CheckArtificeMilestone(4))
                     {
-                        // Claw Mirror
-
-                        toolDamage = DexterityLogic.ApplyCritDamage(toolDamage);
+                        toolDamage += 2;
                     }
-                    else if (ArtificeLogic.CheckArtificeMilestone(1) &&
-                        (tool.name == "Pimpilo" || tool.name == "Brolly Spike"))
+
+                    toolDamage = ArtificeLogic.ApplyToolDamageBonuses(toolDamage, tool);
+
+                    if (IntelligenceLogic.CheckIntelligenceMilestone(3))
                     {
-                        // Pimpillo and Sawtooth Circlet
-
-                        toolDamage = DexterityLogic.ApplyCritDamage(toolDamage);
+                        toolDamage = IntelligenceLogic.ApplyClawMirrorDamageBonuses(toolDamage, tool);
                     }
-                }
 
-                if (tool.name == "Brolly Spike" &&
-                    ArtificeLogic.CheckArtificeMilestone(2) &&
-                    ArtificeLogic.HitEnemyWithSawtoothCirclet)
-                {
-                    HeroController.instance.AddSilk(1, false);
-                    ArtificeLogic.HitEnemyWithSawtoothCirclet = false;
+                    if (isCrit)
+                    {
+                        if (IntelligenceLogic.CheckWeakBindRequirement() &&
+                            (tool.name == "Dazzle Bind" || tool.name == "Dazzle Bind Upgraded"))
+                        {
+                            // Claw Mirror
+
+                            toolDamage = DexterityLogic.ApplyCritDamage(toolDamage);
+                        }
+                        else if (ArtificeLogic.CheckArtificeMilestone(1) &&
+                            (tool.name == "Pimpilo" || tool.name == "Brolly Spike"))
+                        {
+                            // Pimpillo and Sawtooth Circlet
+
+                            toolDamage = DexterityLogic.ApplyCritDamage(toolDamage);
+                        }
+                    }
+
+                    if (tool.name == "Brolly Spike" &&
+                        ArtificeLogic.CheckArtificeMilestone(2) &&
+                        ArtificeLogic.HitEnemyWithSawtoothCirclet)
+                    {
+                        HeroController.instance.AddSilk(1, false);
+                        ArtificeLogic.HitEnemyWithSawtoothCirclet = false;
+                    }
                 }
 
                 hitInstance.DamageDealt = toolDamage;

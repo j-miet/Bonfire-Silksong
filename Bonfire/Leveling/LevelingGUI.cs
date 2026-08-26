@@ -110,9 +110,14 @@ namespace BonfireSilksong
         private string _glassCannonMaskBonus;
         private string _glassCannonMilestoneBonus;
 
-
         private string _extraSilk;
         private string _silkRegenInterval;
+        private string _silkNailsDamage;
+        private string _silkNailsSpawnCooldown;
+        private string _cogflyDamage;
+        private string _cogflyAttackCooldown;
+        private string _lanternAttackCooldown;
+        private string _lanternSpawnCooldown;
 
         private string _critChance;
         private string _rosaryIncrease;
@@ -481,21 +486,22 @@ namespace BonfireSilksong
             DrawInfoStatLabel("Needle Damage: " + _needleBaseDamage);
 
             GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
+            Color bgOld = GUI.backgroundColor;
 
             // needle strike auto-release toggle
             GUI.enabled = StrengthLogic.CheckStrengthMilestone(1);
 
-            string autoStrike = "Needle strike auto-release: " +
+            string autoStrikeToggle = "Needle strike auto-release: " +
                 $"{(Bonfire.Instance.Status.AutoReleaseNeedleStrike ? "ENABLED" : "DISABLED")}";
-            Color bgOld = GUI.backgroundColor;
             GUI.backgroundColor = new Color(0, 0.5f, 0.8f);
-            if (CustomCursor.Button(autoStrike, GUIStyles.LvlInfoButtonStyle, GUILayout.Height(30f)))
+            if (CustomCursor.Button(autoStrikeToggle, GUIStyles.LvlInfoButtonStyle, GUILayout.Height(30f)))
             {
                 Bonfire.Instance.Status.AutoReleaseNeedleStrike = !Bonfire.Instance.Status.AutoReleaseNeedleStrike;
             }
-            GUI.backgroundColor = bgOld;
             GUI.enabled = true;
             GUILayout.Space(5);
+
+            GUI.backgroundColor = bgOld;
 
             GUILayout.Label(
                 $"[{StrengthLogic.StrengthMilestone(1)}] " +
@@ -568,13 +574,9 @@ namespace BonfireSilksong
             DrawInfoStatLabel("Silk Skill Damage Bonus: " + _spellDamageBonus);
             DrawInfoStatLabel("Binding Cost: " + _bindCost);
 
-            GUI.enabled = IntelligenceLogic.CheckIntelligenceMilestone(1);
-
-            GUILayout.Label("Secondary", GUIStyles.LvlInfoHeaderSecondaryStyle);
-            DrawInfoStatLabel("Taunt Damage: " + _tauntDamage);
-            DrawInfoStatLabel("Taunt Range: " + _tauntRange);
-
-            GUI.enabled = true;
+            GUILayout.Label("Challenge Taunt", GUIStyles.LvlInfoHeaderSecondaryStyle);
+            DrawInfoStatLabel("Damage: " + _tauntDamage);
+            DrawInfoStatLabel("Range: " + _tauntRange);
 
             GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
             GUILayout.Label(
@@ -679,22 +681,23 @@ namespace BonfireSilksong
             DrawInfoStatLabel("Milestone Bonus: " + _glassCannonMilestoneBonus);
 
             GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
+            Color bgOld = GUI.backgroundColor;
 
             // reflect/glass cannon mode toggle
             GUI.enabled = ResilienceLogic.CheckResilienceMilestone(1);
 
             var mode = (BlueState)Bonfire.Instance.Status.BlueMaskMode;
 
-            string autoStrike = "Current blue mask mode: " + GetBlueStateString(mode);
-            Color bgOld = GUI.backgroundColor;
+            string blueModeToggle = "Current blue mask mode: " + GetBlueStateString(mode);
             GUI.backgroundColor = new Color(0, 0.5f, 0.8f);
-            if (CustomCursor.Button(autoStrike, GUIStyles.LvlInfoButtonStyle, GUILayout.Height(30f)))
+            if (CustomCursor.Button(blueModeToggle, GUIStyles.LvlInfoButtonStyle, GUILayout.Height(30f)))
             {
                 Bonfire.Instance.Status.BlueMaskMode = (int)RotateBlueState(mode);
             }
-            GUI.backgroundColor = bgOld;
             GUI.enabled = true;
             GUILayout.Space(5);
+
+            GUI.backgroundColor = bgOld;
 
             GUILayout.Label(
                 $"[{ResilienceLogic.ResilienceMilestone(1)}] " +
@@ -777,16 +780,114 @@ namespace BonfireSilksong
             DrawInfoStatLabel("Silk Gained On Enemy Hit: " + _extraSilk);
             DrawInfoStatLabel("Silk Regen Interval: " + _silkRegenInterval);
 
+            GUILayout.Label("Silk Nails", GUIStyles.LvlInfoHeaderSecondaryStyle);
+            DrawInfoStatLabel("Damage (single nail): " + _silkNailsDamage);
+            DrawInfoStatLabel("Spawn Cooldown: " + _silkNailsSpawnCooldown);
+
+            GUILayout.Label("Cogwork Warrior", GUIStyles.LvlInfoHeaderSecondaryStyle);
+            DrawInfoStatLabel("Damage: " + _cogflyDamage);
+            DrawInfoStatLabel("Attack Cooldown: " + _cogflyAttackCooldown);
+
+            GUILayout.Label("Wispfire Lantern", GUIStyles.LvlInfoHeaderSecondaryStyle);
+            DrawInfoStatLabel("Attack Cooldown: " + _lanternAttackCooldown);
+            DrawInfoStatLabel("Spawn Delay: " + _lanternSpawnCooldown);
+
             GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
+            Color bgOld = GUI.backgroundColor;
+
+            // QoL: block summons using Challenge taunt
+
+            GUI.enabled = WisdomLogic.CheckWisdomMilestone(1);
+            GUILayout.Label(
+                $"[Quality of Life] If you have \n" +
+                "- Shard Pendant yellow tool equipped.\n" +
+                "- Reached 1. Wisdom milestone\n, " +
+                "and then use 'Challenge' taunt, " +
+                "you disable all your following summons: \n" +
+                "- Wispfire Lantern\n" +
+                "- Silk Nails\n" +
+                "- Cogwork Warrior.\n" +
+                "GUI buttons are also disabled during this 'BLOCKED' state." +
+                "Taunting again under these same conditions will naturally reverse this to 'ALLOWED' state.\n" +
+                "- The Magnetite Dice block effect is triggered on each taunt so you know disable/enable worked.\n" +
+                "- This setting will not be saved and starts always in enabled state. This means if you close the " +
+                " game and then launch it again, the first taunt will always set state to 'BLOCKED' even if you have " +
+                "them already disabled.\n" +
+                "=> This feature is meant to be used during platforming sections which could otherwise be quite" +
+                "frustrating with multiple summons shooting at enemies.\n",
+                GUIStyles.LvlInfoLabelStyle);
+            GUILayout.Label(
+                $"[Summons] => {(WisdomLogic.BlockSummons ? "BLOCKED" : "ALLOWED")}",
+                GUIStyles.LvlInfoLabelStyle);
+
+            GUI.enabled = true;
+
+            // Silk Nails toggle
+            GUI.enabled = WisdomLogic.CheckWisdomMilestone(1) && !WisdomLogic.BlockSummons;
+
+            string silkNailsToggle = "Silk Nails: " +
+                $"{(Bonfire.Instance.Status.SilkNailsEnabled ? "ENABLED" : "DISABLED")}";
+            GUI.backgroundColor = new Color(0, 0.5f, 0.8f);
+            if (CustomCursor.Button(silkNailsToggle, GUIStyles.LvlInfoButtonStyle, GUILayout.Height(30f)))
+            {
+                Bonfire.Instance.Status.SilkNailsEnabled = !Bonfire.Instance.Status.SilkNailsEnabled;
+            }
+            GUI.enabled = true;
+            GUILayout.Space(5);
+
+            // Cogfly Warrior toggle
+            GUI.enabled = WisdomLogic.CheckWisdomMilestone(2) && !WisdomLogic.BlockSummons;
+
+            string cogflyWarriorToggle = "Cogfly Warrior: " +
+                $"{(Bonfire.Instance.Status.CogflyWarriorEnabled ? "ENABLED" : "DISABLED")}";
+            GUI.backgroundColor = new Color(0, 0.5f, 0.8f);
+            if (CustomCursor.Button(cogflyWarriorToggle, GUIStyles.LvlInfoButtonStyle, GUILayout.Height(30f)))
+            {
+                Bonfire.Instance.Status.CogflyWarriorEnabled = !Bonfire.Instance.Status.CogflyWarriorEnabled;
+            }
+            GUI.enabled = true;
+            GUILayout.Space(5);
+
+            GUI.backgroundColor = bgOld;
+
+            GUILayout.Label(
+                $"[{WisdomLogic.WisdomMilestone(1)}] " +
+                "Toggle on/off 'Silk Nails' which is a weaker version of Pale Nails silk skill.\n" +
+                "\n" +
+                "<Silk Nails>\n" +
+                "- Has its own damage and spawn cooldown scaling from Wisdom.\n" +
+                "- Spawns automatically when enemies are near.\n" +
+                "- Doesn't have a silk cost.\n",
+                LevelingSystem.HighLightStatMilestone(s, 1) ?
+                    GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
+
             GUILayout.Label(
                 $"[{WisdomLogic.WisdomMilestone(2)}] " +
-                "Wispfire Lantern silk cost removed, attack delay halved and spawn cooldown is down to 2 seconds.",
+                "Toggle on/off 'Cogfly Warrior' which is a stronger version of Cogfly.\n" +
+                "\n" +
+                "<Cogfly Warrior>\n" +
+                "- Has its own damage and attack cooldown scaling from Wisdom.\n" +
+                "- Has no max hit limit, meaning the minion will never die + it auto-summons itself if some game " +
+                "event ends up destroying it (e.g. cutscenes).\n" +
+                "- Total cogfly amount limited to 1, final milestone increases this by 1.\n" +
+                "- While Cogfly Warrior is enabled, you cannot use Cogfly tool.",
                 LevelingSystem.HighLightStatMilestone(s, 2) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
+
             GUILayout.Label(
                 $"[{WisdomLogic.WisdomMilestone(3)}] " +
-                "Wispfire Lantern attack cooldown down to 1/3 of original, spawns a wisp every second.",
+                "Wispfire Lantern silk cost removed, attack delay halved and spawn cooldown is down to 2 seconds.\n" +
+                "[Reminder] Wispfire Lantern has no Wisdom stat scaling, only tool damage matters.",
                 LevelingSystem.HighLightStatMilestone(s, 3) ?
+                    GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.Label(
+                $"[{WisdomLogic.WisdomMilestone(4)}] " +
+                "All of Wisdom's offensive abilities buffed:\n" +
+                "- Silk Nails: Can now critically hit.\n" +
+                "- Cogfly Warrior: summons a second cogfly.\n" +
+                "- Wispfire Lantern: attack cooldown down to 1/3 of original, spawns a wisp every second.",
+                LevelingSystem.HighLightStatMilestone(s, 4) ?
                     GUIStyles.LvlInfoLabelStyle : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.EndVertical();
@@ -874,6 +975,14 @@ namespace BonfireSilksong
             var s = Bonfire.Instance.Status;
             var ls = LevelingSystem.Instance;
 
+            int strNew = s.StrengthStat + ls.StrengthIncrease;
+            int dexNew = s.DexterityStat + ls.DexterityIncrease;
+            int intNew = s.IntelligenceStat + ls.IntelligenceIncrease;
+            int artNew = s.ArtificeStat + ls.ArtificeIncrease;
+            int resNew = s.ResilienceStat + ls.ResilienceIncrease;
+            int wsdmNew = s.WisdomStat + ls.WisdomIncrease;
+            int luckNew = s.LuckStat + ls.LuckIncrease;
+
             _availableRelicLevels = ls.GetAvailableRelicLevels();
             _gotFreeLevel = _availableRelicLevels > 0;
 
@@ -882,64 +991,54 @@ namespace BonfireSilksong
 
             _currentLvl = LevelingSystem.GetCurrentLevel();
 
-            // preview strings
-            _totalStr = (s.StrengthStat + ls.StrengthIncrease).ToString();
-            _totalDex = (s.DexterityStat + ls.DexterityIncrease).ToString();
-            _totalInt = (s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
-            _totalArt = (s.ArtificeStat + ls.ArtificeIncrease).ToString();
-            _totalRes = (s.ResilienceStat + ls.ResilienceIncrease).ToString();
-            _totalWsdm = (s.WisdomStat + ls.WisdomIncrease).ToString();
-            _totalLuck = (s.LuckStat + ls.LuckIncrease).ToString();
+            // stat preview strings
+            _totalStr = strNew.ToString();
+            _totalDex = dexNew.ToString();
+            _totalInt = intNew.ToString();
+            _totalArt = artNew.ToString();
+            _totalRes = resNew.ToString();
+            _totalWsdm = wsdmNew.ToString();
+            _totalLuck = luckNew.ToString();
 
-            // stat calculations
-            _needleBaseDamage = StrengthLogic.NeedleDamage(
-                5 + 4 * PlayerData.instance.nailUpgrades,
-                s.StrengthStat + ls.StrengthIncrease)
-                .ToString();
+            // stat formula strings
+            // Strength
+            _needleBaseDamage = StrengthLogic.NeedleDamage(5 + 4 * PlayerData.instance.nailUpgrades, strNew).ToString();
 
-            _attackSpeed = DexterityLogic.AttackSpeed(s.DexterityStat + ls.DexterityIncrease).ToString();
-            _critDamageBonus =
-                (DexterityLogic.CritDamage(s.DexterityStat + ls.DexterityIncrease, 100) - 100).ToString() + "%";
+            // Dexterity
+            _attackSpeed = DexterityLogic.AttackSpeed(dexNew).ToString();
+            _critDamageBonus = (DexterityLogic.CritDamage(dexNew, 100) - 100).ToString() + "%";
 
-            _spellDamageBonus = (IntelligenceLogic.SpellDamage(
-                100, s.IntelligenceStat + ls.IntelligenceIncrease) - 100)
-                .ToString() + "%";
-            _bindCost = IntelligenceLogic.BindCost(s.IntelligenceStat + ls.IntelligenceIncrease).ToString();
-            _tauntDamage = IntelligenceLogic.TauntDamage(s.IntelligenceStat + ls.IntelligenceIncrease, isGUI: true)
-                .ToString();
-            _tauntRange = IntelligenceLogic.TauntRange(s.IntelligenceStat + ls.IntelligenceIncrease, isGUI: true)
-                .ToString();
+            // Intelligence
+            _spellDamageBonus = (IntelligenceLogic.SpellDamage(100, intNew) - 100).ToString() + "%";
+            _bindCost = IntelligenceLogic.BindCost(intNew).ToString();
+            _tauntDamage = IntelligenceLogic.TauntDamage(intNew, isGUI: true).ToString();
+            _tauntRange = IntelligenceLogic.TauntRange(intNew, isGUI: true).ToString();
 
-            _toolDamageBonus = (ArtificeLogic.ToolDamage(100, s.ArtificeStat + ls.ArtificeIncrease) - 100)
-                .ToString() + "%";
+            // Artifice
+            _toolDamageBonus = (ArtificeLogic.ToolDamage(100, artNew) - 100).ToString() + "%";
             _toolRegenInterval = "-";
-            if (s.ArtificeStat + ls.ArtificeIncrease > 0)
+            if (artNew > 0)
             {
-                int toolRegen = ArtificeLogic.ToolRegenInterval(s.ArtificeStat + ls.ArtificeIncrease);
+                int toolRegen = ArtificeLogic.ToolRegenInterval(artNew);
                 _toolRegenInterval = toolRegen > 0 ? toolRegen.ToString() + " s" : "-";
             }
 
-            _extraMasks = ResilienceLogic.BlueMasks(s.ResilienceStat + ls.ResilienceIncrease).ToString();
-            _blockChance = s.ResilienceStat + ls.ResilienceIncrease > 0
-                ? ResilienceLogic.AverageBlockChance(s.ResilienceStat + ls.ResilienceIncrease).ToString("F0") + "%"
-                : "0%";
+            // Resilience
+            _extraMasks = ResilienceLogic.BlueMasks(resNew).ToString();
+            _blockChance = resNew > 0 ? ResilienceLogic.AverageBlockChance(resNew).ToString("F0") + "%" : "0%";
             _reflectDamage = "0";
             _reflectArea = "0";
             _glassCannonMaskBonus = "0%";
             _glassCannonMilestoneBonus = "0%";
-            if (s.ResilienceStat + ls.ResilienceIncrease > 0)
+            if (resNew > 0)
             {
-                string reflectDamage = ResilienceLogic.ReflectDamage(
-                    s.ResilienceStat + ls.ResilienceIncrease, isGUI: true)
-                    .ToString();
+                string reflectDamage = ResilienceLogic.ReflectDamage(resNew, isGUI: true).ToString();
                 string reflectArea = ResilienceLogic.ReflectArea(isGUI: true).ToString();
 
                 string ggMaskBonus = ResilienceLogic.IsInBlueState(BlueState.GLASSCANNON)
                     ? (ResilienceLogic.GlassCannonDamageMaskBonus(isGUI: true) * 100 - 100).ToString("F0") + "%"
                     : "0%";
-                string ggMilestoneBonus = ResilienceLogic.GetGlassCannonMilestoneBonus(
-                    s.ResilienceStat + ls.ResilienceIncrease)
-                    .ToString();
+                string ggMilestoneBonus = ResilienceLogic.GetGlassCannonMilestoneBonus(resNew).ToString();
 
                 if (ResilienceLogic.CheckResilienceMilestone(3))
                 {
@@ -969,29 +1068,40 @@ namespace BonfireSilksong
                 _glassCannonMilestoneBonus = ggMilestoneBonus;
             }
 
-            _extraSilk = WisdomLogic.ExtraSilk(s.WisdomStat + ls.WisdomIncrease, 1).ToString();
+            // Wisdom
+            _extraSilk = WisdomLogic.ExtraSilk(wsdmNew, 1).ToString();
             _silkRegenInterval = "-";
-            if (s.WisdomStat + ls.WisdomIncrease > 0)
+            if (wsdmNew > 0)
             {
-                int silkRegen = WisdomLogic.SilkRegenInterval(s.WisdomStat + ls.WisdomIncrease);
+                int silkRegen = WisdomLogic.SilkRegenInterval(wsdmNew);
                 _silkRegenInterval = silkRegen > 0 ? silkRegen.ToString() + " s" : "-";
             }
+            _silkNailsDamage = WisdomLogic.SilkNailsDamage(wsdmNew).ToString();
+            _silkNailsSpawnCooldown = WisdomLogic.SilkNailsSpawnCooldown(wsdmNew).ToString("F2");
+            _cogflyDamage = WisdomLogic.CogflyWarriorDamage(wsdmNew).ToString();
+            _cogflyAttackCooldown = WisdomLogic.CogflyWarriorAttackCooldown(wsdmNew).ToString("F2");
 
-            _critChance = LuckLogic.CritChance(s.LuckStat + ls.LuckIncrease).ToString() + "%";
+            (float lanternAttack, float lanternSpawn) = WisdomLogic.WispLanternSpeed();
+            _lanternAttackCooldown = lanternAttack.ToString();
+            _lanternSpawnCooldown = lanternSpawn.ToString();
+
+            // Luck
+            _critChance = LuckLogic.CritChance(luckNew).ToString() + "%";
             _rosaryIncrease = LuckLogic.GetRosaryIncreasePercentage(s.LuckStat, ls.LuckIncrease);
 
             // "Apply" button label
             int pRelics = s.PendingRelicLevels;
-            if (s.PendingRelicLevels > 0 && s.PendingRosaries > 0)
+            int pRosaries = s.PendingRosaries;
+            if (pRelics > 0 && pRosaries > 0)
             {
                 _applyText =
-                    $"Apply \n({s.PendingRosaries} rosaries + {s.PendingRelicLevels} " +
-                    $"{(s.PendingRelicLevels > 1 ? "relics" : "relic")})";
+                    $"Apply \n({pRosaries} rosaries + {pRelics} " +
+                    $"{(pRelics > 1 ? "relics" : "relic")})";
             }
-            else if (s.PendingRelicLevels > 0)
+            else if (pRelics > 0)
             {
                 _applyText =
-                    $"Apply ({s.PendingRelicLevels} relic {(s.PendingRelicLevels > 1 ? "levels" : "level")})";
+                    $"Apply ({pRelics} relic {(pRelics > 1 ? "levels" : "level")})";
             }
             else if (_gotFreeLevel)
             {
@@ -999,7 +1109,7 @@ namespace BonfireSilksong
             }
             else
             {
-                _applyText = $"Apply ({s.PendingRosaries} rosaries)";
+                _applyText = $"Apply ({pRosaries} rosaries)";
             }
         }
     }

@@ -97,7 +97,7 @@ namespace BonfireSilksong
             if (GameManager.instance.GameState == GameState.MAIN_MENU)
             {
                 IntelligenceLogic.BindCostInit = false;
-                ResilienceLogic.BlueHpInit = false;
+                BlueHealthUpdate.BlueHpInit = false;
             }
         }
 
@@ -215,10 +215,11 @@ namespace BonfireSilksong
             LuckIncrease = 0;
 
             MilestoneBonus = ResilienceLogic.GetGlassCannonMilestoneBonus(s.ResilienceStat);
+            WisdomLogic.UpdateCogflyWarriorSpawnLimit();
 
             HeroController.instance.CharmUpdate();
-            ResilienceLogic.CancelBlueHPUpdate();
-            ResilienceLogic.CallUpdateBlueHP();
+            BlueHealthUpdate.CancelBlueHPUpdate();
+            BlueHealthUpdate.CallUpdateBlueHP();
         }
 
         /// <summary>
@@ -270,13 +271,11 @@ namespace BonfireSilksong
             silkEaters.Take(s.RespecCost);
             s.RespecCost++;
 
-            MilestoneBonus = ResilienceLogic.GetGlassCannonMilestoneBonus(0);
-
             ResetMilestoneFlags();
 
             HeroController.instance.CharmUpdate();
-            ResilienceLogic.CancelBlueHPUpdate();
-            ResilienceLogic.CallUpdateBlueHP();
+            BlueHealthUpdate.CancelBlueHPUpdate();
+            BlueHealthUpdate.CallUpdateBlueHP();
         }
 
         /// <summary>
@@ -418,6 +417,11 @@ namespace BonfireSilksong
         {
             Bonfire.Instance.Status.BlueMaskMode = (int)BlueState.DISABLED;
             Bonfire.Instance.Status.AutoReleaseNeedleStrike = false;
+            Bonfire.Instance.Status.SilkNailsEnabled = false;
+            Bonfire.Instance.Status.CogflyWarriorEnabled = false;
+
+            MilestoneBonus = ResilienceLogic.GetGlassCannonMilestoneBonus(0);
+            WisdomLogic.UpdateCogflyWarriorSpawnLimit();
         }
 
         private void Awake()

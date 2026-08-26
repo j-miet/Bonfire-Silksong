@@ -22,7 +22,7 @@ namespace BonfireSilksong
         public PlayerStatus Status;
 
         /// <summary>
-        /// Check if game is in main menu or non-gameplay scene. Should be called att the start of each Unity callback
+        /// Check if game is in main menu or non-gameplay scene. Should be called at the start of each Unity callback
         /// to prevent mod logic from running when it's unnecessary.
         /// </summary>
         public static bool IsNotGamePlayState()
@@ -195,7 +195,7 @@ namespace BonfireSilksong
                     // this check refreshes blue masks after inventory/pause menu is closed, otherwise they get wiped
                     if (_invClosedCheck)
                     {
-                        ResilienceLogic.CallUpdateBlueHP();
+                        BlueHealthUpdate.CallUpdateBlueHP();
 
                         _invClosedCheck = false;
                     }
@@ -232,6 +232,7 @@ namespace BonfireSilksong
 
             LevelingSystem.Instance.RefreshRelicsDeposited();
             LevelingSystem.MilestoneBonus = ResilienceLogic.GetGlassCannonMilestoneBonus(Status.ResilienceStat);
+            WisdomLogic.UpdateCogflyWarriorSpawnLimit();
 
             //Log.LogDebug("[Bonfire] Current scene: " + GameManager.instance.GetSceneNameString());
 
@@ -248,20 +249,21 @@ namespace BonfireSilksong
             if (PlayerData.instance.atBench && !_satDown)
             {
                 Log.LogDebug("[Bonfire] Bench sat down check");
+
                 _satDown = true;
-                ResilienceLogic.SatDownAtBench = true;
+                BlueHealthUpdate.SatDownAtBench = true;
 
                 // this causes BlueHpCheckInvOrMenu check to be ignored on first blue hp update call which happens
                 // right after loading into a save.
-                if (!ResilienceLogic.BlueHpInit)
+                if (!BlueHealthUpdate.BlueHpInit)
                 {
-                    ResilienceLogic.SatDownAtBench = false;
+                    BlueHealthUpdate.SatDownAtBench = false;
                 }
             }
             else if (!PlayerData.instance.atBench)
             {
                 _satDown = false;
-                ResilienceLogic.SatDownAtBench = false;
+                BlueHealthUpdate.SatDownAtBench = false;
             }
         }
     }

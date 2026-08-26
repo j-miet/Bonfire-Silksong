@@ -19,7 +19,20 @@ namespace BonfireSilksong
         {
             static void Prefix(HeroWispLantern __instance)
             {
-                WisdomLogic.WispLanternBuffSpeed(__instance);
+                WisdomLogic.ApplyWispLanternSpeedBuff(__instance);
+            }
+        }
+
+        // private void ToggleWispLantern(bool isEquipped)
+        [HarmonyPatch(typeof(HeroWispLantern), "SpawnWispsRoutine")]
+        class HeroWispLantern_ToggleWispLantern
+        {
+            static bool Prefix()
+            {
+                if (WisdomLogic.BlockSummons)
+                    return false;
+
+                return true;
             }
         }
     }

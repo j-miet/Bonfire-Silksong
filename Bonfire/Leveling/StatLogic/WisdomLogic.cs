@@ -1,12 +1,34 @@
 using System;
 using System.Reflection;
 
+using GlobalSettings;
 using TeamCherry.SharedUtils;
+using UnityEngine;
 
 namespace BonfireSilksong
 {
     public static class WisdomLogic
     {
+        public static bool BlockSummons { get; private set; } = false;
+        public static bool IsSilkNailsEnabled
+        {
+            get
+            {
+                if (BlockSummons) return false;
+
+                return Bonfire.Instance.Status.SilkNailsEnabled && CheckWisdomMilestone(1);
+            }
+        }
+        public static bool IsCogflyWarriorEnabled
+        {
+            get
+            {
+                if (BlockSummons) return false;
+
+                return Bonfire.Instance.Status.CogflyWarriorEnabled && CheckWisdomMilestone(2);
+            }
+        }
+
         public static int WisdomMilestone(int m)
         {
             switch (m)
@@ -14,7 +36,7 @@ namespace BonfireSilksong
                 case 1: return 1;
                 case 2: return 2;
                 case 3: return 3;
-                case 4: return 3;
+                case 4: return 4;
                 default: return 999;
             }
         }
@@ -26,20 +48,113 @@ namespace BonfireSilksong
             return s + b >= WisdomMilestone(m) && s >= 1;
         }
 
-        // Stat scaling: extra silk gained when striking an enemy with needle (+1 silk for every 20 levels)
+        /// <summary>
+        /// Extra silk gained when striking an enemy with needle (+1 silk for every 20 levels).
+        /// </summary>
         public static int ExtraSilk(int totalWsdm, int baseSilk)
         {
+            if (totalWsdm < 20) return baseSilk;
+
             return (int)(baseSilk + Math.Floor(totalWsdm / 20f));
         }
 
-        // Stat scaling: amount of time it takes to passively produce a single silk.
-        // starts from 40 seconds timer at lvl 5 to prevents players from putting just a single point and
-        // reaping the benefits
+        /// <summary>
+        /// Amount of time it takes to passively produce a single silk.
+        /// Starts from 40 seconds timer at lvl 5 to prevents players from putting just a single point and reaping the 
+        /// benefits.
+        /// </summary>
         public static int SilkRegenInterval(int totalWsdm)
         {
             if (totalWsdm < 5) return -1;
 
             return (int)(4.0 + 36.0 * Math.Exp(-0.06 * (totalWsdm - 5)));
+        }
+
+        public static int SilkNailsDamage(int totalWsdm)
+        {
+            int damage = SilkNailsBaseDamage;
+
+            if (totalWsdm <= 1) return damage;
+
+            if (totalWsdm < WisdomMilestone(4))
+            {
+                damage += (int)Math.Floor(totalWsdm * 0.5f);
+            }
+            else
+            {
+                damage += 5 + totalWsdm - 10;
+            }
+
+            return damage;
+        }
+
+        public static float SilkNailsSpawnCooldown(int totalWsdm)
+        {
+            if (totalWsdm <= 1) return 5f;
+
+            return (float)(0.75 + 4.25 * Math.Exp(-0.09 * totalWsdm));
+        }
+
+        public static int CogflyWarriorDamage(int totalWsdm)
+        {
+            int damage = CogflyWarriorBaseDamage;
+
+            if (totalWsdm <= 1) return damage;
+
+            if (totalWsdm <= WisdomMilestone(2))
+            {
+                damage += (int)Math.Floor(totalWsdm * 0.25f);
+            }
+            else
+            {
+                damage += 3 + (int)Math.Floor(totalWsdm * 0.5f);
+            }
+
+            return damage;
+        }
+
+        public static float CogflyWarriorAttackCooldown(int totalWsdm)
+        {
+            if (totalWsdm <= 1) return 1.5f;
+
+            // game's default cooldown logic samples values from range [0.5, 1.0). 
+            // This instead sets range to (0.05, 1.5], but simply decreases the value with more points in Wisdom.
+            return (float)(0.05 + 1.45 * Math.Exp(-0.05 * totalWsdm));
+        }
+
+        /// <summary>
+        /// Updates spawn limit of Cogfly Warriors. Should call this frequently e.g. after scene transitions, and
+        /// also after leveling up/respeccing.
+        /// </summary>
+        public static void UpdateCogflyWarriorSpawnLimit()
+        {
+            if (CheckWisdomMilestone(4))
+                CogflySpawner.SetCogflySpawnLimit(2);
+            else
+                CogflySpawner.SetCogflySpawnLimit(1);
+        }
+
+        /// <summary>
+        /// Get Wispfire Lantern custom attack delay and cooldown values.
+        /// </summary>
+        public static (float attackCd, float spawnCd) WispLanternSpeed()
+        {
+            // start & end use same value: delay default is 0.3f, cooldown default is 4f (4 seconds)
+            float attackNew = 0.3f;
+            float spawnNew = 4f;
+
+            if (CheckWisdomMilestone(4))
+            {
+                attackNew = 0.1f;
+                spawnNew = 1f;
+            }
+            else if (CheckWisdomMilestone(3))
+            {
+                attackNew = 0.15f;
+                spawnNew = 2f;
+            }
+
+            return (attackNew, spawnNew);
         }
 
         /// <summary>
@@ -62,6 +177,8 @@ namespace BonfireSilksong
         /// </summary>
         public static void CheckSilkRegen(float dt)
         {
+            if (Bonfire.Instance.Status.WisdomStat < 1) return;
+
             if (_silkRegenTime > 0)
             {
                 _silkRegenTime -= dt;
@@ -84,6 +201,74 @@ namespace BonfireSilksong
         }
 
         /// <summary>
+        /// HeroController.Update (Postfix): Silk Nails custom ability spawning.
+        /// </summary>
+        public static void CheckSilkNails(float dt)
+        {
+            if (!IsSilkNailsEnabled) return;
+
+            if (_silkNailCooldown > 0)
+            {
+                _silkNailCooldown -= dt;
+            }
+            else
+            {
+                if (SpawnSilkNails())
+                {
+                    Bonfire.Log.LogInfo("[WisdomLogic] Checking Silk Nails cooldown.");
+
+                    float silkNailsCD = SilkNailsSpawnCooldown(Bonfire.Instance.Status.WisdomStat);
+                    if (silkNailsCD <= 0)
+                    {
+                        _silkNailCooldown = 1f;
+                        return;
+                    }
+
+                    _silkNailCooldown = silkNailsCD;
+                    Bonfire.Log.LogInfo("Spawned Silk Nails");
+
+                    return;
+                }
+
+                _silkNailCooldown = 0.25f;
+
+                return;
+            }
+        }
+
+        /// <summary>
+        /// HeroController.Update (Postfix): Check if Cogfly Warrior(s) need to be resummoned or despawned.
+        /// </summary>
+        public static void CheckCogflyWarriorState()
+        {
+            if (IsCogflyWarriorEnabled)
+            {
+                CogflySpawner.SpawnCogflies();
+            }
+            else
+            {
+                CogflySpawner.DespawnAllCogflies();
+            }
+        }
+
+        /// <summary>
+        /// ClockworkHatchling.HitLanded (Prefix): Update Cogfly hp to custom amount before hit logic. This way they
+        /// can be made permanent/unbreakable.
+        /// </summary>
+        public static void UpdateCogflyCurrentHP(ClockworkHatchling instance)
+        {
+            _hpCurrentField.SetValue(instance, 100);
+        }
+
+        /// <summary>
+        /// ClockworkHatchling.StartAttackCooldown (Postfix): Override Cogfly attack cooldown.
+        /// </summary>
+        public static void UpdateCogflyAttackCooldown(ClockworkHatchling instance)
+        {
+            _cooldownTimer.SetValue(instance, CogflyWarriorAttackCooldown(Bonfire.Instance.Status.WisdomStat));
+        }
+
+        /// <summary>
         /// HeroWispLantern.SpawnWispsRoutine (Prefix): Checks if player has 0 silk and milestone requirement: if yes,
         /// add one silk to spawn a wisp.
         /// </summary>
@@ -98,37 +283,24 @@ namespace BonfireSilksong
         /// <summary>
         /// HeroWispLantern.OnSceneLoaded (Prefix): Upgrade Wispfire Lantern by lowering attack delay and cooldown.
         /// </summary>
-        public static void WispLanternBuffSpeed(HeroWispLantern instance)
+        public static void ApplyWispLanternSpeedBuff(HeroWispLantern instance)
         {
-            MinMaxFloat mmfDelay = (MinMaxFloat)WispSpawnStartDelay?.GetValue(instance);
-            MinMaxFloat mmfCd = (MinMaxFloat)WispSpawnCooldown?.GetValue(instance);
+            MinMaxFloat mmfDelay = (MinMaxFloat)_wispSpawnStartDelay?.GetValue(instance);
+            MinMaxFloat mmfSpawnCd = (MinMaxFloat)_wispSpawnCooldown?.GetValue(instance);
 
             Bonfire.Log.LogDebug("[WisdomLogic] Wispfire Lantern stats:");
             Bonfire.Log.LogDebug("- Delay start: " + mmfDelay.Start);
             Bonfire.Log.LogDebug("- Delay End " + mmfDelay.End);
-            Bonfire.Log.LogDebug("- Cd start: " + mmfCd.Start);
-            Bonfire.Log.LogDebug("- Cd End: " + mmfCd.End);
+            Bonfire.Log.LogDebug("- Cd start: " + mmfSpawnCd.Start);
+            Bonfire.Log.LogDebug("- Cd End: " + mmfSpawnCd.End);
 
-            // start & end use same value: delay default is 0.3f, cooldown default is 4f (4 seconds)
-            float delayNew = 0.3f;
-            float cdNew = 4f;
+            var (delay, cd) = WispLanternSpeed();
 
-            if (CheckWisdomMilestone(2))
-            {
-                delayNew = 0.1f;
-                cdNew = 1f;
-            }
-            else if (CheckWisdomMilestone(1))
-            {
-                delayNew = 0.15f;
-                cdNew = 2f;
-            }
+            mmfDelay.Start = mmfDelay.End = delay;
+            mmfSpawnCd.Start = mmfSpawnCd.End = cd;
 
-            mmfDelay.Start = mmfDelay.End = delayNew;
-            mmfCd.Start = mmfCd.End = cdNew;
-
-            WispSpawnStartDelay.SetValue(instance, mmfDelay);
-            WispSpawnCooldown.SetValue(instance, mmfCd);
+            _wispSpawnStartDelay.SetValue(instance, mmfDelay);
+            _wispSpawnCooldown.SetValue(instance, mmfSpawnCd);
         }
 
         /// <summary>
@@ -142,12 +314,67 @@ namespace BonfireSilksong
             return false;
         }
 
+        /// <summary>
+        /// Reverses BlockSummons boolean value and plays the Magnetite Dice prefab effect as a visual indicator.
+        /// </summary>
+        public static void ToggleSummonsActivity()
+        {
+            if (Gameplay.BoneNecklaceTool.IsEquipped)
+            {
+                BlockSummons = !BlockSummons;
+
+                var player = HeroController.instance;
+                var prefab = player.luckyDiceShieldEffectPrefab;
+
+                var effect = UnityEngine.Object.Instantiate(
+                    prefab,
+                    player.transform.position,
+                    player.transform.rotation
+                );
+
+                effect.transform.SetScaleX(0.5f);
+                effect.transform.SetScaleY(0.5f);
+
+                UnityEngine.Object.Destroy(effect, 3f);
+            }
+        }
+
+
+        private const int SilkNailsBaseDamage = 1;
+        private const float SilkNailsActivationRange = 12f;
+        private const int CogflyWarriorBaseDamage = 2;
 
         private static float _silkRegenTime = 0f;
+        private static float _silkNailCooldown = 0f;
 
-        private static readonly FieldInfo WispSpawnStartDelay = typeof(HeroWispLantern)
+        private static readonly FieldInfo _hpCurrentField = typeof(ClockworkHatchling)
+            .GetField("hpCurrent", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly FieldInfo _cooldownTimer = typeof(ClockworkHatchling)
+            .GetField("cooldownTimer", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static readonly FieldInfo _wispSpawnStartDelay = typeof(HeroWispLantern)
             .GetField("wispSpawnStartDelay", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static readonly FieldInfo WispSpawnCooldown = typeof(HeroWispLantern)
+        private static readonly FieldInfo _wispSpawnCooldown = typeof(HeroWispLantern)
             .GetField("wispSpawnCooldown", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        private static bool SpawnSilkNails()
+        {
+            HeroController hc = HeroController.instance;
+
+            foreach (var e in EnemyHealth.EnemyMaxHp.Keys)
+            {
+                if (e == null)
+                    continue;
+
+                float dist = Vector2.Distance(hc.transform.position, e.transform.position);
+                if (dist > SilkNailsActivationRange)
+                    continue;
+
+                PaleNailsSpawner.SpawnNeedles();
+
+                return true;
+            }
+
+            return false;
+        }
     }
 }

@@ -62,8 +62,11 @@ namespace BonfireSilksong
                 {
                     WisdomLogic.CheckSilkRegen(dt);
                     ArtificeLogic.CheckToolRegen(dt);
+                    WisdomLogic.CheckSilkNails(dt);
                 }
                 catch { }
+
+                WisdomLogic.CheckCogflyWarriorState();
             }
         }
 
@@ -72,7 +75,7 @@ namespace BonfireSilksong
         {
             static void Postfix()
             {
-                ResilienceLogic.CustomUpdateBlueHealth();
+                BlueHealthUpdate.CustomUpdateBlueHealth();
             }
         }
 
@@ -215,6 +218,8 @@ namespace BonfireSilksong
         {
             static void Postfix()
             {
+                WisdomLogic.ToggleSummonsActivity();
+
                 IntelligenceLogic.DealTauntDamage();
 
                 if (IntelligenceLogic.CheckIntelligenceMilestone(1) &&
@@ -231,6 +236,8 @@ namespace BonfireSilksong
         {
             static void Postfix()
             {
+                WisdomLogic.ToggleSummonsActivity();
+
                 IntelligenceLogic.DealTauntDamage();
 
                 if (IntelligenceLogic.CheckIntelligenceMilestone(1) &&
@@ -304,9 +311,22 @@ namespace BonfireSilksong
             {
                 __state = ArtificeLogic.GetThrownToolItem();
 
+                // can't use Pale Nails when Wisdom's Silk Nails are enabled.
+                if (WisdomLogic.IsSilkNailsEnabled && __state.name == "Silk Boss Needle")
+                {
+                    return false;
+                }
+
+                // can't use Cogfly tool when Wisdom's Cogfly Warrior is enabled
+                if (WisdomLogic.IsCogflyWarriorEnabled && __state.name == "Cogwork Flier")
+                {
+                    return false;
+                }
+
+                // can't use Plasmium Phial when Resilience's blue state is enabled and milestone 3 not yet unlocked.
                 if (__state.name == "Lifeblood Syringe" &&
                     !HeroController.instance.IsInLifebloodState &&
-                    !ResilienceLogic.IsInAnyBlueState() &&
+                    ResilienceLogic.IsInAnyBlueState() &&
                     !ResilienceLogic.CheckResilienceMilestone(3))
                 {
                     return false;
@@ -328,7 +348,7 @@ namespace BonfireSilksong
                     return;
                 }
 
-                ArtificeLogic.SetThrowFieldValues(__state);
+                ArtificeLogic.SetThrowFieldValues(__state, setWillThrowTool: true, setQueuedAutoThrow: true);
                 _extraToolThrows--;
             }
         }
