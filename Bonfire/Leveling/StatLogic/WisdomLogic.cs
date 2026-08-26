@@ -230,7 +230,9 @@ namespace BonfireSilksong
                     return;
                 }
 
-                _silkNailCooldown = 0.25f;
+                // small pause to avoid constant SpawnSilkNails check. Probably doesn't have any practical impact
+                // because the distance calculation inside SpawnSilkNails is already quite inexpensive to do.
+                _silkNailCooldown = 0.05f;
 
                 return;
             }

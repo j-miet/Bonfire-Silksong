@@ -128,8 +128,8 @@ namespace BonfireSilksong
                 hitInstance.DamageDealt = spellDamage;
             }
             else if (tool != null &&
-                    (tool.Type == ToolItemType.Red || tool.Type == ToolItemType.Blue) &&
-                    tool.name != "Silk Nails")
+                (tool.Type == ToolItemType.Red || tool.Type == ToolItemType.Blue) &&
+                tool.name != "Silk Nails")
             {
                 int toolDamage = hitInstance.DamageDealt;
 
@@ -248,10 +248,11 @@ namespace BonfireSilksong
                 hitInstance.DamageDealt = reflectDamage;
             }
 
+            // -- additional checks after hitInstance's own logic has been applied --
+
             if (ResilienceLogic.IsInBlueState(BlueState.GLASSCANNON))
             {
                 hitInstance.DamageDealt = ResilienceLogic.ApplyGlassCannonDamageBonus(hitInstance.DamageDealt);
-
             }
 
             // while in reflect state, all non-reflect damage is reduced by 99% but is always at least 1.
@@ -264,6 +265,8 @@ namespace BonfireSilksong
                     Bonfire.Log.LogDebug($"Reflect state enabled, damage reduced to {hitInstance.DamageDealt}");
                 }
             }
+
+            Bonfire.Log.LogInfo("=> Modified Damage Output: " + hitInstance.DamageDealt);
 
             DexterityLogic.ApplyCritHeal(isCrit);
             LuckLogic.Crit = false;
