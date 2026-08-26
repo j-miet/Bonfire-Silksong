@@ -30,8 +30,9 @@ namespace BonfireSilksong
         /// </summary>
         public static int NeedleDamage(int baseDamage, int totalStr)
         {
-            return (int)Math.Round(
-                baseDamage * Math.Pow(1.2, Math.Log(totalStr + 1, 2.0)));
+            if (totalStr <= 0) return baseDamage;
+
+            return (int)Math.Round(baseDamage * Math.Pow(1.2, Math.Log(totalStr + 1, 2.0)));
         }
 
         /// <summary>
@@ -94,7 +95,7 @@ namespace BonfireSilksong
             if (!CheckStrengthMilestone(3)) return;
             if (instance.CurrentElement != NailElements.Fire) return;
 
-            ImbuementTimeLeftField.SetValue(instance, 999f);
+            _imbuementTimeLeftField.SetValue(instance, 999f);
         }
 
         /// <summary>
@@ -104,7 +105,7 @@ namespace BonfireSilksong
         {
             if (CheckStrengthMilestone(3) && instance.IsUsingQuickening)
             {
-                QuickeningTimeLeftField.SetValue(instance, 999f);
+                _quickeningTimeLeftField.SetValue(instance, 999f);
             }
         }
 
@@ -145,7 +146,7 @@ namespace BonfireSilksong
         {
             if (!CheckStrengthMilestone(1) || !Bonfire.Instance.Status.AutoReleaseNeedleStrike) return;
 
-            if ((float)NailChargeTimerField.GetValue(HeroController.instance) > CurrentChargeLimit)
+            if ((float)_nailChargeTimerField.GetValue(HeroController.instance) > CurrentChargeLimit)
             {
                 Bonfire.Log.LogDebug("[StrengthLogic] Attempting to release needle strike automatically");
                 var fsm = FindNeedleStrikeFSM();
@@ -177,11 +178,11 @@ namespace BonfireSilksong
         private static readonly Vector2 NeedleRangeMultiplier = new Vector2(1.33f, 1.33f);
         private static float CurrentChargeLimit;
 
-        private static readonly FieldInfo ImbuementTimeLeftField = typeof(HeroNailImbuement)
+        private static readonly FieldInfo _imbuementTimeLeftField = typeof(HeroNailImbuement)
             .GetField("imbuementTimeLeft", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static readonly FieldInfo QuickeningTimeLeftField = typeof(HeroController)
+        private static readonly FieldInfo _quickeningTimeLeftField = typeof(HeroController)
             .GetField("quickeningTimeLeft", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static readonly FieldInfo NailChargeTimerField = typeof(HeroController)
+        private static readonly FieldInfo _nailChargeTimerField = typeof(HeroController)
             .GetField("nailChargeTimer", BindingFlags.Instance | BindingFlags.NonPublic);
     }
 }

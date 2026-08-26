@@ -79,11 +79,13 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// HeroController.Update (Postfix): Passive tool regen, replenishes 1 charge for ALL red tools 
-        /// currently equipped
+        /// HeroController.Update (Postfix): Passive tool regen, replenishes 1 charge for all currently equipped red 
+        /// tools.
         /// </summary>
         public static void CheckToolRegen(float dt)
         {
+            if (Bonfire.Instance.Status.ArtificeStat < 1) return;
+
             if (_toolRegenTime > 0)
             {
                 _toolRegenTime -= dt;
@@ -143,14 +145,6 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// HeroController.ThrowTool (Prefix): Get currently thrown tool in willThrowTool private field.
-        /// </summary>
-        public static ToolItem GetThrownToolItem()
-        {
-            return (ToolItem)WillThrowToolField.GetValue(HeroController.instance);
-        }
-
-        /// <summary>
         /// HeroController.ThrowTool (Prefix): Checks if tool is valid for copying then calculates extra tool copies
         /// from Quick Sling tool + Artifice stat rolls. If tool is not valid for extra copies OR should only use
         /// Quick Sling base game behavior, returned count is 0.
@@ -173,7 +167,10 @@ namespace BonfireSilksong
                 t.name == "Flea Brew" ||
                 t.name == "Lifeblood Syringe" ||
                 t.name == "Silk Snare" ||
-                (t.name == "Lightning Rod" && !PlayerData.instance.LightningToolToggle))
+                (t.name == "Lightning Rod" && !PlayerData.instance.LightningToolToggle) ||
+                tool.Type == ToolItemType.Skill ||
+                tool.Type == ToolItemType.Blue ||
+                tool.Type == ToolItemType.Yellow)
             {
                 return 0;
             }
@@ -228,16 +225,28 @@ namespace BonfireSilksong
         }
 
         /// <summary>
+        /// HeroController.ThrowTool (Prefix): Get currently thrown tool in willThrowTool private field.
+        /// </summary>
+        public static ToolItem GetThrownToolItem()
+        {
+            return (ToolItem)_willThrowToolField.GetValue(HeroController.instance);
+        }
+
+        /// <summary>
         /// HeroController.ThrowTool (Postfix): Changes null willThrowTool field to passed tool + sets 
         /// queuedAutoThrowField = true to automatically throw another copy of current tool. This behavior is similar
         /// to how game handles Quick Sling tool copy spawning.
         /// </summary>
-        public static void SetThrowFieldValues(ToolItem tool)
+        public static void SetThrowFieldValues(ToolItem tool, bool setWillThrowTool, bool setQueuedAutoThrow)
         {
             var hc = HeroController.instance;
 
-            WillThrowToolField.SetValue(hc, tool);
-            QueuedAutoThrowToolField.SetValue(hc, true); // this makes HeroController's Update to call ThrowTool again
+            if (setWillThrowTool)
+                _willThrowToolField.SetValue(hc, tool);
+
+            // this makes HeroController's Update to call ThrowTool again
+            if (setQueuedAutoThrow)
+                _queuedAutoThrowToolField.SetValue(hc, true);
         }
 
         /// <summary>
@@ -294,9 +303,9 @@ namespace BonfireSilksong
         private static bool _isUsingSilkshot = false;
         private static float _toolRegenTime = 0f;
 
-        private static readonly FieldInfo WillThrowToolField = typeof(HeroController)
+        private static readonly FieldInfo _willThrowToolField = typeof(HeroController)
             .GetField("willThrowTool", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static readonly FieldInfo QueuedAutoThrowToolField = typeof(HeroController)
+        private static readonly FieldInfo _queuedAutoThrowToolField = typeof(HeroController)
             .GetField("queuedAutoThrowTool", BindingFlags.Instance | BindingFlags.NonPublic);
     }
 }

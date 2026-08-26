@@ -37,8 +37,8 @@ namespace BonfireSilksong
 
             instance.proxyFSM.SendEventSafe("HeroCtrl-EnteringScene");
 
-            // teleporting will update blue hp too early so call update again after a short delay for refresh state
-            Bonfire.Instance.StartCoroutine(ResilienceLogic.CallDelayedUpdateBlueHP());
+            // teleporting will update blue hp too early so call update again after a short delay to refresh state
+            Bonfire.Instance.StartCoroutine(BlueHealthUpdate.CallDelayedUpdateBlueHP());
 
             GameManager.instance.SaveGame(null);
         }

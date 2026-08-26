@@ -199,6 +199,7 @@ namespace BonfireSilksong
                 DefaultName = "Cradle_Challenge_Bench", // make name slightly shorter to avoid vertical scrollbar
                 CustomName = "Climb",
                 IsUnlocked = () => PlayerData.instance.blackThreadWorld
+                                && PlayerData.instance.completedAbyssAscent
                                 && PlayerData.instance.hasSilkBossNeedle // available after picking Pale Nails
             },
         };

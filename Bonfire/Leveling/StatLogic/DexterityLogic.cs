@@ -30,6 +30,8 @@ namespace BonfireSilksong
         /// </summary>
         public static float AttackSpeed(int totalDex)
         {
+            if (totalDex <= 0) return 1f;
+
             return (float)Math.Round(2.7 / (1.0 + 1.82 * Math.Exp(-0.08 * (totalDex + 1))) - 0.01, 2);
         }
 
@@ -38,6 +40,8 @@ namespace BonfireSilksong
         /// </summary>
         public static int CritDamage(int totalDex, int needleDamage)
         {
+            if (totalDex <= 0) return needleDamage;
+
             return (int)(needleDamage * (1.2 + Math.Log(totalDex + 1)));
         }
 
@@ -113,8 +117,16 @@ namespace BonfireSilksong
         {
             if (CheckDexterityMilestone(3) && wasCrit)
             {
-                HeroController.instance.AddHealth(1);
                 Bonfire.Log.LogDebug("[DexterityLogic] Crit heal");
+
+                // heal blue hp instead if in a blue state
+                if (ResilienceLogic.IsInAnyBlueState() && !HeroController.instance.IsInLifebloodState)
+                {
+                    Bonfire.Instance.StartCoroutine(ResilienceLogic.BlueStateHealBlueMasks(1));
+                    return;
+                }
+
+                HeroController.instance.AddHealth(1);
             }
 
             // -- original idea was to heal 2 masks from clawline and needle strike, 1 from the rest.
@@ -156,9 +168,9 @@ namespace BonfireSilksong
 
             float attackSpeed = AttackSpeed(Bonfire.Instance.Status.DexterityStat);
 
-            AttackCooldownField?.SetValue(
+            _attackCooldownField?.SetValue(
                 instance,
-                (float)AttackCooldownField.GetValue(instance) / attackSpeed);
+                (float)_attackCooldownField.GetValue(instance) / attackSpeed);
         }
 
         /// <summary>
@@ -173,9 +185,9 @@ namespace BonfireSilksong
 
             float attackSpeed = AttackSpeed(Bonfire.Instance.Status.DexterityStat);
 
-            AttackDurationField?.SetValue(
+            _attackDurationField?.SetValue(
                 instance,
-                (float)AttackDurationField.GetValue(instance) / attackSpeed);
+                (float)_attackDurationField.GetValue(instance) / attackSpeed);
         }
 
         /// <summary>
@@ -201,9 +213,9 @@ namespace BonfireSilksong
         private static int _clawlineHitCounter = 0;
         private static bool _usedHarpoon = false;
 
-        private static readonly FieldInfo AttackCooldownField = typeof(HeroController)
+        private static readonly FieldInfo _attackCooldownField = typeof(HeroController)
             .GetField("attack_cooldown", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static readonly FieldInfo AttackDurationField = typeof(HeroController)
+        private static readonly FieldInfo _attackDurationField = typeof(HeroController)
             .GetField("attackDuration", BindingFlags.Instance | BindingFlags.NonPublic);
     }
 }

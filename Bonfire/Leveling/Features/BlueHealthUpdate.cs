@@ -6,7 +6,12 @@ using UnityEngine;
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Custom blue health logic e.g. to update lifeblood masks during bench visits.
+    /// Custom blue health logic e.g. to update lifeblood masks during bench visits. Usage:
+    /// - Always reset BlueHpInit back to false when quitting to main menu.
+    /// - Set SatDownAtBench to true after entering bench, it will be flipped to false internally.
+    /// - Patch CustomUpdateBlueHealth into HeroController.UpdateBlueHealth.
+    /// Additional helpers (CallDelayedpdateBlueHP, CancelBlueHPUpdate) can be also used to either delay the update
+    /// e.g. during scene transitions and to cancel ongoing update loops.
     /// </summary>
     public static class BlueHealthUpdate
     {

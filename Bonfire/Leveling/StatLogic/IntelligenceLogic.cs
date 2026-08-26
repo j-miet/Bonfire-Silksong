@@ -1,5 +1,5 @@
 using System;
-
+using System.Reflection;
 using GlobalSettings;
 using HutongGames.PlayMaker;
 using UnityEngine;
@@ -37,6 +37,8 @@ namespace BonfireSilksong
         /// </summary>
         public static int SpellDamage(int baseDamage, int totalInt)
         {
+            if (totalInt <= 0) return baseDamage;
+
             return (int)Math.Round(baseDamage * Math.Pow(1.25, Math.Log(totalInt + 1, 2.0)));
         }
 
@@ -49,6 +51,8 @@ namespace BonfireSilksong
         /// </summary>
         public static int BindCost(int totalInt)
         {
+            if (totalInt <= 0) return 9;
+
             return (int)Math.Round(9.1 * Math.Exp(-0.01 * (totalInt + 2.0)));
         }
 

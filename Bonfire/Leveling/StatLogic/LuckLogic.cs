@@ -51,6 +51,8 @@ namespace BonfireSilksong
         /// </summary>
         public static int IncreaseRosaries(int droppedRosaries, int totalLck)
         {
+            if (totalLck <= 0) return droppedRosaries;
+
             return (int)(droppedRosaries * (1f + (totalLck / 20f)));
         }
 
@@ -144,9 +146,18 @@ namespace BonfireSilksong
                 // Prefer one with no audio + only mild visuals; you will be hearing/seeing this effect a lot if
                 // you level up luck stat
                 var prefab = HeroController.instance.takeHitBlackHealthNullifyPrefab;
-                prefab.transform.SetScaleX(0.5f);
-                prefab.transform.SetScaleY(0.5f);
-                Instantiate(prefab, target.transform.position, target.transform.rotation);
+
+                // create a copy of prefab to avoid modifying the original
+                var effect = Instantiate(
+                    prefab,
+                    target.transform.position,
+                    target.transform.rotation
+                );
+
+                effect.transform.SetScaleX(0.5f);
+                effect.transform.SetScaleY(0.5f);
+
+                Destroy(effect, 3f); // clean up the copy after a while; 3 seconds should be more than enough.
             }
         }
 
