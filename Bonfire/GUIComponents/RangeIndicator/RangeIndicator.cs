@@ -11,8 +11,11 @@ namespace BonfireSilksong
         /// <summary>
         /// Display a disc texture around the player. Use with UpdateFading.
         /// </summary>
-        public static void Display(float radius)
+        public static void Display(float radius, Color? circleColor, Color? discColor)
         {
+            _circleColor = circleColor ?? new Color(1f, 1f, 1f);
+            _discColor = discColor ?? new Color(1f, 1f, 1f);
+
             if (_rangeCircle == null)
             {
                 CreateRangeDisc(radius);
@@ -25,7 +28,6 @@ namespace BonfireSilksong
             _rangeCircle.enabled = true;
             _rangeIndicatorUntil = Time.time + RangeDisplayTime;
         }
-
 
         /// <summary>
         /// Add fading effect to range indicator by reducing alpha based on time left. Needs to be called in OnGUI.
@@ -46,8 +48,8 @@ namespace BonfireSilksong
             float alpha = remaining / RangeDisplayTime;
 
             // the circle has more alpha to clearly show the outer edge.
-            Color circleColor = new Color(1f, 1f, 1f, alpha);
-            Color discColor = new Color(1f, 1f, 1f, alpha * 0.2f);
+            Color circleColor = new Color(_circleColor.r, _circleColor.g, _circleColor.b, alpha);
+            Color discColor = new Color(_discColor.r, _discColor.g, _discColor.b, alpha * 0.2f);
 
             _rangeCircle.startColor = circleColor;
             _rangeCircle.endColor = circleColor;
@@ -59,9 +61,11 @@ namespace BonfireSilksong
 
         private static LineRenderer _rangeCircle;
         private static float _rangeIndicatorUntil;
+        private static Color _circleColor;
 
         private static MeshRenderer _rangeDisc;
         private static MeshFilter _rangeDiscMesh;
+        private static Color _discColor;
 
         private static void CreateRangeDisc(float radius)
         {
