@@ -1,4 +1,3 @@
-using System;
 using HarmonyLib;
 
 namespace BonfireSilksong
@@ -77,13 +76,26 @@ namespace BonfireSilksong
                 amount = ResilienceLogic.PreventHPLossOnBlock(amount);
 
                 if (amount > 0)
+                {
                     amount = ResilienceLogic.UpdateBlueStateDamageTaken(amount);
+
+                    if (IntelligenceLogic.CheckWeakBindRequirement())
+                        amount += 1;
+                }
             }
         }
 
         [HarmonyPatch(typeof(PlayerData), "SilkSkillCost", MethodType.Getter)]
         class PlayerData_SilkSkillCost
         {
+            static bool Prefix(ref int __result)
+            {
+                // override normal getter; Postfix will still run as intended.
+                __result = PatchHelpers.CustomSilkSkillCostGetter();
+
+                return false;
+            }
+
             static void Postfix(ref int __result)
             {
                 if (IntelligenceLogic.CheckWeakBindRequirement())

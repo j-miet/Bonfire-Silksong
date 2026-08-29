@@ -29,9 +29,9 @@ namespace BonfireSilksong
         /// <summary>
         /// For highlighting stat milestones in LevelingGUI.
         /// </summary>
-        public static bool HighLightStatMilestone(string name, int m)
+        public static bool HighLightStatMilestone(string statName, int m)
         {
-            string normalized = name.ToLower();
+            string normalized = statName.ToLower();
 
             switch (normalized)
             {
@@ -415,8 +415,9 @@ namespace BonfireSilksong
 
         private static void ResetMilestoneFlags()
         {
-            Bonfire.Instance.Status.BlueMaskMode = (int)BlueState.DISABLED;
             Bonfire.Instance.Status.AutoReleaseNeedleStrike = false;
+            Bonfire.Instance.Status.WeaverAuraMode = (int)WeaverAura.DISABLED;
+            Bonfire.Instance.Status.BlueMaskMode = (int)BlueState.DISABLED;
             Bonfire.Instance.Status.SilkNailsEnabled = false;
             Bonfire.Instance.Status.CogflyWarriorEnabled = false;
 

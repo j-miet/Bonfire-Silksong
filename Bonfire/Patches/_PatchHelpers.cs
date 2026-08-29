@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 
+using GlobalSettings;
 using HarmonyLib;
 
 namespace BonfireSilksong
@@ -10,6 +11,9 @@ namespace BonfireSilksong
     /// </summary>
     public static class PatchHelpers
     {
+        public static bool Taunted = false;
+        public static int TotalSilkCache = 0;
+
         // PlayerData.instance.nailDamage
         public static readonly MethodInfo PlayerDataInstanceGetter = AccessTools.PropertyGetter(
             typeof(PlayerData),
@@ -70,6 +74,57 @@ namespace BonfireSilksong
         }
 
         /// <summary>
+        /// PlayerData.SilkSkillCost (Postfix): Same as original, except if player is in any Resilience blue state, not
+        /// being at max blue masks should also prevent the Egg of Flealia silk cost reduction.
+        /// </summary>
+        public static int CustomSilkSkillCostGetter()
+        {
+            if (Gameplay.FleaCharmTool.IsEquippedHud)
+            {
+                var pd = PlayerData.instance;
+                int maxBlueHp = ResilienceLogic.BlueMasks(Bonfire.Instance.Status.ResilienceStat);
+
+                // during plasmification, game uses normal masks to track hp
+                // in any blue state, but not plasmified -> use blue masks instead
+                // otherwise use the default normal mask tracking
+                if ((ResilienceLogic.IsInAnyBlueStateAndPlasmified() && pd.health == pd.CurrentMaxHealth) ||
+                    (ResilienceLogic.IsInAnyBlueState() && pd.healthBlue == maxBlueHp) ||
+                    (!ResilienceLogic.IsInAnyBlueState() && pd.health == pd.CurrentMaxHealth))
+                {
+                    return 3;
+                }
+            }
+
+            return 4;
+        }
+
+        /// <summary>
+        /// HeroController.TakeSilk (Prefix): Refund taunt cost under specific conditions. Importantly: cost check
+        /// is always called before the SilkTaunted/RingTaunted methods in HeroController, meaning this one should
+        /// check the validity whereas these two taunt methods should handle the toggling afterwards. 
+        /// </summary>
+        public static bool CheckTauntCostRefund(int cost)
+        {
+            // PlayerData's silk has not been updated to 'silk - cost' yet so cache it here
+            TotalSilkCache = PlayerData.instance.silk;
+
+            bool refunded = false;
+
+            if (Taunted && cost == 1)
+            {
+                if (IntelligenceLogic.AuraOrBurstEnabled)
+                {
+                    Bonfire.Log.LogInfo("[PatchHelpers] Refunded Taunt Cost for Aura/Burst");
+                    refunded = true;
+                }
+            }
+
+            Taunted = false;
+
+            return refunded;
+        }
+
+        /// <summary>
         /// HealthManager.Hit (Prefix): Handle stat damage calculations before game calls HealthManager.TakeDamage
         /// for actual health subtraction logic.
         /// Pass by references: HitInstance is a struct value type and its DamageDealt value needs to be updated.
@@ -81,7 +136,7 @@ namespace BonfireSilksong
             string sourceName = hitInstance.Source.name;
             var tool = hitInstance.RepresentingTool;
 
-            Bonfire.Log.LogInfo("[HealthManager.Hit] Recorded a hit => Hit source: " + sourceName);
+            Bonfire.Log.LogInfo("[PatchHelpers] Recorded a hit => Hit source: " + sourceName);
             Bonfire.Log.LogInfo("- Damage Dealt: " + hitInstance.DamageDealt);
             Bonfire.Log.LogInfo("- Tool instance: " + tool?.name ?? "null");
 
@@ -207,8 +262,7 @@ namespace BonfireSilksong
                 // IsNailDamage is better identifier unless specific needle strike damage components
                 // need to be scaled individually.
                 // 3. IsUsingNeedleDamageMult would also apply to Silk Skills because in vanilla they do scale
-                // from needle upgrade count. However after base game upgrade scaling, this becomes solely intelligence 
-                // stat's responsibility.
+                // from needle upgrade count. However after base game upgrade scaling, Intelligence handles the rest.
 
                 int needleDamage = hitInstance.DamageDealt;
 
@@ -221,18 +275,18 @@ namespace BonfireSilksong
 
                 hitInstance.DamageDealt = needleDamage;
             }
-            else if (sourceName == "Bonfire-Taunt")
+            else if (sourceName == "Bonfire-WeaverAura")
             {
-                // custom damage type: handles all primary damage logic in TauntDamage.
+                // custom damage type: handles all primary damage logic in WeaverAuraDamage
 
-                int tauntDamage = IntelligenceLogic.TauntDamage(Bonfire.Instance.Status.IntelligenceStat);
+                int auraDamage = IntelligenceLogic.WeaverAuraDamage(Bonfire.Instance.Status.IntelligenceStat);
 
                 if (IntelligenceLogic.CheckIntelligenceMilestone(3) && isCrit)
                 {
-                    tauntDamage = DexterityLogic.ApplyCritDamage(tauntDamage);
+                    auraDamage = DexterityLogic.ApplyCritDamage(auraDamage);
                 }
 
-                hitInstance.DamageDealt = tauntDamage;
+                hitInstance.DamageDealt = auraDamage;
             }
             else if (sourceName == "Bonfire-Reflect")
             {
@@ -265,6 +319,9 @@ namespace BonfireSilksong
                     Bonfire.Log.LogDebug($"Reflect state enabled, damage reduced to {hitInstance.DamageDealt}");
                 }
             }
+
+            // TODO-> dps metter: cache latest value here for GUI to display it
+            // - source, damage before mod's buffs, damage post mod's buffs
 
             Bonfire.Log.LogInfo("=> Modified Damage Output: " + hitInstance.DamageDealt);
 

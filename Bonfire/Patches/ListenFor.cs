@@ -67,5 +67,25 @@ namespace BonfireSilksong
                 return true;
             }
         }
+
+        [HarmonyPatch(typeof(ListenForTaunt), "OnUpdate")]
+        class ListenForTaunt_OnUpdate
+        {
+            static void Prefix()
+            {
+                if (GameManager.instance.inputHandler.inputActions.Taunt.WasPressed)
+                    PatchHelpers.Taunted = true;
+            }
+        }
+
+        [HarmonyPatch(typeof(ListenForTauntV2), "OnUpdate")]
+        class ListenForTauntV2_OnUpdate
+        {
+            static void Prefix()
+            {
+                if (GameManager.instance.inputHandler.inputActions.Taunt.WasPressed)
+                    PatchHelpers.Taunted = true;
+            }
+        }
     }
 }

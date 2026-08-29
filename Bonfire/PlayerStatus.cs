@@ -33,6 +33,7 @@ namespace BonfireSilksong
 
         // stat milestones
         public bool AutoReleaseNeedleStrike = false;
+        public int WeaverAuraMode = 0;
         public int BlueMaskMode = 0;
         public bool SilkNailsEnabled = false;
         public bool CogflyWarriorEnabled = false;

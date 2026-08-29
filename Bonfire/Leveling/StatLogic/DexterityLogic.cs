@@ -40,7 +40,7 @@ namespace BonfireSilksong
         /// </summary>
         public static int CritDamage(int totalDex, int needleDamage)
         {
-            if (totalDex <= 0) return needleDamage;
+            if (totalDex <= 0) return (int)(needleDamage * 1.2f);
 
             return (int)(needleDamage * (1.2 + Math.Log(totalDex + 1)));
         }
@@ -71,8 +71,13 @@ namespace BonfireSilksong
         /// </summary>
         public static int ApplyClawlineDamageBonuses(int baseDamage)
         {
-            _clawlineHitCounter += 1;
-            Bonfire.Log.LogDebug("Clawline hits: " + _clawlineHitCounter);
+            if (CheckDexterityMilestone(1))
+            {
+                _clawlineHitCounter += 1;
+                Bonfire.Log.LogDebug("Clawline hits: " + _clawlineHitCounter);
+            }
+            else if (_clawlineHitCounter > 0)
+                _clawlineHitCounter = 0;
 
             int updatedDamage = baseDamage;
 
@@ -93,13 +98,19 @@ namespace BonfireSilksong
 
             if (CheckDexterityMilestone(1) && _clawlineHitCounter >= ClawlineHitLimit)
             {
-                updatedDamage *= 2;
-                Bonfire.Log.LogDebug($"Clawline {ClawlineHitLimit}. hit: applied x2 multiplier");
-
                 if (CheckDexterityMilestone(3))
                 {
+                    updatedDamage *= 3;
+
                     HeroController.instance.AddHealth(1);
-                    Bonfire.Log.LogDebug($"Clawline {ClawlineHitLimit}. hit: healed 1 mask");
+
+                    Bonfire.Log.LogDebug($"Clawline {ClawlineHitLimit}. hit: healed 1 mask and applied 3x multiplier");
+                }
+                else
+                {
+                    updatedDamage *= 2;
+
+                    Bonfire.Log.LogDebug($"Clawline {ClawlineHitLimit}. hit: applied x2 multiplier");
                 }
 
                 _clawlineHitCounter = 0;

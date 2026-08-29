@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Reflection;
 
 using GlobalEnums;
 using UnityEngine;
@@ -137,7 +136,7 @@ namespace BonfireSilksong
                 DealReflectDamage();
 
                 if (Bonfire.Instance.Status.ShowCustomRangeIndicator)
-                    RangeIndicator.Display(ReflectArea(isGUI: true));
+                    RangeIndicator.Display(ReflectArea(isGUI: true), null, null);
 
                 if (hazard == HazardType.ENEMY)
                     HeroController.instance.AddSilk(1, false);
@@ -178,7 +177,7 @@ namespace BonfireSilksong
         /// </summary>
         public static int ApplyGlassCannonDamageBonus(int baseDamage)
         {
-            int damage = (int)Math.Round(baseDamage * 1.5f * GlassCannonDamageMaskBonus());
+            int damage = (int)Math.Round(baseDamage * (1.5f + GlassCannonDamageMaskBonus()));
 
             if (CheckResilienceMilestone(2) || IsInBlueState(BlueState.GLASSCANNON))
             {
@@ -199,7 +198,7 @@ namespace BonfireSilksong
             if (!IsInBlueState(state))
                 return 0;
 
-            float bonus = 1f;
+            float bonus = 0;
 
             if (IsInBlueStateAndPlasmified(state) || (isGUI && GUIPlasmified))
             {
@@ -267,6 +266,13 @@ namespace BonfireSilksong
                 Bonfire.Instance.Status.BlueMaskMode == (int)state;
         }
 
+        public static bool IsInAnyBlueStateAndPlasmified()
+        {
+            return HeroController.instance.IsInLifebloodState &&
+                CheckResilienceMilestone(3) &&
+                (IsInBlueState(BlueState.REFLECT) || IsInBlueState(BlueState.GLASSCANNON));
+        }
+
         /// <summary>
         /// Heal custom amount of blue masks with a small delay. Useful if blue hp needs to be added repeatedly, this
         /// avoids FSM event overriding.
@@ -303,8 +309,6 @@ namespace BonfireSilksong
             {
                 // revert the -1 damage taken below: IsInBlueStateAndPlasmified must be checked first before 
                 // IsInBlueState as the latter will always get accepted if the former is true. 
-                // However while Plasmified, healthBlue should technically equal to 0 because game tracks normal hp
-                // instead so this might not be necessary, but it can stay here as a safety check.
                 damageTaken = amount;
             }
             else if (IsInAnyBlueState() && PlayerData.instance.healthBlue <= 0)
@@ -362,8 +366,10 @@ namespace BonfireSilksong
             if (multiplier > 0 && num <= multiplier * blockChance)
             {
                 _hitsSinceShielded = 0;
-                LuckyDiceBlockVisual();
                 BlockNextHit = true;
+
+                SpawnPrefab.SpawnHero(HeroController.instance.luckyDiceShieldEffectPrefab);
+
                 Bonfire.Log.LogDebug("Blocked a hit!");
             }
             else
@@ -393,19 +399,6 @@ namespace BonfireSilksong
 
         private static int _hitsSinceShielded = 0;
 
-        // helper for HandleBlockCheck to display same effect what Magnetite Dice tool uses on blocked hits.
-        private static void LuckyDiceBlockVisual()
-        {
-            var hc = HeroController.instance;
-            var effect = hc.luckyDiceShieldEffectPrefab;
-
-            if (effect != null)
-            {
-                effect.SetActive(false);
-                effect.SetActive(true);
-            }
-        }
-
         private static HitInstance CreateReflectHitInstance(HeroController instance)
         {
             instance.gameObject.name = "Bonfire-Reflect";
@@ -418,7 +411,7 @@ namespace BonfireSilksong
                 IsFirstHit = false,
                 HitEffectsType = EnemyHitEffectsProfile.EffectsTypes.Full,
                 Direction = 0f,
-                MagnitudeMultiplier = 1f,
+                MagnitudeMultiplier = 0f,
                 Multiplier = 1f,
                 IsHeroDamage = true,
                 SilkGeneration = HitSilkGeneration.Full

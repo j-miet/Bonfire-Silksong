@@ -253,6 +253,11 @@ namespace BonfireSilksong
                 _satDown = true;
                 BlueHealthUpdate.SatDownAtBench = true;
 
+                IntelligenceLogic.WeaverAuraTaunt = false;
+                IntelligenceLogic.WeaverAuraRingTaunt = false;
+                IntelligenceLogic.ResetWeaverAuraTimer();
+                PatchHelpers.Taunted = false;
+
                 // this causes BlueHpCheckInvOrMenu check to be ignored on first blue hp update call which happens
                 // right after loading into a save.
                 if (!BlueHealthUpdate.BlueHpInit)

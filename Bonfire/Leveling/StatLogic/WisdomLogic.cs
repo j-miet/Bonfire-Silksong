@@ -1,7 +1,6 @@
 using System;
 using System.Reflection;
 
-using GlobalSettings;
 using TeamCherry.SharedUtils;
 using UnityEngine;
 
@@ -10,6 +9,7 @@ namespace BonfireSilksong
     public static class WisdomLogic
     {
         public static bool BlockSummons { get; private set; } = false;
+        public static bool CanBlockSummons => CheckWisdomMilestone(1) && PlayerData.instance.hasNeedolin;
         public static bool IsSilkNailsEnabled
         {
             get
@@ -53,9 +53,9 @@ namespace BonfireSilksong
         /// </summary>
         public static int ExtraSilk(int totalWsdm, int baseSilk)
         {
-            if (totalWsdm < 20) return baseSilk;
+            if (totalWsdm < ExtraSilkLevelThreshold) return baseSilk;
 
-            return (int)(baseSilk + Math.Floor(totalWsdm / 20f));
+            return (int)(baseSilk + Math.Floor(totalWsdm / ExtraSilkLevelThreshold));
         }
 
         /// <summary>
@@ -65,9 +65,9 @@ namespace BonfireSilksong
         /// </summary>
         public static int SilkRegenInterval(int totalWsdm)
         {
-            if (totalWsdm < 5) return -1;
+            if (totalWsdm < SilkRegenUnlockLevel) return -1;
 
-            return (int)(4.0 + 36.0 * Math.Exp(-0.06 * (totalWsdm - 5)));
+            return (int)(4.0 + 36.0 * Math.Exp(-0.06 * (totalWsdm - SilkRegenUnlockLevel)));
         }
 
         public static int SilkNailsDamage(int totalWsdm)
@@ -166,8 +166,7 @@ namespace BonfireSilksong
             if (hitInstance.SilkGeneration == HitSilkGeneration.FirstHit && !hitInstance.IsFirstHit) return;
             if (PlayerData.instance.atBench) return;
 
-            int baseSilk = 1;
-            int extraSilk = ExtraSilk(Bonfire.Instance.Status.WisdomStat, baseSilk) - baseSilk;
+            int extraSilk = ExtraSilk(Bonfire.Instance.Status.WisdomStat, 0);
             if (extraSilk > 0)
                 HeroController.instance.AddSilk(extraSilk, heroEffect: false);
         }
@@ -177,7 +176,7 @@ namespace BonfireSilksong
         /// </summary>
         public static void CheckSilkRegen(float dt)
         {
-            if (Bonfire.Instance.Status.WisdomStat < 1) return;
+            if (Bonfire.Instance.Status.WisdomStat < SilkRegenUnlockLevel) return;
 
             if (_silkRegenTime > 0)
             {
@@ -319,29 +318,29 @@ namespace BonfireSilksong
         /// <summary>
         /// Reverses BlockSummons boolean value and plays the Magnetite Dice prefab effect as a visual indicator.
         /// </summary>
-        public static void ToggleSummonsActivity()
+        public static bool ToggleSummonsActivity()
         {
-            if (Gameplay.BoneNecklaceTool.IsEquipped)
+            if (!CanBlockSummons) return false;
+
+            if (BlockSummons)
             {
-                BlockSummons = !BlockSummons;
-
-                var player = HeroController.instance;
-                var prefab = player.luckyDiceShieldEffectPrefab;
-
-                var effect = UnityEngine.Object.Instantiate(
-                    prefab,
-                    player.transform.position,
-                    player.transform.rotation
-                );
-
-                effect.transform.SetScaleX(0.5f);
-                effect.transform.SetScaleY(0.5f);
-
-                UnityEngine.Object.Destroy(effect, 3f);
+                BlockSummons = false;
+                Bonfire.Log.LogDebug("[WisdomLogic] Summons are blocked.");
             }
+            else
+            {
+                BlockSummons = true;
+                Bonfire.Log.LogDebug("[WisdomLogic] Summons are active.");
+            }
+
+            HeroController.instance.GetComponent<SpriteFlash>().flashFocusHeal();
+
+            return true;
         }
 
 
+        private const int SilkRegenUnlockLevel = 5;
+        private const float ExtraSilkLevelThreshold = 20f;
         private const int SilkNailsBaseDamage = 1;
         private const float SilkNailsActivationRange = 12f;
         private const int CogflyWarriorBaseDamage = 2;

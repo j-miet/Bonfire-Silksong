@@ -63,6 +63,7 @@ namespace BonfireSilksong
                     WisdomLogic.CheckSilkRegen(dt);
                     ArtificeLogic.CheckToolRegen(dt);
                     WisdomLogic.CheckSilkNails(dt);
+                    IntelligenceLogic.CheckWeaverAura(dt);
                 }
                 catch { }
 
@@ -155,6 +156,9 @@ namespace BonfireSilksong
         {
             static bool Prefix(int amount, SilkSpool.SilkTakeSource source)
             {
+                if (PatchHelpers.CheckTauntCostRefund(amount))
+                    return false;
+
                 if (WisdomLogic.CheckWispLanternCostRefund(source))
                     return false;
 
@@ -213,39 +217,37 @@ namespace BonfireSilksong
             }
         }
 
+        // game seems to call this method only if taunt successfully consumed 1 silk. Currently weaver aura on/off 
+        // toggle use this functionality. This shouldn't cost silk nor give the global 50% damage buff for next attack.
+        // SilkTauntEffectConsume removes the damage buff immediately, PatchHelpers.Taunted is called upon button 
+        // press in ListenFor patches which is then later consumed by PatchHelpers.CheckTauntCostRefund.
+        // However the initial check for silk cost of 1 remains, this could be removed quite easily but with Silk 
+        // Hearts upgrades its very easy to always have that 1 silk available anyway.
         [HarmonyPatch(typeof(HeroController), "SilkTaunted")]
         class HeroController_SilkTaunted
         {
             static void Postfix()
             {
-                WisdomLogic.ToggleSummonsActivity();
-
-                IntelligenceLogic.DealTauntDamage();
-
-                if (IntelligenceLogic.CheckIntelligenceMilestone(1) &&
-                    Bonfire.Instance.Status.ShowCustomRangeIndicator)
+                if (IntelligenceLogic.AuraOrBurstEnabled)
                 {
-                    RangeIndicator.Display(
-                        IntelligenceLogic.TauntRange(Bonfire.Instance.Status.IntelligenceStat, isGUI: true));
+                    IntelligenceLogic.WeaverAuraTaunt = !IntelligenceLogic.WeaverAuraTaunt;
+
+                    // this removed the normal damage buff
+                    HeroController.instance.SilkTauntEffectConsume();
                 }
             }
         }
 
+        // this is always called when Throwing Ring tool is equipped as taunting no longer costs silk, and instead of
+        // 50% global damage it now gives only the 50% Throwing Ring tool damage. So no need to call 
+        // RingTauntEffectConsume here.
         [HarmonyPatch(typeof(HeroController), "RingTaunted")]
         class HeroController_RingTaunted
         {
             static void Postfix()
             {
-                WisdomLogic.ToggleSummonsActivity();
-
-                IntelligenceLogic.DealTauntDamage();
-
-                if (IntelligenceLogic.CheckIntelligenceMilestone(1) &&
-                    Bonfire.Instance.Status.ShowCustomRangeIndicator)
-                {
-                    RangeIndicator.Display(
-                        IntelligenceLogic.TauntRange(Bonfire.Instance.Status.IntelligenceStat, isGUI: true));
-                }
+                if (IntelligenceLogic.AuraOrBurstEnabled)
+                    IntelligenceLogic.WeaverAuraRingTaunt = !IntelligenceLogic.WeaverAuraRingTaunt;
             }
         }
 
@@ -277,6 +279,18 @@ namespace BonfireSilksong
                 {
                     if (!ArtificeLogic.HitEnemyWithSawtoothCirclet)
                         ArtificeLogic.HitEnemyWithSawtoothCirclet = true;
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(HeroController), "CanPlayNeedolin")]
+        class HeroController_CanFPlayNeedolin
+        {
+            static void Postfix(ref bool __result)
+            {
+                if (__result)
+                {
+                    WisdomLogic.ToggleSummonsActivity();
                 }
             }
         }
@@ -313,23 +327,29 @@ namespace BonfireSilksong
 
                 // can't use Pale Nails when Wisdom's Silk Nails are enabled.
                 if (WisdomLogic.IsSilkNailsEnabled && __state.name == "Silk Boss Needle")
-                {
                     return false;
-                }
 
                 // can't use Cogfly tool when Wisdom's Cogfly Warrior is enabled
                 if (WisdomLogic.IsCogflyWarriorEnabled && __state.name == "Cogwork Flier")
-                {
                     return false;
-                }
 
-                // can't use Plasmium Phial when Resilience's blue state is enabled and milestone 3 not yet unlocked.
-                if (__state.name == "Lifeblood Syringe" &&
-                    !HeroController.instance.IsInLifebloodState &&
-                    ResilienceLogic.IsInAnyBlueState() &&
-                    !ResilienceLogic.CheckResilienceMilestone(3))
+                // if in any blue state, allow use of Plasmium Phial normally before final milestone.
+                // However, when final milestone is reached the behavior changes:
+                // - always get Plasmified instantly when using Phial, no matter how much hp you have
+                // - during Plasmified state, can't use Phial anymore
+                if (__state.name == "Lifeblood Syringe" && ResilienceLogic.IsInAnyBlueState())
                 {
-                    return false;
+                    if (!HeroController.instance.IsInLifebloodState)
+                    {
+                        if (ResilienceLogic.CheckResilienceMilestone(3))
+                            BlueHealthUpdate.CallUpdateBlueHP(9);
+
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
 
                 if (!isAutoThrow && __state != null)

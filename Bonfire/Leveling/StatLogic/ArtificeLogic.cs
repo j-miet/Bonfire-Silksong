@@ -47,9 +47,9 @@ namespace BonfireSilksong
         /// </summary>
         public static int ToolRegenInterval(int totalArt)
         {
-            if (totalArt < 5) return -1;
+            if (totalArt < ToolRegenUnlockLevel) return -1;
 
-            return (int)(2.0 + 58.0 * Math.Exp(-0.06 * (totalArt - 5)));
+            return (int)(2.0 + 58.0 * Math.Exp(-0.06 * (totalArt - ToolRegenUnlockLevel)));
         }
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace BonfireSilksong
         /// </summary>
         public static void CheckToolRegen(float dt)
         {
-            if (Bonfire.Instance.Status.ArtificeStat < 1) return;
+            if (Bonfire.Instance.Status.ArtificeStat < ToolRegenUnlockLevel) return;
 
             if (_toolRegenTime > 0)
             {
@@ -292,6 +292,7 @@ namespace BonfireSilksong
 
 
         private const float SawtoothCircletRangeMultiplier = 1.5f;
+        private const int ToolRegenUnlockLevel = 5;
 
         private static readonly string[] _silkshotNames = new[] {
             "WebShot Forge",

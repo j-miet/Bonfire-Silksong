@@ -45,11 +45,11 @@ namespace BonfireSilksong
         /// Should be used after fast travel teleport finishes as it will trigger normal UpdateBlueHP call prematurely,
         /// then fix any possible visual issues with another update loop.
         /// </summary>
-        public static IEnumerator CallDelayedUpdateBlueHP()
+        public static IEnumerator CallDelayedUpdateBlueHP(int masks = -1)
         {
             yield return new WaitUntil(() => GameManager.instance.GameState == GameState.PLAYING);
-            yield return new WaitForSecondsRealtime(0.25f);
-            CallUpdateBlueHP();
+            yield return new WaitForSecondsRealtime(2f);
+            CallUpdateBlueHP(masks);
         }
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace BonfireSilksong
         // be very consistent.
         private static IEnumerator UpdateBlueHP(int amount)
         {
-            Bonfire.Log.LogDebug("[ResilienceLogic] Blue hp refresh");
+            Bonfire.Log.LogInfo("[ResilienceLogic] Blue hp refresh");
             yield return new WaitForSecondsRealtime(0.25f);
 
             if (_blueHpAddingInProgress) yield break;
