@@ -50,12 +50,12 @@ namespace BonfireSilksong
             CustomCursor.BeginGroup(rect);
 
             CustomCursor.BeginArea(new Rect(10, 10, rect.width - 20, rect.height - 20));
-            _settingsScrollPos = GUILayout.BeginScrollView(_settingsScrollPos);
+            _settingsScrollPos = CustomCursor.BeginScrollView(_settingsScrollPos);
 
             GUILayout.Label("Settings", GUIStyles.LabelStyle);
             DrawExtraSettingsContent();
 
-            GUILayout.EndScrollView();
+            CustomCursor.EndScrollView();
 
             CustomCursor.EndArea();
 

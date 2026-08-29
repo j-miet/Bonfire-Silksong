@@ -123,7 +123,7 @@ namespace BonfireSilksong
 
             Vector2 newScrollPos = GUILayout.BeginScrollView(scrollPos, options);
 
-            // adding an invisible marker at the start of scroll wheel helps with detecting start its position
+            // adding an invisible marker at the start of scroll wheel helps with detecting its start position
             GUILayout.Label(GUIContent.none, GUILayout.Width(0), GUILayout.Height(0));
             Rect marker = GUILayoutUtility.GetLastRect();
 

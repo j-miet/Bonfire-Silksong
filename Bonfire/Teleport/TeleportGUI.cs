@@ -513,7 +513,7 @@ namespace BonfireSilksong
             }
             else
             {
-                _scrollPos = CustomCursor.BeginScrollView(_scrollPos);
+                _scrollPos = CustomCursor.BeginScrollViewTeleportMenu(_scrollPos);
 
                 foreach ((string mapArea, Color32 c) in TeleportData.OrderedBenchAreaNames)
                 {
