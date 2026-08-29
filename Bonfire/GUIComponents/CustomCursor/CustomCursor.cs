@@ -96,29 +96,6 @@ namespace BonfireSilksong
             _currentOffset = _offsetStack.Pop();
         }
 
-        // -- unused, previous popup window logic uses now GUI.Box + BeginGroup/EndGroup
-        public static Rect Window(
-            int id,
-            Rect rect,
-            GUI.WindowFunction func,
-            string title)
-        {
-            return GUI.Window(id, rect, windowId =>
-            {
-                _offsetStack.Push(_currentOffset);
-                _currentOffset += rect.position;
-
-                try
-                {
-                    func(windowId);
-                }
-                finally
-                {
-                    _currentOffset = _offsetStack.Pop();
-                }
-            }, title);
-        }
-
         public static void BeginGroup(Rect rect)
         {
             _offsetStack.Push(_currentOffset);
@@ -136,19 +113,6 @@ namespace BonfireSilksong
 
         public static Vector2 BeginScrollView(Vector2 scrollPos, params GUILayoutOption[] options)
         {
-            // scrollbar width and length offset:
-            // Width: scrollbar width + some buffer
-            // Height: in bench menu, scrollbar covers a bit over 3 button heights, buttons have h = 30f -> 90f + buffer
-            // Following values have been found by testing click areas: tricky part is make it work for both overview
-            // info scroll and bench teleport scroll menu.
-            float scrollX = 28f;
-            float scrollY = 99f;
-
-            Vector2 offSet = new Vector2(scrollPos.x - scrollX, scrollPos.y - scrollY);
-
-            _offsetStack.Push(_currentOffset);
-            _currentOffset -= offSet; // scrolling down moves content up, have to subtract
-
             var device = GameManager.instance.inputHandler.inputActions.ActiveDevice;
 
             if (device.LeftTrigger.IsPressed)
@@ -158,6 +122,17 @@ namespace BonfireSilksong
                 scrollPos.y += CursorSpeed * Time.unscaledDeltaTime;
 
             Vector2 newScrollPos = GUILayout.BeginScrollView(scrollPos, options);
+
+            // adding an invisible marker at the start of scroll wheel helps with detecting start its position
+            GUILayout.Label(GUIContent.none, GUILayout.Width(0), GUILayout.Height(0));
+            Rect marker = GUILayoutUtility.GetLastRect();
+
+            // offset: scroll shift content by -scrollPos (scrolling down moves content up) from start position
+            Vector2 offSet = marker.position - scrollPos;
+
+            _offsetStack.Push(_currentOffset);
+            _currentOffset += offSet;
+
             return newScrollPos;
         }
 
@@ -171,6 +146,37 @@ namespace BonfireSilksong
             {
                 _currentOffset = _offsetStack.Pop();
             }
+        }
+
+        /// <summary>
+        /// Custom variant for BeginScrollView, use this for teleport bench menu. End component is still the
+        /// CustomCursor.EndScrollView.
+        /// </summary>
+        public static Vector2 BeginScrollViewTeleportMenu(Vector2 scrollPos, params GUILayoutOption[] options)
+        {
+            // scrollbar width and length offset:
+            // Width: scrollbar width + some buffer
+            // Height: in bench menu, scrollbar covers a bit over 3 button heights, buttons have h = 30f -> 90f + buffer
+            // Following values have been found by testing click areas.
+            float scrollX = 28f;
+            float scrollY = 99f;
+
+            var device = GameManager.instance.inputHandler.inputActions.ActiveDevice;
+
+            if (device.LeftTrigger.IsPressed)
+                scrollPos.y -= CursorSpeed * Time.unscaledDeltaTime;
+
+            if (device.RightTrigger.IsPressed)
+                scrollPos.y += CursorSpeed * Time.unscaledDeltaTime;
+
+            Vector2 newScrollPos = GUILayout.BeginScrollView(scrollPos, options);
+
+            Vector2 offSet = new Vector2(scrollX - scrollPos.x, scrollY - scrollPos.y);
+
+            _offsetStack.Push(_currentOffset);
+            _currentOffset += offSet;
+
+            return newScrollPos;
         }
 
         public static bool Toggle(bool value, string text, params GUILayoutOption[] options)
