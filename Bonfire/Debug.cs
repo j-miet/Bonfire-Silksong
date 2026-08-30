@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -202,6 +203,78 @@ namespace BonfireSilksong
             for (int i = 0; i < root.childCount; i++)
             {
                 DumpHierarchy(root.GetChild(i), indent + "  ");
+            }
+        }
+
+        /// <summary>
+        /// Get all Fsm tied to player character, their FsmStates and finally type names of actions from each FSMState.
+        /// </summary>
+        public static void GetHornetAllFsmStateAction()
+        {
+            var hc = HeroController.instance;
+
+            foreach (var fsm in hc.GetComponents<PlayMakerFSM>())
+            {
+                Bonfire.Log.LogInfo($"### {fsm.FsmName}");
+                if (fsm == null) continue;
+
+                foreach (var s in fsm.FsmStates)
+                {
+                    Bonfire.Log.LogInfo($" == {s.Name} ==");
+                    if (s == null) continue;
+
+                    foreach (var a in s.Actions)
+                    {
+                        Bonfire.Log.LogInfo($"  - {a.GetType().Name}");
+                    }
+                }
+            }
+        }
+
+        public static void GetAllScenes()
+        {
+            Bonfire.Log.LogInfo("== All Scenes ==");
+            foreach (var s in Resources.FindObjectsOfTypeAll<GameMapScene>())
+                Bonfire.Log.LogInfo(s.Name);
+        }
+
+        /// <summary>
+        /// Get all scene names with benches and the type of bench marker. However this also gives invalid benches
+        /// that can be teleported at, but all there is a black screen.
+        /// </summary>
+        public static void GetAllBenchScenes()
+        {
+            Dictionary<string, SceneTeleportMap.SceneInfo> teleportMap = SceneTeleportMap.GetTeleportMap();
+            if (teleportMap == null)
+            {
+                Bonfire.Log.LogError("SceneTeleportMap is null!");
+                return;
+            }
+
+            SceneTeleportMap.SceneInfo info;
+
+            Bonfire.Log.LogInfo("== Bench Scenes ==");
+            foreach (var pair in teleportMap)
+            {
+                info = pair.Value;
+                if (info == null)
+                    continue;
+
+                var respawnMarkers = info.RespawnPoints
+                    .FindAll(p => p.Contains("Bench"));
+
+                foreach (var marker in respawnMarkers)
+                {
+                    if (!string.IsNullOrEmpty(marker) &&
+                        info.TransitionGates.Any(t =>
+                            t.StartsWith("left") ||
+                            t.StartsWith("right") ||
+                            t.StartsWith("top") ||
+                            t.StartsWith("bot")))
+                    {
+                        Bonfire.Log.LogInfo($"{pair.Key} | {marker}");
+                    }
+                }
             }
         }
 
