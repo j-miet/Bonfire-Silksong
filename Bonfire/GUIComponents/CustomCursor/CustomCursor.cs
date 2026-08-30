@@ -181,16 +181,12 @@ namespace BonfireSilksong
 
         public static bool Toggle(bool value, string text, params GUILayoutOption[] options)
         {
-            _offsetStack.Push(_currentOffset);
+            return CustomToggle(GUILayout.Toggle(value, text, options));
+        }
 
-            try
-            {
-                return CustomToggle(value, text, options);
-            }
-            finally
-            {
-                _currentOffset = _offsetStack.Pop();
-            }
+        public static bool Toggle(bool value, string text, GUIStyle style, params GUILayoutOption[] options)
+        {
+            return CustomToggle(GUILayout.Toggle(value, text, style, options));
         }
 
         public static bool Button(string text, params GUILayoutOption[] options)
@@ -220,18 +216,27 @@ namespace BonfireSilksong
             return clicked;
         }
 
-        public static bool CustomToggle(bool value, string text, params GUILayoutOption[] options)
+        public static bool CustomToggle(bool clicked)
         {
-            bool newValue = GUILayout.Toggle(value, text, options);
+            bool newValue = clicked;
 
-            if (GameManager.instance.inputHandler.gameController.IsAttached &&
-                IsCursorPressed())
+            _offsetStack.Push(_currentOffset);
+
+            try
             {
-                Bonfire.Log.LogDebug("[CustomCursor] Pressed a GUI toggle");
-                newValue = !value;
-            }
+                if (GameManager.instance.inputHandler.gameController.IsAttached &&
+                    IsCursorPressed())
+                {
+                    Bonfire.Log.LogDebug("[CustomCursor] Pressed a GUI toggle");
+                    newValue = !newValue;
+                }
 
-            return newValue;
+                return newValue;
+            }
+            finally
+            {
+                _currentOffset = _offsetStack.Pop();
+            }
         }
 
 
