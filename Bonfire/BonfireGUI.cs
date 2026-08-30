@@ -128,6 +128,9 @@ namespace BonfireSilksong
 
             Settings.DrawEnemyHealthBars();
 
+            if (Bonfire.Instance.Status.ShowDamageOverlay)
+                DamageOverlay.Display(Bonfire.Instance.Status.DamageOverlayX, Bonfire.Instance.Status.DamageOverlayY);
+
             RangeIndicator.UpdateFading();
 
             GUI.matrix = oldMatrix;

@@ -28,8 +28,9 @@ namespace BonfireSilksong
         public int PendingRelicLevels = 0;
         public int RespecCost = 1;
 
-        // leveling GUI
+        // GUI styles
         public int LevelingInfoStyle = 0;
+        public int BenchMenuStyle = 1;
 
         // stat milestones
         public bool AutoReleaseNeedleStrike = false;
@@ -39,12 +40,18 @@ namespace BonfireSilksong
         public bool CogflyWarriorEnabled = false;
 
         // settings
+        public int AdjustButtonStep = 5;
+
         // - custom cursor
         public int CustomCursorSpeed = 400;
         public bool DisplayGameCursorWithGamepad = false;
 
         // - other
+        public bool ResetMusicAfterTeleport = false;
         public bool ShowCustomRangeIndicator = true;
+        public bool ShowDamageOverlay = false;
+        public int DamageOverlayX = 200;
+        public int DamageOverlayY = 5;
 
         // - gameplay
         public bool EnemyHealthBarsEnabled = false;
@@ -63,6 +70,5 @@ namespace BonfireSilksong
         // bench fast travel
         public bool UnlockedFastTravel = false;
         public bool VisitedAbyssSecondTime = false;
-        public int BenchMenuStyle = 1;
     }
 }

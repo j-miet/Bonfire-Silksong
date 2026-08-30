@@ -10,6 +10,11 @@ namespace BonfireSilksong
         public static Font TrajanBold;
         public static Font TrajanNormal;
 
+        public static GUIStyle WordWrapToggleStyle;
+        public static GUIStyle LabelCenteredStyle;
+        public static GUIStyle SettingsHeader;
+        public static GUIStyle SettingsHeader2;
+
         public static GUIStyle LevelHeaderStyle;
         public static GUIStyle LabelStyle;
         public static GUIStyle ButtonStyle;
@@ -52,6 +57,44 @@ namespace BonfireSilksong
 
         public static void EnsureStyles()
         {
+            if (WordWrapToggleStyle == null)
+            {
+                WordWrapToggleStyle = new GUIStyle(GUI.skin.toggle)
+                {
+                    wordWrap = true
+                };
+            }
+
+            if (LabelCenteredStyle == null)
+            {
+                LabelCenteredStyle = new GUIStyle(GUI.skin.label)
+                {
+                    alignment = TextAnchor.MiddleCenter
+                };
+            }
+
+            if (SettingsHeader == null)
+            {
+                SettingsHeader = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 14,
+                    normal = { textColor = new Color(1f, 1f, 1f) }
+                };
+            }
+
+            if (SettingsHeader2 == null)
+            {
+                SettingsHeader2 = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 12,
+                    normal = { textColor = new Color(0.4f, 0.4f, 0.8f) }
+                };
+            }
+
             if (LevelHeaderStyle == null)
             {
                 LevelHeaderStyle = new GUIStyle(GUI.skin.label)

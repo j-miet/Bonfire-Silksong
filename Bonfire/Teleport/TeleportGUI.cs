@@ -260,8 +260,7 @@ namespace BonfireSilksong
 
                     var p = bench.Key;
 
-                    Bonfire.Log.LogDebug("Scene: " + s);
-                    Bonfire.Log.LogDebug("Marker: " + bench.Value.marker);
+                    Bonfire.Log.LogDebug($"Scene: {s}, Marker: {bench.Value.marker}");
 
                     // get map area name:
 
@@ -467,7 +466,44 @@ namespace BonfireSilksong
         private IEnumerator StartTeleport()
         {
             yield return Bonfire.Instance.StartCoroutine(CloseFastTravelMenuRoutine());
+
             BenchTeleport.TeleportToBench();
+
+            if (Bonfire.Instance.Status.ResetMusicAfterTeleport)
+                StopAllSceneMusic();
+        }
+
+        // force all music and atmosphere to stop: when teleporting from certain scenes, the music from that scene
+        // still remains on target scene.
+        private static void StopAllSceneMusic()
+        {
+            var gm = GameManager.instance;
+
+            gm.AudioManager.StopAndClearMusic();
+            gm.AudioManager.StopAndClearAtmos();
+
+            Transform music = gm.AudioManager.transform?.Find("Music");
+            if (music == null)
+            {
+                Bonfire.Log.LogInfo("Music object not found");
+                return;
+            }
+
+            PlayMakerFSM fsmRestArea = music.Find("RestArea")?.GetComponent<PlayMakerFSM>();
+            if (fsmRestArea != null)
+            {
+                fsmRestArea.Fsm.Start();
+                fsmRestArea.SendEventSafe("REST AREA MUSIC STOP FAST");
+                Bonfire.Log.LogInfo("Rest area audio source stopped");
+            }
+
+            PlayMakerFSM fsmFleaCaravan = music.Find("FleaCaravan")?.GetComponent<PlayMakerFSM>();
+            if (fsmFleaCaravan != null)
+            {
+                fsmFleaCaravan.Fsm.Start();
+                fsmFleaCaravan.SendEventSafe("FLEA MUSIC STOP FAST");
+                Bonfire.Log.LogInfo("Flea caravan audio source stopped");
+            }
         }
 
         private void ChangeBenchMenuStyle()
@@ -478,6 +514,7 @@ namespace BonfireSilksong
 
             Bonfire.Instance.Status.BenchMenuStyle = s;
         }
+
 
         private void DrawBenchListPanel()
         {

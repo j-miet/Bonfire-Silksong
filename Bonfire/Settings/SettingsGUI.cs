@@ -33,7 +33,7 @@ namespace BonfireSilksong
             GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            float w = 590f, h = 670f;
+            float w = SettingsWidth, h = SettingsHeight;
             float x = BonfireGUI.Width / 2f - w / 2f;
             float y = BonfireGUI.Height / 2f - h / 2f;
             Rect rect = new Rect(x, y, w, h);
@@ -49,10 +49,15 @@ namespace BonfireSilksong
             GUI.Box(rect, GUIContent.none);
             CustomCursor.BeginGroup(rect);
 
-            CustomCursor.BeginArea(new Rect(10, 10, rect.width - 20, rect.height - 20));
+            CustomCursor.BeginArea(
+                new Rect(
+                    SettingsOuterOffset,
+                    SettingsOuterOffset,
+                    rect.width - SettingsInnerOffset,
+                    rect.height - SettingsInnerOffset));
+
             _settingsScrollPos = CustomCursor.BeginScrollView(_settingsScrollPos);
 
-            GUILayout.Label("Settings", GUIStyles.LabelStyle);
             DrawExtraSettingsContent();
 
             CustomCursor.EndScrollView();
@@ -70,7 +75,7 @@ namespace BonfireSilksong
             GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            float w = 550f, h = 210f;
+            float w = CrestUnlockWidth, h = CrestUnlockHeight;
             float x = BonfireGUI.Width / 2f - w / 2f;
             float y = BonfireGUI.Height / 2f - h / 2f;
             Rect rect = new Rect(x, y, w, h);
@@ -104,7 +109,7 @@ namespace BonfireSilksong
             GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            float w = 600f, h = 400f;
+            float w = StatusResetWidth, h = StatusResetHeight;
             float x = BonfireGUI.Width / 2f - w / 2f;
             float y = BonfireGUI.Height / 2f - h / 2f;
             Rect rect = new Rect(x, y, w, h);
@@ -210,6 +215,19 @@ namespace BonfireSilksong
         }
 
 
+        private const float SettingsWidth = 590f;
+        private const float SettingsHeight = 675f;
+        private const float SettingsOuterOffset = 10f;
+        private const float SettingsInnerOffset = 2 * SettingsOuterOffset;
+        private const float SettingsAdjustButtonWidth = 60f;
+        private const float SettingsAdjustButtonHeight = 30f;
+
+        private const float StatusResetWidth = 550;
+        private const float StatusResetHeight = 210f;
+
+        private const float CrestUnlockWidth = 600f;
+        private const float CrestUnlockHeight = 530f;
+
         private static bool _hpBarColorsInitialized;
         private static Color _bossColor;
         private static Color _enemyColor;
@@ -234,7 +252,7 @@ namespace BonfireSilksong
         private void DrawExtraSettingsContent()
         {
             DrawToggleSettings();
-            GUILayout.Space(10);
+            GUILayout.Space(15);
 
             DrawCrestUnlockButton();
             GUILayout.Space(15);
@@ -260,29 +278,75 @@ namespace BonfireSilksong
             GUILayout.EndHorizontal();
         }
 
-        private void DrawToggleSettings()
+        private void DrawAdjustUI()
+        {
+            var s = Bonfire.Instance.Status;
+
+            // adjust step size
+            GUILayout.Label($"Adjust button step size (how much -/+ buttons changes the target value; range 5-100)");
+            GUILayout.BeginHorizontal(GUILayout.Width(160));
+            if (CustomCursor.Button(
+                    $"-",
+                    GUILayout.Width(SettingsAdjustButtonWidth),
+                    GUILayout.Height(SettingsAdjustButtonHeight)))
+            {
+                s.AdjustButtonStep = (int)Mathf.Max(DamageOverlay.BoxOffset, s.AdjustButtonStep - 5);
+            }
+
+            GUILayout.Space(10);
+            GUILayout.Label(
+                $"{s.AdjustButtonStep}",
+                GUIStyles.LabelCenteredStyle,
+                GUILayout.Width(30),
+                GUILayout.Height(SettingsAdjustButtonHeight));
+            GUILayout.Space(10);
+
+            if (CustomCursor.Button(
+                    $"+",
+                    GUILayout.Width(SettingsAdjustButtonWidth),
+                    GUILayout.Height(SettingsAdjustButtonHeight)))
+            {
+                s.AdjustButtonStep = Mathf.Min(100, s.AdjustButtonStep + 5);
+            }
+
+            GUILayout.EndHorizontal();
+        }
+
+        private void DrawCursorSettings()
         {
             var s = Bonfire.Instance.Status;
 
             GUI.enabled = GameManager.instance.inputHandler.gameController.IsAttached;
-            GUI.backgroundColor = Color.white;
-            GUILayout.BeginVertical("box");
-            GUILayout.Label("Custom cursor (enabled if a GamePad device is detected)");
+
+            GUILayout.Label("Custom cursor (enabled if a GamePad device is detected)", GUIStyles.SettingsHeader2);
 
             GUILayout.Label(
-                $"Cursor speed [min. {CustomCursor.MinSpeed}, max. {CustomCursor.MaxSpeed}]");
-            GUILayout.Space(10);
+                $"Cursor speed (range {CustomCursor.MinSpeed} - {CustomCursor.MaxSpeed}]");
 
             GUILayout.BeginHorizontal(GUILayout.Width(160));
-            if (CustomCursor.Button($"-", GUILayout.Width(60)))
+            if (CustomCursor.Button(
+                    $"-",
+                    GUILayout.Width(SettingsAdjustButtonWidth),
+                    GUILayout.Height(SettingsAdjustButtonHeight)))
+            {
                 s.CustomCursorSpeed = Mathf.Max(50, s.CustomCursorSpeed - 10);
+            }
 
-            GUILayout.Space(20);
-            GUILayout.Label($"{s.CustomCursorSpeed}");
-            GUILayout.Space(20);
+            GUILayout.Space(10);
+            GUILayout.Label(
+                $"{s.CustomCursorSpeed}",
+                GUIStyles.LabelCenteredStyle,
+                GUILayout.Width(30),
+                GUILayout.Height(SettingsAdjustButtonHeight));
+            GUILayout.Space(10);
 
-            if (CustomCursor.Button($"+", GUILayout.Width(60)))
+            if (CustomCursor.Button(
+                    $"+",
+                    GUILayout.Width(SettingsAdjustButtonWidth),
+                    GUILayout.Height(SettingsAdjustButtonHeight)))
+            {
                 s.CustomCursorSpeed = Mathf.Min(1000, s.CustomCursorSpeed + 10);
+            }
 
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
@@ -290,24 +354,111 @@ namespace BonfireSilksong
             s.DisplayGameCursorWithGamepad = CustomCursor.Toggle(
                 s.DisplayGameCursorWithGamepad,
                 "Display both custom and default cursor");
-            GUILayout.EndVertical();
+
             GUI.enabled = true;
+        }
 
-            GUILayout.Space(10);
+        private void DrawVisualSettings()
+        {
+            var s = Bonfire.Instance.Status;
 
-            GUILayout.BeginVertical("box");
-            GUILayout.Label("Custom");
+            int widthMax = (int)(BonfireGUI.Width - DamageOverlay.Width - DamageOverlay.BoxOffset);
+            int heightMax = (int)(BonfireGUI.Height - DamageOverlay.Height - DamageOverlay.BoxOffset);
+
+            GUILayout.Label("Visual", GUIStyles.SettingsHeader2);
 
             s.ShowCustomRangeIndicator = CustomCursor.Toggle(
                 s.ShowCustomRangeIndicator,
                 "Display damage range indicator in Taunt/Reflect.");
+            s.ShowDamageOverlay = CustomCursor.Toggle(
+                s.ShowDamageOverlay,
+                "Display info from latest enemy damaging instance (has default hotkey LeftControl + J).");
 
-            GUILayout.EndVertical();
+            GUI.enabled = s.ShowDamageOverlay;
+            GUILayout.BeginHorizontal(GUILayout.Width(450));
+            GUILayout.Label($"X-Position");
+            GUILayout.Label($"Y-Position");
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal(GUILayout.Width(450));
+            GUILayout.BeginHorizontal();
+            if (CustomCursor.Button(
+                    $"-",
+                    GUILayout.Width(SettingsAdjustButtonWidth),
+                    GUILayout.Height(SettingsAdjustButtonHeight)))
+            {
+                s.DamageOverlayX = (int)Mathf.Max(DamageOverlay.BoxOffset, s.DamageOverlayX - s.AdjustButtonStep);
+            }
+
+            GUILayout.Space(10);
+            GUILayout.Label(
+                $"{s.DamageOverlayX}",
+                GUIStyles.LabelCenteredStyle,
+                GUILayout.Width(30),
+                GUILayout.Height(SettingsAdjustButtonHeight));
             GUILayout.Space(10);
 
-            GUI.backgroundColor = Color.white;
-            GUILayout.BeginVertical("box");
-            GUILayout.Label("Enemy HP bars");
+            if (CustomCursor.Button(
+                    $"+",
+                    GUILayout.Width(SettingsAdjustButtonWidth),
+                    GUILayout.Height(SettingsAdjustButtonHeight)))
+            {
+                s.DamageOverlayX = Mathf.Min(widthMax, s.DamageOverlayX + s.AdjustButtonStep);
+            }
+
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+
+            if (CustomCursor.Button(
+                    $"-",
+                    GUILayout.Width(SettingsAdjustButtonWidth),
+                    GUILayout.Height(SettingsAdjustButtonHeight)))
+            {
+                s.DamageOverlayY = (int)Mathf.Max(DamageOverlay.BoxOffset, s.DamageOverlayY - s.AdjustButtonStep);
+            }
+
+            GUILayout.Space(10);
+            GUILayout.Label(
+                $"{s.DamageOverlayY}",
+                GUIStyles.LabelCenteredStyle,
+                GUILayout.Width(30),
+                GUILayout.Height(SettingsAdjustButtonHeight));
+            GUILayout.Space(10);
+
+            if (CustomCursor.Button(
+                    $"+",
+                    GUILayout.Width(SettingsAdjustButtonWidth),
+                    GUILayout.Height(SettingsAdjustButtonHeight)))
+            {
+                s.DamageOverlayY = Mathf.Min(heightMax, s.DamageOverlayY + s.AdjustButtonStep);
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.EndHorizontal();
+            GUI.enabled = true;
+            GUILayout.Space(10);
+
+            GUILayout.Label("Audio", GUIStyles.SettingsHeader2);
+            GUI.enabled = s.UnlockedFastTravel;
+            s.ResetMusicAfterTeleport = CustomCursor.Toggle(
+                s.ResetMusicAfterTeleport,
+                "Resets music after bench fast travel.\n" +
+                "Normally music/atmosphere carries over to target scene, but then fades out and gets replaced with " +
+                "the music from new scene. After fast travel, previous sound effects can linger much longer than " +
+                "they should. With this enabled, existing music track cuts off immediately and the new one starts to " +
+                "play as soon as scene transition is completed.",
+                GUIStyles.WordWrapToggleStyle,
+                GUILayout.Width(SettingsWidth - SettingsOuterOffset - SettingsInnerOffset - 50)
+                );
+            GUI.enabled = true;
+        }
+
+        private void DrawGameplaySettings()
+        {
+            var s = Bonfire.Instance.Status;
+
+            GUILayout.Label("Enemy HP bars", GUIStyles.SettingsHeader2);
 
             GUILayout.BeginHorizontal(GUILayout.Width(480));
             s.EnemyHealthBarsEnabled = CustomCursor.Toggle(
@@ -319,7 +470,7 @@ namespace BonfireSilksong
             GUILayout.Label("/");
             GUILayout.Label("boss", GUIStyles.BossHpStyle);
             GUILayout.Label("→");
-            GUILayout.Label("default hotkey is LeftControl + H)");
+            GUILayout.Label("has default hotkey LeftControl + H)");
             GUILayout.EndVertical();
 
             GUILayout.BeginHorizontal(GUILayout.Width(370));
@@ -340,11 +491,9 @@ namespace BonfireSilksong
             GUI.enabled = true;
 
             GUILayout.EndHorizontal();
-            GUILayout.EndVertical();
-            GUILayout.Space(10);
 
-            GUILayout.BeginVertical("box");
-            GUILayout.Label("Delivery Quests");
+            GUILayout.Space(10);
+            GUILayout.Label("Delivery Quests", GUIStyles.SettingsHeader2);
 
             s.DeliveryQuestsRemoveDamage = CustomCursor.Toggle(
                 s.DeliveryQuestsRemoveDamage,
@@ -354,11 +503,8 @@ namespace BonfireSilksong
                 s.DeliveryQuestsRemoveTimer,
                 "Remove timer penalty");
 
-            GUILayout.EndVertical();
             GUILayout.Space(10);
-
-            GUILayout.BeginVertical("box");
-            GUILayout.Label("Other");
+            GUILayout.Label("Other", GUIStyles.SettingsHeader2);
 
             s.AlwaysHaveCompassTool = CustomCursor.Toggle(
                 s.AlwaysHaveCompassTool,
@@ -375,6 +521,37 @@ namespace BonfireSilksong
             s.EasierSprintmasterRaces = CustomCursor.Toggle(
                 s.EasierSprintmasterRaces,
                 "Reduce Sprintmaster Swift's movement speed in races by 50%.");
+        }
+
+        private void DrawToggleSettings()
+        {
+            var s = Bonfire.Instance.Status;
+
+            // adjust step size
+            GUILayout.BeginVertical("box");
+            GUILayout.Label("General", GUIStyles.SettingsHeader);
+
+            DrawAdjustUI();
+
+            GUILayout.EndVertical();
+            GUILayout.Space(20);
+
+            GUILayout.BeginVertical("box");
+            GUILayout.Label("Controls/Visuals/Audio", GUIStyles.SettingsHeader);
+
+            // settings
+            DrawCursorSettings();
+            GUILayout.Space(10);
+            DrawVisualSettings();
+
+            GUILayout.EndVertical();
+            GUILayout.Space(20);
+
+            // gameplay
+            GUILayout.BeginVertical("box");
+            GUILayout.Label("Gameplay", GUIStyles.SettingsHeader);
+
+            DrawGameplaySettings();
 
             GUILayout.EndVertical();
         }
@@ -454,11 +631,18 @@ namespace BonfireSilksong
         {
             GUILayout.Space(10);
             GUILayout.Label(
-                "Resets your mod configurations e.g. stat levels and settings, for CURRENT SAVE SLOT.\n" +
+                "Resets your mod configurations for CURRENT SAVE SLOT which includes: \n" +
+                "- Leveling data -\n" +
+                "- Crest unlock flag -\n" +
+                " (so can use unlock feature again on new save)\n" +
+                "- Bench fast travel unlock + safety checks -\n" +
+                "(to prevent softlocks e.g. with Act 3 Abyss travel on new saves)\n" +
+                "\n" +
+                "<-- This will not reset your 'Extra Settings' values! -->\n" +
                 "\n" +
                 "Configs are save slot specific and loaded from an external file.\n" +
                 "Config data remains even if you start a new game on same save slot.\n" +
-                "This feature overrides the config data for currently active slot so you don't " +
+                "This feature overrides only the config data for currently active slot so you don't " +
                 "need to manually search and edit/delete the file outside the game.\n" +
                 "\n" +
                 "You should only use this feature if you're done with your current playthrough and " +
@@ -482,7 +666,8 @@ namespace BonfireSilksong
             {
                 PendingStatusReset = false;
                 PendingSettingsWindow = true;
-                Bonfire.Instance.Status = new PlayerStatus();
+
+                ResetPlayerStatus();
 
                 Bonfire.Instance.SaveSettings();
             }
@@ -500,6 +685,38 @@ namespace BonfireSilksong
 
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
+        }
+
+        private void ResetPlayerStatus()
+        {
+            var s = Bonfire.Instance.Status;
+            var newStatus = new PlayerStatus()
+            {
+                LevelingInfoStyle = s.LevelingInfoStyle,
+                BenchMenuStyle = s.BenchMenuStyle,
+
+                ResetMusicAfterTeleport = s.ResetMusicAfterTeleport,
+
+                CustomCursorSpeed = s.CustomCursorSpeed,
+                DisplayGameCursorWithGamepad = s.DisplayGameCursorWithGamepad,
+
+                ShowCustomRangeIndicator = s.ShowCustomRangeIndicator,
+                ShowDamageOverlay = s.ShowDamageOverlay,
+                DamageOverlayX = s.DamageOverlayX,
+                DamageOverlayY = s.DamageOverlayY,
+                AdjustButtonStep = s.AdjustButtonStep,
+
+                EnemyHealthBarsEnabled = s.EnemyHealthBarsEnabled,
+                EnemyHpBarColorProgression = s.EnemyHpBarColorProgression,
+                DeliveryQuestsRemoveTimer = s.DeliveryQuestsRemoveTimer,
+                DeliveryQuestsRemoveDamage = s.DeliveryQuestsRemoveDamage,
+                AlwaysHaveCompassTool = s.AlwaysHaveCompassTool,
+                RefillShardsAtBench = s.RefillShardsAtBench,
+                ReduceFleaGamesScoreLimit = s.ReduceFleaGamesScoreLimit,
+                EasierSprintmasterRaces = s.EasierSprintmasterRaces,
+            };
+
+            Bonfire.Instance.Status = newStatus;
         }
     }
 }

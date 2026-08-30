@@ -124,8 +124,10 @@ namespace BonfireSilksong
         // prevents SaveSettings from using previous save's PlayerStatus data to override data for current slot.
         private bool _firstSave = true;
 
-        private ConfigEntry<KeyboardShortcut> _enemyHpBarToggleHotkey;
+        private ConfigEntry<KeyboardShortcut> _enemyHpBarHotkey;
         private bool _enemyHPBarsEnabled = false;
+        private ConfigEntry<KeyboardShortcut> _damageOverlayHotkey;
+        private bool _damageOverlayEnabled = false;
 
         private bool _invClosedCheck = false;
         private bool _satDown = false;
@@ -139,11 +141,17 @@ namespace BonfireSilksong
 
             Log.LogInfo("Initializing Bonfire-Silksong...");
 
-            _enemyHpBarToggleHotkey = Instance.Config.Bind(
+            _enemyHpBarHotkey = Instance.Config.Bind(
                 "Hotkeys",
                 "Enemy HP bar Toggle",
                 new KeyboardShortcut(KeyCode.H, KeyCode.LeftControl),
                 "Toggle enemy HP bars on/off");
+
+            _damageOverlayHotkey = Instance.Config.Bind(
+                "Hotkeys",
+                "Damage info Toggle",
+                new KeyboardShortcut(KeyCode.J, KeyCode.LeftControl),
+                "Toggle damage info panel on/off");
 
             LoadSettings();
             _firstSave = true;
@@ -170,11 +178,16 @@ namespace BonfireSilksong
 
             AtBenchCheck();
 
-            // enemy hp bar toggle hotkey
-            if (_enemyHpBarToggleHotkey.Value.IsDown())
+            if (_enemyHpBarHotkey.Value.IsDown())
             {
                 _enemyHPBarsEnabled = !_enemyHPBarsEnabled;
                 Instance.Status.EnemyHealthBarsEnabled = _enemyHPBarsEnabled;
+            }
+
+            if (_damageOverlayHotkey.Value.IsDown())
+            {
+                _damageOverlayEnabled = !_damageOverlayEnabled;
+                Instance.Status.ShowDamageOverlay = _damageOverlayEnabled;
             }
         }
 
@@ -235,8 +248,6 @@ namespace BonfireSilksong
             WisdomLogic.UpdateCogflyWarriorSpawnLimit();
 
             //Log.LogDebug("[Bonfire] Current scene: " + GameManager.instance.GetSceneNameString());
-
-            //Debug.VisitedScenes();
         }
 
         // -- other --
@@ -248,10 +259,20 @@ namespace BonfireSilksong
         {
             if (PlayerData.instance.atBench && !_satDown)
             {
-                Log.LogDebug("[Bonfire] Bench sat down check");
+                Log.LogDebug("[Bonfire] Sat down on a bench");
+
+                // Debug.VisitedScenes();
+                // Log.LogDebug("----------------------");
+                // Debug.GetAllScenes();
+                // Log.LogDebug("----------------------");
+                // Debug.GetAllBenchScenes();
+                // Log.LogDebug("----------------------");
+                // Debug.GetHornetAllFsmStateAction();
 
                 _satDown = true;
                 BlueHealthUpdate.SatDownAtBench = true;
+
+                SaveSettings();
 
                 IntelligenceLogic.WeaverAuraTaunt = false;
                 IntelligenceLogic.WeaverAuraRingTaunt = false;

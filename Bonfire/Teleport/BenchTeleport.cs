@@ -153,9 +153,7 @@ namespace BonfireSilksong
                 return false;
             }
 
-            Bonfire.Log.LogDebug($"Respawn Scene : {respawnScene}");
-            Bonfire.Log.LogDebug($"Respawn Marker: {respawnMarker}");
-            Bonfire.Log.LogDebug($"Respawn Type  : {respawnType}");
+            Bonfire.Log.LogDebug($"Respawn > Scene: {respawnScene}, Marker: {respawnMarker}, Type: {respawnType}");
 
             // these define the fast travel outcome: 
             // - bench scene, 
