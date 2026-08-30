@@ -68,9 +68,11 @@ namespace BonfireSilksong
         [HarmonyPatch(typeof(HealthManager), "Hit")]
         class HealthManager_Hit
         {
-            static void Prefix(ref HitInstance hitInstance)
+            static void Prefix(HealthManager __instance, ref HitInstance hitInstance)
             {
                 PatchHelpers.ApplyHitDamageBonuses(ref hitInstance);
+
+                ArtificeLogic.CastRuneRageOnHit(__instance, in hitInstance);
             }
         }
     }

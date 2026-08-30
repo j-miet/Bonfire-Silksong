@@ -444,63 +444,6 @@ namespace BonfireSilksong
             GUI.enabled = true;
         }
 
-        private void DrawStatButton(string statName, string displayValue, bool gotFreeLevel, PlayerStatus s,
-                                   int rosariesToLvlUp)
-        {
-            if (CustomCursor.Button(
-                    $"{statName}: {displayValue}",
-                    GUIStyles.ButtonStyle,
-                    GUILayout.Width(160f),
-                    GUILayout.Height(LevelingAreaButtonHeight))
-                && LevelingSystem.CanLevelUp(gotFreeLevel, rosariesToLvlUp)
-                && PlayerData.instance.atBench)
-            {
-                LevelingSystem.Instance.IncreaseStat(statName, s, rosariesToLvlUp);
-            }
-        }
-
-        private void DrawStatLabel(string text)
-        {
-            GUILayout.Label(
-                text,
-                GUIStyles.LabelStyle,
-                GUILayout.Width(185f),
-                GUILayout.Height(LevelingAreaButtonHeight));
-        }
-
-        private void DrawStatButtonExtended(string statName, bool gotFreeLevel, PlayerStatus s,
-                                   int rosariesToLvlUp)
-        {
-            if (CustomCursor.Button(
-                    $"{statName}",
-                    GUIStyles.ButtonStyle,
-                    GUILayout.Width(160f),
-                    GUILayout.Height(LevelingAreaButtonHeight))
-                && LevelingSystem.CanLevelUp(gotFreeLevel, rosariesToLvlUp)
-                && PlayerData.instance.atBench)
-            {
-                LevelingSystem.Instance.IncreaseStat(statName, s, rosariesToLvlUp);
-            }
-        }
-
-        private void DrawStatLabelExtended(string text)
-        {
-            GUILayout.Label(
-                text,
-                GUIStyles.LabelStyle,
-                GUILayout.Width(75f),
-                GUILayout.Height(LevelingAreaButtonHeight));
-        }
-
-        private void DrawInfoStatLabel(string text)
-        {
-            GUILayout.Label(
-                text,
-                GUIStyles.LvlInfoLabelStyle,
-                GUILayout.Width(BoxWidth),
-                 GUILayout.Height(LevelingAreaButtonHeight));
-        }
-
         // info boxes for all stats
         private void DrawStrengthInfo()
         {
@@ -613,7 +556,7 @@ namespace BonfireSilksong
                 $"[{DexterityLogic.DexterityMilestone(1)}] " +
                 "Clawline damage increased by 25%. " +
                 $"Every {DexterityLogic.ClawlineHitLimit}th hit from Clawline deals 2x damage " +
-                "(default Clawline attack counts as 2 hits).",
+                "(default Clawline use counts as 2 hits).",
                 LevelingSystem.HighLightStatMilestone(s, 1)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
@@ -780,34 +723,39 @@ namespace BonfireSilksong
 
             GUILayout.Label(
                 $"[{ArtificeLogic.ArtificeMilestone(1)}] " +
-                "Silkshot silk cost removed. Sawtooth Circlet and Pimpillo can critically hit.",
+                "Pimpillo: has 2x tool capacity and can apply critical hits.\n" +
+                "Sawtooth Circlet: can apply critical hits.",
                 LevelingSystem.HighLightStatMilestone(s, 1)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
                 $"[{ArtificeLogic.ArtificeMilestone(2)}] " +
-                "Sawtooth Circlet gives 1 silk when used. " +
-                "Rosary Cannon keeps limited charges during use, but will always replenish them fully " +
-                "when initial animation starts.",
+                "Rosary Cannon: has infinite, free refills. Every time you start the use animation, it becomes " +
+                "fully loaded loaded.\n" +
+                "Silkshot: silk cost removed, can apply critical hits.\n" +
+                "Sawtooth Circlet: gives 1 silk from first enemy hit.\n",
                 LevelingSystem.HighLightStatMilestone(s, 2)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
                 $"[{ArtificeLogic.ArtificeMilestone(3)}] " +
-                "Silkshot has infinite charges. Sawtooth Circlet horizontal range increased by 50%.",
+                "Rosary Cannon: +2 flat damage which is applied before Artifice stat damage bonus.\n" +
+                "Silkshot: has infinite charges.\n" +
+                "Sawtooth Circlet: horizontal range increased by 50%.\n" +
+                "Pimpillo: casts 'Rune Rage' silk skill on top of enemy on hit. Skill scales normally from any silk " +
+                "skill buffs.",
                 LevelingSystem.HighLightStatMilestone(s, 3)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
                 $"[{ArtificeLogic.ArtificeMilestone(4)}] " +
-                "Using an offensive red tool has 33% chance to spawn a copy of itself. " +
-                "Neither original nor copy cost charges.\n" +
-                "Following tools cannot utilize this effect: Silkshot, Delver's Drill, Rosary Cannon, " +
-                "Voltvessels Spear (Bolas do work), Snare Setter.\n" +
-                "Rosary Cannon: +2 flat damage which is applied before Artifice stat multiplier.",
+                "Offensive red tool has 33% chance to spawn a copy of itself when used. " +
+                "When a copy is spawned, neither original nor copy cost charges.\n" +
+                "Following tools cannot benefit from this: Silkshot, Delver's Drill, Rosary Cannon, " +
+                "Voltvessels Spear (Bolas do work), Snare Setter.",
                 LevelingSystem.HighLightStatMilestone(s, 4)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
@@ -875,7 +823,7 @@ namespace BonfireSilksong
 
             GUILayout.Label(
                 $"[{ResilienceLogic.ResilienceMilestone(1)}] " +
-                "You can now optionally select 'Vengeful' or 'Hollow' mode.\n" +
+                "You can now select 'Vengeful' or 'Hollow' blue health mode.\n" +
                 "\n" +
                 "When Vengeful/Hollow is active:\n" +
                 "- Blue masks effectively replace normal masks: if you have no blue hp left, the next hit will " +
@@ -1135,13 +1083,61 @@ namespace BonfireSilksong
             GUILayout.EndVertical();
         }
 
-        private void ChangeLevelingMenuStyle()
+        private void DrawStatButton(string statName, string displayValue, bool gotFreeLevel, PlayerStatus s,
+                                   int rosariesToLvlUp)
         {
-            int s = Bonfire.Instance.Status.LevelingInfoStyle + 1;
-            if (s >= 4 || s < 0)
-                s = 0;
+            if (CustomCursor.Button(
+                    $"{statName}: {displayValue}",
+                    GUIStyles.ButtonStyle,
+                    GUILayout.Width(160f),
+                    GUILayout.Height(LevelingAreaButtonHeight))
+                && LevelingSystem.CanLevelUp(gotFreeLevel, rosariesToLvlUp)
+                && PlayerData.instance.atBench)
+            {
+                LevelingSystem.Instance.IncreaseStat(statName, s, rosariesToLvlUp);
+            }
+        }
 
-            Bonfire.Instance.Status.LevelingInfoStyle = s;
+        private void DrawStatLabel(string text)
+        {
+            GUILayout.Label(
+                text,
+                GUIStyles.LabelStyle,
+                GUILayout.Width(185f),
+                GUILayout.Height(LevelingAreaButtonHeight));
+        }
+
+        private void DrawStatButtonExtended(string statName, bool gotFreeLevel, PlayerStatus s,
+                                   int rosariesToLvlUp)
+        {
+            if (CustomCursor.Button(
+                    $"{statName}",
+                    GUIStyles.ButtonStyle,
+                    GUILayout.Width(160f),
+                    GUILayout.Height(LevelingAreaButtonHeight))
+                && LevelingSystem.CanLevelUp(gotFreeLevel, rosariesToLvlUp)
+                && PlayerData.instance.atBench)
+            {
+                LevelingSystem.Instance.IncreaseStat(statName, s, rosariesToLvlUp);
+            }
+        }
+
+        private void DrawStatLabelExtended(string text)
+        {
+            GUILayout.Label(
+                text,
+                GUIStyles.LabelStyle,
+                GUILayout.Width(75f),
+                GUILayout.Height(LevelingAreaButtonHeight));
+        }
+
+        private void DrawInfoStatLabel(string text)
+        {
+            GUILayout.Label(
+                text,
+                GUIStyles.LvlInfoLabelStyle,
+                GUILayout.Width(BoxWidth),
+                 GUILayout.Height(LevelingAreaButtonHeight));
         }
 
         private void DrawUIPanels()
@@ -1165,6 +1161,15 @@ namespace BonfireSilksong
                     DrawExtendedStatPanel();
                     return;
             }
+        }
+
+        private void ChangeLevelingMenuStyle()
+        {
+            int s = Bonfire.Instance.Status.LevelingInfoStyle + 1;
+            if (s >= 4 || s < 0)
+                s = 0;
+
+            Bonfire.Instance.Status.LevelingInfoStyle = s;
         }
 
         private string GetWeaverAuraString(WeaverAura state)

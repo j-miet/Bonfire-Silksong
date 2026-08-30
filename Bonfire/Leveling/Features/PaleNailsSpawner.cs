@@ -11,9 +11,9 @@ namespace BonfireSilksong
         public static bool NeedleSpawnInProgress = false;
 
         /// <summary>
-        /// Simulates Pale Nails silk skill spawn without locking the player into idle state or costing silk.
+        /// Simulates Pale Nails silk skill spawn without player animation or silk cost.
         /// </summary>
-        public static void SpawnNeedles()
+        public static void CastPaleNails()
         {
             Bonfire.Log.LogInfo("[NeedleSpellSpawner] Spawn Silk Nails.");
 
@@ -29,13 +29,13 @@ namespace BonfireSilksong
             GameObject needlePrefab = GetPrefabFromAction(hornetFsm, "BossNeedle Cast", 0);
             if (needlePrefab == null)
             {
-                Bonfire.Log.LogInfo("Could not find needle prefab in BossNeedle Cast state.");
+                Bonfire.Log.LogInfo("Could not find prefab in 'BossNeedle Cast' state.");
                 return;
             }
 
             Vector3 hornetPos = hornet.transform.position;
 
-            // spawn 3 needles, each an identical GameObject
+            // spawn 3 identical GameObjects for needles
             var a = SpawnFromPool(needlePrefab, hornetPos, Quaternion.identity, hornet);
             var b = SpawnFromPool(needlePrefab, hornetPos, Quaternion.identity, hornet);
             var c = SpawnFromPool(needlePrefab, hornetPos, Quaternion.identity, hornet);

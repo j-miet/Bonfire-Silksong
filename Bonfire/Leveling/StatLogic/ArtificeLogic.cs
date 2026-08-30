@@ -267,11 +267,10 @@ namespace BonfireSilksong
             // - base values -
             // Visual: (1.05, -0.94, 1.00)
             // Damager: (2.33, -0.47, 1.00)
-            // => X ~ 2.33/1.05 = 2.22, Y ~ -0.47/-0.94 = 0.5, Z can remain unscaled
             //
             // Why not simply scale localScale.x etc. directly: The GameObject is pooled, meaning it is likely recycled
             // and using existing scale as a reference just ends up with stacking values over and over again. Instead
-            // the localScale base values listed above are better here and avoid the constant unintended re-referencing.
+            // the localScale base values listed above are better here and avoid repeated referencing.
 
             float rangeMultpilier = SawtoothCircletRangeMultiplier;
 
@@ -287,6 +286,22 @@ namespace BonfireSilksong
                 damager.localScale = new Vector3(2.33f * rangeMultpilier, -0.47f, 1.0f);
 
                 Bonfire.Log.LogDebug($"Brolly Spike damager scale: {damager.localScale}");
+            }
+        }
+
+        /// <summary>
+        /// Cast 'Rune Rage' silk skill when enemy is hit. Current condition is cast only when Pimpillo tool is used.
+        /// </summary>
+        public static void CastRuneRageOnHit(HealthManager hm, in HitInstance hit)
+        {
+            if (hm != null &&
+                hm.gameObject != null &&
+                hm.hp > 0 &&
+                hit.RepresentingTool != null &&
+                hit.RepresentingTool.name == "Pimpilo" &&
+                CheckArtificeMilestone(3))
+            {
+                RuneRageSpawner.CastRuneRage(hm.gameObject);
             }
         }
 

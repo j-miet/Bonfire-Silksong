@@ -140,6 +140,8 @@ namespace BonfireSilksong
             Bonfire.Log.LogInfo("- Damage Dealt: " + hitInstance.DamageDealt);
             Bonfire.Log.LogInfo("- Tool instance: " + tool?.name ?? "null");
 
+            int vanillaDamage = hitInstance.DamageDealt;
+
             LuckLogic.CheckIfCrit(hitInstance);
             bool isCrit = LuckLogic.Crit;
 
@@ -198,7 +200,7 @@ namespace BonfireSilksong
                 {
                     // -- red and blue tools --
 
-                    if (tool.name == "Rosary Cannon" && ArtificeLogic.CheckArtificeMilestone(4))
+                    if (tool.name == "Rosary Cannon" && ArtificeLogic.CheckArtificeMilestone(3))
                     {
                         toolDamage += 2;
                     }
@@ -223,6 +225,12 @@ namespace BonfireSilksong
                             (tool.name == "Pimpilo" || tool.name == "Brolly Spike"))
                         {
                             // Pimpillo and Sawtooth Circlet
+
+                            toolDamage = DexterityLogic.ApplyCritDamage(toolDamage);
+                        }
+                        else if (ArtificeLogic.CheckArtificeMilestone(2) && ArtificeLogic.IsSilkshotTool(tool))
+                        {
+                            // Silkshot
 
                             toolDamage = DexterityLogic.ApplyCritDamage(toolDamage);
                         }
@@ -320,8 +328,7 @@ namespace BonfireSilksong
                 }
             }
 
-            // TODO-> dps metter: cache latest value here for GUI to display it
-            // - source, damage before mod's buffs, damage post mod's buffs
+            DamageOverlay.UpdateData(sourceName, tool?.name, vanillaDamage, hitInstance.DamageDealt);
 
             Bonfire.Log.LogInfo("=> Modified Damage Output: " + hitInstance.DamageDealt);
 

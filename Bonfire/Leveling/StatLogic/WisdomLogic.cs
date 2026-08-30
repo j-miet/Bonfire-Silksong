@@ -370,7 +370,7 @@ namespace BonfireSilksong
                 if (dist > SilkNailsActivationRange)
                     continue;
 
-                PaleNailsSpawner.SpawnNeedles();
+                PaleNailsSpawner.CastPaleNails();
 
                 return true;
             }
