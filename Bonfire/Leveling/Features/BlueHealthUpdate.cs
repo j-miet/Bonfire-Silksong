@@ -112,7 +112,7 @@ namespace BonfireSilksong
         // be very consistent.
         private static IEnumerator UpdateBlueHP(int amount)
         {
-            Bonfire.Log.LogInfo("[ResilienceLogic] Blue hp refresh");
+            Bonfire.Log.LogDebug("[ResilienceLogic] Blue hp refresh");
             yield return new WaitForSecondsRealtime(0.25f);
 
             if (_blueHpAddingInProgress) yield break;

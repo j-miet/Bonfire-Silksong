@@ -8,28 +8,26 @@ namespace BonfireSilksong
     /// </summary>
     public static class PaleNailsSpawner
     {
-        public static bool NeedleSpawnInProgress = false;
-
         /// <summary>
         /// Simulates Pale Nails silk skill spawn without player animation or silk cost.
         /// </summary>
         public static void CastPaleNails()
         {
-            Bonfire.Log.LogInfo("[NeedleSpellSpawner] Spawn Silk Nails.");
+            Bonfire.Log.LogDebug("[NeedleSpellSpawner] Cast Silk Nails.");
 
             GameObject hornet = HeroController.instance.gameObject;
 
             var hornetFsm = PlayMakerFSM.FindFsmOnGameObject(hornet, "Silk Specials");
             if (hornetFsm == null)
             {
-                Bonfire.Log.LogInfo("Could not find 'Silk Specials' FSM on Hornet.");
+                Bonfire.Log.LogDebug("Could not find 'Silk Specials' FSM on Hornet.");
                 return;
             }
 
-            GameObject needlePrefab = GetPrefabFromAction(hornetFsm, "BossNeedle Cast", 0);
+            GameObject needlePrefab = GetPrefabAction(hornetFsm, "BossNeedle Cast", 0);
             if (needlePrefab == null)
             {
-                Bonfire.Log.LogInfo("Could not find prefab in 'BossNeedle Cast' state.");
+                Bonfire.Log.LogDebug("Could not find prefab in 'BossNeedle Cast' state.");
                 return;
             }
 
@@ -40,7 +38,7 @@ namespace BonfireSilksong
             var b = SpawnFromPool(needlePrefab, hornetPos, Quaternion.identity, hornet);
             var c = SpawnFromPool(needlePrefab, hornetPos, Quaternion.identity, hornet);
 
-            Bonfire.Log.LogInfo($"Spawned needle objects '{a.name}'");
+            Bonfire.Log.LogDebug($"Spawned needle objects '{a.name}'");
 
             // however each needle (top, middle, bottom) must call its own event.
             TriggerEvent(a, "Control", "TOP1");
@@ -49,7 +47,7 @@ namespace BonfireSilksong
         }
 
 
-        private static GameObject GetPrefabFromAction(PlayMakerFSM fsm, string stateName, int spawnActionIndex)
+        private static GameObject GetPrefabAction(PlayMakerFSM fsm, string stateName, int spawnActionIndex)
         {
             var state = fsm.Fsm.GetState(stateName);
             if (state == null) return null;
@@ -96,7 +94,7 @@ namespace BonfireSilksong
             var fsm = PlayMakerFSM.FindFsmOnGameObject(go, fsmName);
             if (fsm == null)
             {
-                Bonfire.Log.LogInfo($"No FSM '{fsmName}' found on {go.name}");
+                Bonfire.Log.LogDebug($"No FSM '{fsmName}' found on {go.name}");
                 return;
             }
             fsm.Fsm.Event(eventName);

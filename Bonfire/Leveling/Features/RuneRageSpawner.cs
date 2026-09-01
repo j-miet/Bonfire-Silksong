@@ -8,8 +8,6 @@ namespace BonfireSilksong
     /// </summary>
     public static class RuneRageSpawner
     {
-        public static bool NeedleSpawnInProgress = false;
-
         /// <summary>
         /// Simulates Rune Rage silk skill spawn without player animation or silk cost. Skill is cast from target
         /// GameObject.
@@ -18,21 +16,21 @@ namespace BonfireSilksong
         {
             if (target == null) return;
 
-            GameObject hornet = HeroController.instance.gameObject;
+            Bonfire.Log.LogDebug($"[RuneRageSpawner] Cast Rune Rage from {target.name}.");
 
-            Bonfire.Log.LogInfo($"[RuneRageSpawner] Spawn Rune Rage on {target.name}.");
+            GameObject hornet = HeroController.instance.gameObject;
 
             var hornetFsm = PlayMakerFSM.FindFsmOnGameObject(hornet, "Silk Specials");
             if (hornetFsm == null)
             {
-                Bonfire.Log.LogInfo("Could not find 'Silk Specials' FSM on Hornet.");
+                Bonfire.Log.LogDebug("Could not find 'Silk Specials' FSM on Hornet.");
                 return;
             }
 
-            GameObject runePrefab = GetPrefabFromAction(hornetFsm, "Blast Enemy", 0);
+            GameObject runePrefab = GetPrefabAction(hornetFsm, "Blast Enemy", 0);
             if (runePrefab == null)
             {
-                Bonfire.Log.LogInfo("Could not find prefab in 'Blast Enemy' state.");
+                Bonfire.Log.LogDebug("Could not find prefab in 'Blast Enemy' state.");
                 return;
             }
 
@@ -45,7 +43,7 @@ namespace BonfireSilksong
         }
 
 
-        private static GameObject GetPrefabFromAction(PlayMakerFSM fsm, string stateName, int spawnActionIndex)
+        private static GameObject GetPrefabAction(PlayMakerFSM fsm, string stateName, int spawnActionIndex)
         {
             var state = fsm.Fsm.GetState(stateName);
             if (state == null) return null;
@@ -76,19 +74,6 @@ namespace BonfireSilksong
             spawned.transform.eulerAngles = rotation.eulerAngles;
 
             return spawned;
-        }
-
-        private static void TriggerEvent(GameObject go, string fsmName, string eventName)
-        {
-            if (go == null) return;
-
-            var fsm = PlayMakerFSM.FindFsmOnGameObject(go, fsmName);
-            if (fsm == null)
-            {
-                Bonfire.Log.LogInfo($"No FSM '{fsmName}' found on {go.name}");
-                return;
-            }
-            fsm.Fsm.Event(eventName);
         }
     }
 }

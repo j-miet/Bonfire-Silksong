@@ -18,7 +18,8 @@ namespace BonfireSilksong
         /// <summary>
         /// Spawns a temporal visual prefab on player.
         /// </summary>
-        public static void SpawnHero(GameObject prefab, float destroyTimer = 3f)
+        public static void SpawnHero(GameObject prefab, float destroyTimer = 3f, float transformScaleX = 1f,
+            float transformScaleY = 1f)
         {
             var player = HeroController.instance;
 
@@ -28,8 +29,8 @@ namespace BonfireSilksong
                 player.transform.rotation
             );
 
-            //effect.transform.SetScaleX(0.5f);
-            //effect.transform.SetScaleY(0.5f);
+            effect.transform.SetScaleX(transformScaleX);
+            effect.transform.SetScaleY(transformScaleY);
 
             Object.Destroy(effect, destroyTimer);
         }
@@ -37,7 +38,8 @@ namespace BonfireSilksong
         /// <summary>
         /// Spawns a temporal visual prefab on target GameObject.
         /// </summary>
-        public static void Spawn(GameObject target, GameObject prefab, float destroyTimer = 3f)
+        public static void Spawn(GameObject target, GameObject prefab, float destroyTimer = 3f,
+            float transformScaleX = 1f, float transformScaleY = 1f)
         {
             var effect = Object.Instantiate(
                 prefab,
@@ -45,8 +47,8 @@ namespace BonfireSilksong
                 target.transform.rotation
             );
 
-            effect.transform.SetScaleX(0.5f);
-            effect.transform.SetScaleY(0.5f);
+            effect.transform.SetScaleX(transformScaleX);
+            effect.transform.SetScaleY(transformScaleY);
 
             Object.Destroy(effect, destroyTimer);
         }

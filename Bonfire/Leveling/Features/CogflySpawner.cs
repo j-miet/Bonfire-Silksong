@@ -63,7 +63,7 @@ namespace BonfireSilksong
                 _maxCogflies = limit;
             }
 
-            Bonfire.Log.LogInfo($"[CogflySpawner] Max cogflies set to {_maxCogflies}.");
+            Bonfire.Log.LogDebug($"[CogflySpawner] Max cogflies set to {_maxCogflies}.");
         }
 
 
@@ -79,18 +79,18 @@ namespace BonfireSilksong
 
         private static bool SpawnCogfly()
         {
-            Bonfire.Log.LogInfo($"[CogflySpawner] Spawning Cogfly.");
+            Bonfire.Log.LogDebug($"[CogflySpawner] Spawning Cogfly.");
 
             if (_activeCogflies.Count >= _maxCogflies)
             {
-                Bonfire.Log.LogInfo($"Max cogflies ({_maxCogflies}) reached, cannot to spawn another.");
+                Bonfire.Log.LogDebug($"Max cogflies ({_maxCogflies}) reached, cannot to spawn another.");
                 return false;
             }
 
             ToolItem t = ToolItemManager.GetToolByName("Cogwork Flier");
             if (t == null)
             {
-                Bonfire.Log.LogInfo("Tool 'Cogwork Flier' not found.");
+                Bonfire.Log.LogDebug("Tool 'Cogwork Flier' not found.");
                 return false;
             }
 
@@ -99,7 +99,7 @@ namespace BonfireSilksong
 
             if (cogflyPrefab == null)
             {
-                Bonfire.Log.LogInfo("ThrowPrefab was null.");
+                Bonfire.Log.LogDebug("ThrowPrefab was null.");
                 return false;
             }
 
