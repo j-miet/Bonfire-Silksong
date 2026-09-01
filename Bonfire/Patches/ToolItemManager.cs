@@ -10,7 +10,7 @@ namespace BonfireSilksong
         {
             static void Postfix(ToolItem tool, ref int __result)
             {
-                if (ArtificeLogic.CheckArtificeMilestone(1) && tool?.name == "Pimpilo")
+                if (ArtificeStat.CheckArtificeMilestone(1) && tool?.name == "Pimpilo")
                     __result *= 2;
             }
         }

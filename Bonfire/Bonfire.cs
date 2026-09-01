@@ -13,7 +13,7 @@ namespace BonfireSilksong
     /// <summary>
     /// Main class for Bonfire-Silksong mod.
     /// </summary>
-    [BepInPlugin("hksilksong.mod.bonfire-silksong", "Bonfire-Silksong", "0.9.0")]
+    [BepInPlugin("hksilksong.mod.Bonfire-Silksong", "Bonfire-Silksong", "0.9.0")]
     public class Bonfire : BaseUnityPlugin
     {
         public static Bonfire Instance;
@@ -124,10 +124,11 @@ namespace BonfireSilksong
         // prevents SaveSettings from using previous save's PlayerStatus data to override data for current slot.
         private bool _firstSave = true;
 
+        private bool _hotkeysInitialized = false;
         private ConfigEntry<KeyboardShortcut> _enemyHpBarHotkey;
-        private bool _enemyHPBarsEnabled = false;
+        private bool _enemyHPBarsEnabled;
         private ConfigEntry<KeyboardShortcut> _damageOverlayHotkey;
-        private bool _damageOverlayEnabled = false;
+        private bool _damageOverlayEnabled;
 
         private bool _invClosedCheck = false;
         private bool _satDown = false;
@@ -150,7 +151,7 @@ namespace BonfireSilksong
             _damageOverlayHotkey = Instance.Config.Bind(
                 "Hotkeys",
                 "Damage info Toggle",
-                new KeyboardShortcut(KeyCode.J, KeyCode.LeftControl),
+                new KeyboardShortcut(KeyCode.L, KeyCode.LeftControl),
                 "Toggle damage info panel on/off");
 
             LoadSettings();
@@ -174,9 +175,17 @@ namespace BonfireSilksong
 
             if (IsNotGamePlayState()) return;
 
-            IntelligenceLogic.UpdateBindFSMValues();
+            IntelligenceStat.UpdateBindFSMValues();
 
             AtBenchCheck();
+
+            // hotkeys
+            if (!_hotkeysInitialized)
+            {
+                _enemyHPBarsEnabled = Instance.Status.EnemyHealthBarsEnabled;
+                _damageOverlayEnabled = Instance.Status.ShowDamageOverlay;
+                _hotkeysInitialized = true;
+            }
 
             if (_enemyHpBarHotkey.Value.IsDown())
             {
@@ -244,8 +253,8 @@ namespace BonfireSilksong
             Init();
 
             LevelingSystem.Instance.RefreshRelicsDeposited();
-            LevelingSystem.MilestoneBonus = ResilienceLogic.GetGlassCannonMilestoneBonus(Status.ResilienceStat);
-            WisdomLogic.UpdateCogflyWarriorSpawnLimit();
+            LevelingSystem.MilestoneBonus = ResilienceStat.GetGlassCannonMilestoneBonus(Status.ResilienceStat);
+            WisdomStat.UpdateCogflyWarriorSpawnLimit();
 
             //Log.LogDebug("[Bonfire] Current scene: " + GameManager.instance.GetSceneNameString());
         }
@@ -268,16 +277,17 @@ namespace BonfireSilksong
                 // Debug.GetAllBenchScenes();
                 // Log.LogDebug("----------------------");
                 // Debug.GetHornetAllFsmStateAction();
+                // Log.LogDebug("----------------------");
 
                 _satDown = true;
                 BlueHealthUpdate.SatDownAtBench = true;
 
                 SaveSettings();
 
-                IntelligenceLogic.WeaverAuraTaunt = false;
-                IntelligenceLogic.WeaverAuraRingTaunt = false;
-                IntelligenceLogic.ResetWeaverAuraTimer();
-                PatchHelpers.Taunted = false;
+                IntelligenceStat.WeaverAuraTaunt = false;
+                IntelligenceStat.WeaverAuraRingTaunt = false;
+                IntelligenceStat.ResetWeaverAuraTimer();
+                LevelingPatch.Taunted = false;
 
                 // this causes BlueHpCheckInvOrMenu check to be ignored on first blue hp update call which happens
                 // right after loading into a save.

@@ -39,49 +39,49 @@ namespace BonfireSilksong
                     return (Bonfire.Instance.Status.StrengthStat
                     + Instance.StrengthIncrease
                     + MilestoneBonus
-                    >= StrengthLogic.StrengthMilestone(m))
+                    >= StrengthStat.StrengthMilestone(m))
                     && (Bonfire.Instance.Status.StrengthStat + Instance.StrengthIncrease >= 1);
 
                 case "dexterity":
                     return (Bonfire.Instance.Status.DexterityStat
                     + Instance.DexterityIncrease
                     + MilestoneBonus
-                    >= DexterityLogic.DexterityMilestone(m))
+                    >= DexterityStat.DexterityMilestone(m))
                     && (Bonfire.Instance.Status.DexterityStat + Instance.DexterityIncrease >= 1); ;
 
                 case "intelligence":
                     return (Bonfire.Instance.Status.IntelligenceStat
                     + Instance.IntelligenceIncrease
                     + MilestoneBonus
-                    >= IntelligenceLogic.IntelligenceMilestone(m))
+                    >= IntelligenceStat.IntelligenceMilestone(m))
                     && (Bonfire.Instance.Status.IntelligenceStat + Instance.IntelligenceIncrease >= 1);
 
                 case "artifice":
                     return (Bonfire.Instance.Status.ArtificeStat
                     + Instance.ArtificeIncrease
                     + MilestoneBonus
-                    >= ArtificeLogic.ArtificeMilestone(m))
+                    >= ArtificeStat.ArtificeMilestone(m))
                     && (Bonfire.Instance.Status.ArtificeStat + Instance.ArtificeIncrease >= 1);
 
                 case "resilience":
                     return (Bonfire.Instance.Status.ResilienceStat
                     + Instance.ResilienceIncrease
                     + MilestoneBonus
-                    >= ResilienceLogic.ResilienceMilestone(m))
+                    >= ResilienceStat.ResilienceMilestone(m))
                     && (Bonfire.Instance.Status.ResilienceStat + Instance.ResilienceIncrease >= 1);
 
                 case "wisdom":
                     return (Bonfire.Instance.Status.WisdomStat
                     + Instance.WisdomIncrease
                     + MilestoneBonus
-                    >= WisdomLogic.WisdomMilestone(m))
+                    >= WisdomStat.WisdomMilestone(m))
                     && (Bonfire.Instance.Status.WisdomStat + Instance.WisdomIncrease >= 1);
 
                 case "luck":
                     return (Bonfire.Instance.Status.LuckStat
                     + Instance.LuckIncrease
                     + MilestoneBonus
-                    >= LuckLogic.LuckMilestone(m))
+                    >= LuckStat.LuckMilestone(m))
                     && (Bonfire.Instance.Status.LuckStat + Instance.LuckIncrease >= 1);
 
                 default:
@@ -96,7 +96,7 @@ namespace BonfireSilksong
         {
             if (GameManager.instance.GameState == GameState.MAIN_MENU)
             {
-                IntelligenceLogic.BindCostInit = false;
+                IntelligenceStat.BindCostInit = false;
                 BlueHealthUpdate.BlueHpInit = false;
             }
         }
@@ -214,8 +214,8 @@ namespace BonfireSilksong
             WisdomIncrease = 0;
             LuckIncrease = 0;
 
-            MilestoneBonus = ResilienceLogic.GetGlassCannonMilestoneBonus(s.ResilienceStat);
-            WisdomLogic.UpdateCogflyWarriorSpawnLimit();
+            MilestoneBonus = ResilienceStat.GetGlassCannonMilestoneBonus(s.ResilienceStat);
+            WisdomStat.UpdateCogflyWarriorSpawnLimit();
 
             HeroController.instance.CharmUpdate();
             BlueHealthUpdate.CancelBlueHPUpdate();
@@ -415,14 +415,17 @@ namespace BonfireSilksong
 
         private static void ResetMilestoneFlags()
         {
-            Bonfire.Instance.Status.AutoReleaseNeedleStrike = false;
-            Bonfire.Instance.Status.WeaverAuraMode = (int)WeaverAura.DISABLED;
-            Bonfire.Instance.Status.BlueMaskMode = (int)BlueState.DISABLED;
-            Bonfire.Instance.Status.SilkNailsEnabled = false;
-            Bonfire.Instance.Status.CogflyWarriorEnabled = false;
+            var s = Bonfire.Instance.Status;
 
-            MilestoneBonus = ResilienceLogic.GetGlassCannonMilestoneBonus(0);
-            WisdomLogic.UpdateCogflyWarriorSpawnLimit();
+            s.AutoReleaseNeedleStrike = false;
+            s.WeaverAuraMode = (int)WeaverAura.DISABLED;
+            s.WeakBindEnabled = false;
+            s.BlueMaskMode = (int)BlueState.DISABLED;
+            s.SilkNailsEnabled = false;
+            s.CogflyWarriorEnabled = false;
+
+            MilestoneBonus = ResilienceStat.GetGlassCannonMilestoneBonus(0);
+            WisdomStat.UpdateCogflyWarriorSpawnLimit();
         }
 
         private void Awake()

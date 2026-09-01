@@ -95,7 +95,11 @@ namespace BonfireSilksong
                 GUI.contentColor = Color.white;
                 GUI.color = Color.white;
 
+                GUI.enabled = !(SettingsGUI.PendingSettingsWindow ||
+                                SettingsGUI.PendingCrestUnlock ||
+                                SettingsGUI.PendingStatusReset);
                 DrawBenchUI();
+                GUI.enabled = true;
 
                 Teleport.FastTravelUnlockNotification();
                 Settings.DrawExtraSettingsUI();

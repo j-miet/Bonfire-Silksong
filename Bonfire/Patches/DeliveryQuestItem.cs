@@ -14,7 +14,7 @@ namespace BonfireSilksong
         {
             static bool Prefix()
             {
-                return SettingsLogic.DeliveryQuestHitCheck();
+                return SettingsPatch.DeliveryQuestHitCheck();
             }
         }
     }

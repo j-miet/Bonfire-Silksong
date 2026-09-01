@@ -30,7 +30,7 @@ namespace BonfireSilksong
 
             if (masks < 0)
             {
-                amount = ResilienceLogic.BlueMasks(Bonfire.Instance.Status.ResilienceStat);
+                amount = ResilienceStat.BlueMasks(Bonfire.Instance.Status.ResilienceStat);
             }
             else
             {

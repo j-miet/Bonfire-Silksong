@@ -18,7 +18,7 @@ namespace BonfireSilksong
         {
             static void Postfix(GameObject __result)
             {
-                ArtificeLogic.ScaleSawtoothCircletRange(__result);
+                ArtificeStat.ScaleSawtoothCircletRange(__result);
             }
         }
     }

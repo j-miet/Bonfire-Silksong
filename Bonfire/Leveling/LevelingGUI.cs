@@ -474,7 +474,7 @@ namespace BonfireSilksong
             Color bgOld = GUI.backgroundColor;
 
             // needle strike auto-release toggle
-            GUI.enabled = StrengthLogic.CheckStrengthMilestone(1);
+            GUI.enabled = StrengthStat.CheckStrengthMilestone(1);
 
             string autoStrikeToggle = "Needle strike auto-release: " +
                 $"{(Bonfire.Instance.Status.AutoReleaseNeedleStrike ? "ENABLED" : "DISABLED")}";
@@ -493,7 +493,7 @@ namespace BonfireSilksong
             GUI.backgroundColor = bgOld;
 
             GUILayout.Label(
-                $"[{StrengthLogic.StrengthMilestone(1)}] " +
+                $"[{StrengthStat.StrengthMilestone(1)}] " +
                 "Needle strike: active charge time reduced by 20%. " +
                 "Can toggle on/off automatic release when fully charged.",
                 LevelingSystem.HighLightStatMilestone(s, 1)
@@ -501,14 +501,14 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{StrengthLogic.StrengthMilestone(2)}] " +
+                $"[{StrengthStat.StrengthMilestone(2)}] " +
                 "Needle range increased by 33%. Needle strike initial charge time reduced by 20%.",
                 LevelingSystem.HighLightStatMilestone(s, 2)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{StrengthLogic.StrengthMilestone(3)}] " +
+                $"[{StrengthStat.StrengthMilestone(3)}] " +
                 "Flintslate and Flea Brew tools have infinite buff duration. " +
                 "Downslash damage increased by 100%. " +
                 "Needle strike: both initial and active charge time reduction buffed (20% -> 40%).",
@@ -551,23 +551,23 @@ namespace BonfireSilksong
             GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
 
             GUILayout.Label(
-                $"[{DexterityLogic.DexterityMilestone(1)}] " +
+                $"[{DexterityStat.DexterityMilestone(1)}] " +
                 "Clawline damage increased by 25%. " +
-                $"Every {DexterityLogic.ClawlineHitLimit}th hit from Clawline deals 2x damage " +
+                $"Every {DexterityStat.ClawlineHitLimit}th hit from Clawline deals 2x damage " +
                 "(default Clawline use counts as 2 hits).",
                 LevelingSystem.HighLightStatMilestone(s, 1)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{DexterityLogic.DexterityMilestone(2)}] " +
+                $"[{DexterityStat.DexterityMilestone(2)}] " +
                 "Clawline silk cost removed, can now critically hit.",
                 LevelingSystem.HighLightStatMilestone(s, 2)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{DexterityLogic.DexterityMilestone(3)}] " +
+                $"[{DexterityStat.DexterityMilestone(3)}] " +
                 "All critical hits now heal 1 mask\n" +
                 "Clawline:\n" +
                 " - damage bonus increased (25% -> 50%).\n" +
@@ -615,7 +615,7 @@ namespace BonfireSilksong
             Color bgOld = GUI.backgroundColor;
 
             // weaver aura/pale burst toggle
-            GUI.enabled = IntelligenceLogic.CheckIntelligenceMilestone(1);
+            GUI.enabled = IntelligenceStat.CheckIntelligenceMilestone(1);
 
             var mode = (WeaverAura)Bonfire.Instance.Status.WeaverAuraMode;
             string weaverAuraToggle = "Cast Weaver's Light when taunting: " + GetWeaverAuraString(mode);
@@ -631,10 +631,26 @@ namespace BonfireSilksong
             GUI.enabled = true;
             GUILayout.Space(5);
 
+            GUI.enabled = IntelligenceStat.CheckIntelligenceMilestone(2);
+
+            string weakBindToggle = $"Toggle Weak Bind: " +
+                $"{(Bonfire.Instance.Status.WeakBindEnabled ? "ENABLED" : "DISABLED")}";
+            GUI.backgroundColor = _infoButtonColor;
+            if (CustomCursor.Button(
+                weakBindToggle,
+                GUIStyles.LvlInfoButtonStyle,
+                GUILayout.Width(InfoButtonWidth),
+                GUILayout.Height(InfoButtonHeight)))
+            {
+                Bonfire.Instance.Status.WeakBindEnabled = !Bonfire.Instance.Status.WeakBindEnabled;
+            }
+            GUI.enabled = true;
+            GUILayout.Space(5);
+
             GUI.backgroundColor = bgOld;
 
             GUILayout.Label(
-                $"[{IntelligenceLogic.IntelligenceMilestone(1)}] " +
+                $"[{IntelligenceStat.IntelligenceMilestone(1)}] " +
                 "Toggle on/off 'Weaver's Light'.\n" +
                 "\n" +
                 "<Weaver's Light>\n" +
@@ -651,9 +667,8 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{IntelligenceLogic.IntelligenceMilestone(2)}] " +
-                "While equipping Dead Bug's Purse/Shell Satchel yellow tool, you get 'Weak Bind'. " +
-                "While Weak Bind is active:\n" +
+                $"[{IntelligenceStat.IntelligenceMilestone(2)}] " +
+                "Toggle on/off 'Weak Bind'. While Weak Bind is active:\n" +
                 "- Bind heals 1 mask and costs 1/3 of current cost, but keeps its current speed,\n" +
                 "- You take + 1 damage from everything, but you the following bonuses:\n" +
                 "  - Silk Skills: cost reduced by 1, damage increased by 50% multiplicatively.\n" +
@@ -665,14 +680,14 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{IntelligenceLogic.IntelligenceMilestone(3)}] " +
+                $"[{IntelligenceStat.IntelligenceMilestone(3)}] " +
                 "Silk skills, Claw Mirror and Taunt can crit. Equipping Claw Mirror increases binding speed by 33%.",
             LevelingSystem.HighLightStatMilestone(s, 3)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{IntelligenceLogic.IntelligenceMilestone(4)}] " +
+                $"[{IntelligenceStat.IntelligenceMilestone(4)}] " +
                 "Give more effects to all Intelligence-focused abilities:\n" +
                 "- Silk skills: silk cost reduced by 1.\n" +
                 "- Claw Mirror: every 2 points in Intelligence adds +1 damage. Damage is applied after Artifice stat " +
@@ -723,7 +738,7 @@ namespace BonfireSilksong
             GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
 
             GUILayout.Label(
-                $"[{ArtificeLogic.ArtificeMilestone(1)}] " +
+                $"[{ArtificeStat.ArtificeMilestone(1)}] " +
                 "Pimpillo: has 2x tool capacity and can apply critical hits.\n" +
                 "Sawtooth Circlet: can apply critical hits.",
                 LevelingSystem.HighLightStatMilestone(s, 1)
@@ -731,7 +746,7 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{ArtificeLogic.ArtificeMilestone(2)}] " +
+                $"[{ArtificeStat.ArtificeMilestone(2)}] " +
                 "Rosary Cannon: has infinite, free refills. Every time you start the use animation, it becomes " +
                 "fully loaded loaded.\n" +
                 "Silkshot: silk cost removed, can apply critical hits.\n" +
@@ -741,7 +756,7 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{ArtificeLogic.ArtificeMilestone(3)}] " +
+                $"[{ArtificeStat.ArtificeMilestone(3)}] " +
                 "Rosary Cannon: +2 flat damage which is applied before Artifice stat damage bonus.\n" +
                 "Silkshot: has infinite charges.\n" +
                 "Sawtooth Circlet: horizontal range increased by 50%.\n" +
@@ -752,7 +767,7 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{ArtificeLogic.ArtificeMilestone(4)}] " +
+                $"[{ArtificeStat.ArtificeMilestone(4)}] " +
                 "Offensive red tool has 33% chance to spawn a copy of itself when used. " +
                 "When a copy is spawned, neither original nor copy cost charges.\n" +
                 "Following tools cannot benefit from this: Silkshot, Delver's Drill, Rosary Cannon, " +
@@ -803,7 +818,7 @@ namespace BonfireSilksong
             Color bgOld = GUI.backgroundColor;
 
             // reflect/glass cannon mode toggle
-            GUI.enabled = ResilienceLogic.CheckResilienceMilestone(1);
+            GUI.enabled = ResilienceStat.CheckResilienceMilestone(1);
 
             var mode = (BlueState)Bonfire.Instance.Status.BlueMaskMode;
 
@@ -823,7 +838,7 @@ namespace BonfireSilksong
             GUI.backgroundColor = bgOld;
 
             GUILayout.Label(
-                $"[{ResilienceLogic.ResilienceMilestone(1)}] " +
+                $"[{ResilienceStat.ResilienceMilestone(1)}] " +
                 "You can now select 'Vengeful' or 'Hollow' blue health mode.\n" +
                 "\n" +
                 "When Vengeful/Hollow is active:\n" +
@@ -864,7 +879,7 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{ResilienceLogic.ResilienceMilestone(2)}] " +
+                $"[{ResilienceStat.ResilienceMilestone(2)}] " +
                 "Additional buffs to blue health modes:\n" +
                 "<Vengeful> Bind now heals 2 blue masks, reflect damage area increased by 1.\n" +
                 "<Hollow> You get flat +10 damage bonus which is applied after mask bonuses. Milestone bonus " +
@@ -874,7 +889,7 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{ResilienceLogic.ResilienceMilestone(3)}] " +
+                $"[{ResilienceStat.ResilienceMilestone(3)}] " +
                 "While in Vengful/Hollow state, you can now enter Plasmified state and Plasmium Phial will instantly " +
                 "trigger Plasmified when used. While Plasmified, your use of Plasmium Phial is again blocked but " +
                 "you get a more offensive variant of current state:\n" +
@@ -959,12 +974,15 @@ namespace BonfireSilksong
                 " game and then launch it again, the first taunt will always set state to 'BLOCKED' even if you have " +
                 "them already disabled.\n" +
                 "\n" +
-                "=> This feature is meant to be used during platforming sections which could otherwise be quite" +
-                "frustrating with multiple summons shooting at enemies.",
+                "=> This feature is meant to be used during platforming sections which could otherwise be quite " +
+                "frustrating with multiple summons shooting at enemies.\n",
                 GUIStyles.LvlInfoLabelStyle);
+            Color wisdomQoLOld = GUI.color;
+            GUI.color = Color.yellow;
             GUILayout.Label(
-                $"[Summons] => {(WisdomLogic.BlockSummons ? "BLOCKED" : "ALLOWED")}\n",
+                $"[Summons] => {(WisdomStat.BlockSummons ? "BLOCKED" : "ALLOWED")}\n",
                 GUIStyles.LvlInfoLabelStyle);
+            GUI.color = wisdomQoLOld;
 
             GUI.enabled = true;
 
@@ -972,7 +990,7 @@ namespace BonfireSilksong
             Color bgOld = GUI.backgroundColor;
 
             // Silk Nails toggle
-            GUI.enabled = WisdomLogic.CheckWisdomMilestone(1) && !WisdomLogic.BlockSummons;
+            GUI.enabled = WisdomStat.CheckWisdomMilestone(1) && !WisdomStat.BlockSummons;
 
             string silkNailsToggle = "Silk Nails: " +
                 $"{(Bonfire.Instance.Status.SilkNailsEnabled ? "ENABLED" : "DISABLED")}";
@@ -989,7 +1007,7 @@ namespace BonfireSilksong
             GUILayout.Space(5);
 
             // Cogfly Warrior toggle
-            GUI.enabled = WisdomLogic.CheckWisdomMilestone(2) && !WisdomLogic.BlockSummons;
+            GUI.enabled = WisdomStat.CheckWisdomMilestone(2) && !WisdomStat.BlockSummons;
 
             string cogflyWarriorToggle = "Cogfly Warrior: " +
                 $"{(Bonfire.Instance.Status.CogflyWarriorEnabled ? "ENABLED" : "DISABLED")}";
@@ -1008,7 +1026,7 @@ namespace BonfireSilksong
             GUI.backgroundColor = bgOld;
 
             GUILayout.Label(
-                $"[{WisdomLogic.WisdomMilestone(1)}] " +
+                $"[{WisdomStat.WisdomMilestone(1)}] " +
                 "Toggle on/off 'Silk Nails' which is a weaker version of Pale Nails silk skill.\n" +
                 "\n" +
                 "<Silk Nails>\n" +
@@ -1020,7 +1038,7 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{WisdomLogic.WisdomMilestone(2)}] " +
+                $"[{WisdomStat.WisdomMilestone(2)}] " +
                 "Toggle on/off 'Cogfly Warrior' which is a stronger version of Cogfly.\n" +
                 "\n" +
                 "<Cogfly Warrior>\n" +
@@ -1034,7 +1052,7 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{WisdomLogic.WisdomMilestone(3)}] " +
+                $"[{WisdomStat.WisdomMilestone(3)}] " +
                 "Wispfire Lantern silk cost removed, attack delay halved and spawn cooldown is down to 2 seconds.\n" +
                 "[Reminder] Wispfire Lantern has no Wisdom stat scaling, only tool damage matters.",
                 LevelingSystem.HighLightStatMilestone(s, 3)
@@ -1042,7 +1060,7 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{WisdomLogic.WisdomMilestone(4)}] " +
+                $"[{WisdomStat.WisdomMilestone(4)}] " +
                 "All of Wisdom's offensive abilities buffed:\n" +
                 "- Silk Nails: Can now critically hit.\n" +
                 "- Cogfly Warrior: summons a second cogfly.\n" +
@@ -1187,7 +1205,7 @@ namespace BonfireSilksong
 
         private WeaverAura RotateWeaverAuraState(WeaverAura state)
         {
-            if (IntelligenceLogic.CheckIntelligenceMilestone(4))
+            if (IntelligenceStat.CheckIntelligenceMilestone(4))
             {
                 switch (state)
                 {
@@ -1259,63 +1277,63 @@ namespace BonfireSilksong
 
             // stat formula strings
             // Strength
-            _needleBaseDamage = StrengthLogic.NeedleDamage(5 + 4 * PlayerData.instance.nailUpgrades, strNew).ToString();
+            _needleBaseDamage = StrengthStat.NeedleDamage(5 + 4 * PlayerData.instance.nailUpgrades, strNew).ToString();
 
             // Dexterity
-            _attackSpeed = DexterityLogic.AttackSpeed(dexNew).ToString();
-            _critDamageBonus = (DexterityLogic.CritDamage(dexNew, 100) - 100).ToString() + "%";
+            _attackSpeed = DexterityStat.AttackSpeed(dexNew).ToString();
+            _critDamageBonus = (DexterityStat.CritDamage(dexNew, 100) - 100).ToString() + "%";
 
             // Intelligence
-            _spellDamageBonus = (IntelligenceLogic.SpellDamage(100, intNew) - 100).ToString() + "%";
-            _bindCost = IntelligenceLogic.BindCost(intNew).ToString();
-            _weaverAuraDamage = IntelligenceLogic.WeaverAuraDamage(intNew, isGUI: true).ToString() +
+            _spellDamageBonus = (IntelligenceStat.SpellDamage(100, intNew) - 100).ToString() + "%";
+            _bindCost = IntelligenceStat.BindCost(intNew).ToString();
+            _weaverAuraDamage = IntelligenceStat.WeaverAuraDamage(intNew, isGUI: true).ToString() +
                 " (With Silk Bonus: " +
-                $"{IntelligenceLogic.WeaverAuraDamage(intNew, isGUI: true, GUISilkBonus: true)})";
-            _weaverAuraRange = IntelligenceLogic.WeaverAuraRange(intNew, isGUI: true).ToString();
+                $"{IntelligenceStat.WeaverAuraDamage(intNew, isGUI: true, GUISilkBonus: true)})";
+            _weaverAuraRange = IntelligenceStat.WeaverAuraRange(intNew, isGUI: true).ToString();
 
             // Artifice
-            _toolDamageBonus = (ArtificeLogic.ToolDamage(100, artNew) - 100).ToString() + "%";
+            _toolDamageBonus = (ArtificeStat.ToolDamage(100, artNew) - 100).ToString() + "%";
             _toolRegenInterval = "-";
             if (artNew > 0)
             {
-                int toolRegen = ArtificeLogic.ToolRegenInterval(artNew);
+                int toolRegen = ArtificeStat.ToolRegenInterval(artNew);
                 _toolRegenInterval = toolRegen > 0 ? toolRegen.ToString() + " s" : "-";
             }
 
             // Resilience
-            _extraMasks = ResilienceLogic.BlueMasks(resNew).ToString();
-            _blockChance = resNew > 0 ? ResilienceLogic.AverageBlockChance(resNew).ToString("F0") + "%" : "0%";
+            _extraMasks = ResilienceStat.BlueMasks(resNew).ToString();
+            _blockChance = resNew > 0 ? ResilienceStat.AverageBlockChance(resNew).ToString("F0") + "%" : "0%";
             _reflectDamage = "0";
             _reflectArea = "0";
             _glassCannonMaskBonus = "0%";
             _glassCannonMilestoneBonus = "0%";
             if (resNew > 0)
             {
-                string reflectDamage = ResilienceLogic.ReflectDamage(resNew, isGUI: true).ToString();
-                string reflectArea = ResilienceLogic.ReflectArea(isGUI: true).ToString();
+                string reflectDamage = ResilienceStat.ReflectDamage(resNew, isGUI: true).ToString();
+                string reflectArea = ResilienceStat.ReflectArea(isGUI: true).ToString();
 
-                string ggMaskBonus = ResilienceLogic.IsInBlueState(BlueState.GLASSCANNON)
-                    ? (ResilienceLogic.GlassCannonDamageMaskBonus(isGUI: true) * 100).ToString("F0") + "%"
+                string ggMaskBonus = ResilienceStat.IsInBlueState(BlueState.GLASSCANNON)
+                    ? (ResilienceStat.GlassCannonDamageMaskBonus(isGUI: true) * 100).ToString("F0") + "%"
                     : "0%";
-                string ggMilestoneBonus = ResilienceLogic.GetGlassCannonMilestoneBonus(resNew).ToString();
+                string ggMilestoneBonus = ResilienceStat.GetGlassCannonMilestoneBonus(resNew).ToString();
 
-                if (ResilienceLogic.CheckResilienceMilestone(3))
+                if (ResilienceStat.CheckResilienceMilestone(3))
                 {
-                    if (ResilienceLogic.IsInBlueState(BlueState.REFLECT))
+                    if (ResilienceStat.IsInBlueState(BlueState.REFLECT))
                     {
-                        reflectDamage += " (Plasmified: " + ResilienceLogic.ReflectDamage(
+                        reflectDamage += " (Plasmified: " + ResilienceStat.ReflectDamage(
                             s.ResilienceStat, isGUI: true, GUIPlasmified: true)
                             + ")";
-                        reflectArea += " (Plasmified: " + ResilienceLogic.ReflectArea(
+                        reflectArea += " (Plasmified: " + ResilienceStat.ReflectArea(
                             isGUI: true, GUIPlasmified: true)
                             .ToString() + ")";
                     }
-                    else if (ResilienceLogic.IsInBlueState(BlueState.GLASSCANNON))
+                    else if (ResilienceStat.IsInBlueState(BlueState.GLASSCANNON))
                     {
                         ggMaskBonus += " (Plasmified: "
-                            + (ResilienceLogic.GlassCannonDamageMaskBonus(isGUI: true, GUIPlasmified: true) * 100)
+                            + (ResilienceStat.GlassCannonDamageMaskBonus(isGUI: true, GUIPlasmified: true) * 100)
                             .ToString("F0") + "%)";
-                        ggMilestoneBonus += " (Plasmified: " + ResilienceLogic.GetGlassCannonMilestoneBonus(
+                        ggMilestoneBonus += " (Plasmified: " + ResilienceStat.GetGlassCannonMilestoneBonus(
                             s.ResilienceStat, isGUI: true, GUIPlasmified: true)
                             .ToString("F0") + ")";
                     }
@@ -1328,25 +1346,25 @@ namespace BonfireSilksong
             }
 
             // Wisdom
-            _extraSilk = WisdomLogic.ExtraSilk(wsdmNew, 1).ToString();
+            _extraSilk = WisdomStat.ExtraSilk(wsdmNew, 1).ToString();
             _silkRegenInterval = "-";
             if (wsdmNew > 0)
             {
-                int silkRegen = WisdomLogic.SilkRegenInterval(wsdmNew);
+                int silkRegen = WisdomStat.SilkRegenInterval(wsdmNew);
                 _silkRegenInterval = silkRegen > 0 ? silkRegen.ToString() + " s" : "-";
             }
-            _silkNailsDamage = WisdomLogic.SilkNailsDamage(wsdmNew).ToString();
-            _silkNailsSpawnCooldown = WisdomLogic.SilkNailsSpawnCooldown(wsdmNew).ToString("F2");
-            _cogflyDamage = WisdomLogic.CogflyWarriorDamage(wsdmNew).ToString();
-            _cogflyAttackCooldown = WisdomLogic.CogflyWarriorAttackCooldown(wsdmNew).ToString("F2");
+            _silkNailsDamage = WisdomStat.SilkNailsDamage(wsdmNew).ToString();
+            _silkNailsSpawnCooldown = WisdomStat.SilkNailsSpawnCooldown(wsdmNew).ToString("F2");
+            _cogflyDamage = WisdomStat.CogflyWarriorDamage(wsdmNew).ToString();
+            _cogflyAttackCooldown = WisdomStat.CogflyWarriorAttackCooldown(wsdmNew).ToString("F2");
 
-            (float lanternAttack, float lanternSpawn) = WisdomLogic.WispLanternSpeed();
+            (float lanternAttack, float lanternSpawn) = WisdomStat.WispLanternSpeed();
             _lanternAttackCooldown = lanternAttack.ToString();
             _lanternSpawnCooldown = lanternSpawn.ToString();
 
             // Luck
-            _critChance = LuckLogic.CritChance(luckNew).ToString() + "%";
-            _rosaryIncrease = LuckLogic.GetRosaryIncreasePercentage(s.LuckStat, ls.LuckIncrease);
+            _critChance = LuckStat.CritChance(luckNew).ToString() + "%";
+            _rosaryIncrease = LuckStat.GetRosaryIncreasePercentage(s.LuckStat, ls.LuckIncrease);
 
             // "Apply" button label
             int pRelics = s.PendingRelicLevels;

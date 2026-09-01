@@ -10,7 +10,7 @@ namespace BonfireSilksong
         {
             static void Postfix(ref float currentBaseSpeed)
             {
-                currentBaseSpeed = SettingsLogic.MakeSprintmasterRaceEasier(currentBaseSpeed);
+                currentBaseSpeed = SettingsPatch.MakeSprintmasterRaceEasier(currentBaseSpeed);
             }
         }
     }

@@ -27,7 +27,7 @@ namespace BonfireSilksong
         {
             static void Postfix(HeroController __instance)
             {
-                TeleportLogic.HandleArrival(__instance);
+                TeleportPatch.HandleArrival(__instance);
             }
         }
 
@@ -36,7 +36,7 @@ namespace BonfireSilksong
         {
             static bool Prefix()
             {
-                return SettingsLogic.DeliveryQuestTimerCheck();
+                return SettingsPatch.DeliveryQuestTimerCheck();
             }
         }
 
@@ -45,7 +45,7 @@ namespace BonfireSilksong
         {
             static void Prefix(HeroController __instance)
             {
-                StrengthLogic.RefreshFleaBrewBuffDuration(__instance);
+                StrengthStat.RefreshFleaBrewBuffDuration(__instance);
             }
 
             static void Postfix()
@@ -60,14 +60,14 @@ namespace BonfireSilksong
                 float dt = Time.deltaTime;
                 try
                 {
-                    WisdomLogic.CheckSilkRegen(dt);
-                    ArtificeLogic.CheckToolRegen(dt);
-                    WisdomLogic.CheckSilkNails(dt);
-                    IntelligenceLogic.CheckWeaverAura(dt);
+                    WisdomStat.CheckSilkRegen(dt);
+                    ArtificeStat.CheckToolRegen(dt);
+                    WisdomStat.CheckSilkNails(dt);
+                    IntelligenceStat.CheckWeaverAura(dt);
                 }
                 catch { }
 
-                WisdomLogic.CheckCogflyWarriorState();
+                WisdomStat.CheckCogflyWarriorState();
             }
         }
 
@@ -85,7 +85,7 @@ namespace BonfireSilksong
         {
             static void Postfix(ref float __result)
             {
-                __result = StrengthLogic.UpdateNeedleChargeBeginTime(__result);
+                __result = StrengthStat.UpdateNeedleChargeBeginTime(__result);
             }
         }
 
@@ -94,7 +94,7 @@ namespace BonfireSilksong
         {
             static void Postfix(ref float __result)
             {
-                __result = StrengthLogic.UpdateNeedleChargeTime(__result);
+                __result = StrengthStat.UpdateNeedleChargeTime(__result);
             }
         }
 
@@ -103,7 +103,7 @@ namespace BonfireSilksong
         {
             static void Postfix(HeroController __instance)
             {
-                DexterityLogic.UpdateNeedleAttackCooldown(__instance);
+                DexterityStat.UpdateNeedleAttackCooldown(__instance);
             }
         }
 
@@ -113,7 +113,7 @@ namespace BonfireSilksong
         {
             static void Postfix(HeroController __instance)
             {
-                DexterityLogic.UpdateNeedleAttackDuration(__instance);
+                DexterityStat.UpdateNeedleAttackDuration(__instance);
             }
         }
 
@@ -124,14 +124,14 @@ namespace BonfireSilksong
         {
             static void Prefix(HeroController __instance, HazardType hazardType)
             {
-                ResilienceLogic.HandleBlockCheck(__instance, hazardType);
+                ResilienceStat.HandleBlockCheck(__instance, hazardType);
             }
 
             static void Postfix()
             {
                 // safety feature to ensure that block flag is set to 'false' after TakeDamage call. 
                 // Otherwise blocking flag could get stuck on 'true', making player invulnerable.
-                ResilienceLogic.BlockNextHit = false;
+                ResilienceStat.BlockNextHit = false;
             }
         }
 
@@ -143,7 +143,7 @@ namespace BonfireSilksong
         {
             static void Postfix(HitInstance hitInstance)
             {
-                WisdomLogic.AddExtraSilkOnNeedleHit(hitInstance);
+                WisdomStat.AddExtraSilkOnNeedleHit(hitInstance);
             }
         }
 
@@ -156,16 +156,16 @@ namespace BonfireSilksong
         {
             static bool Prefix(int amount, SilkSpool.SilkTakeSource source)
             {
-                if (PatchHelpers.CheckTauntCostRefund(amount))
+                if (LevelingPatch.CheckTauntCostRefund(amount))
                     return false;
 
-                if (WisdomLogic.CheckWispLanternCostRefund(source))
+                if (WisdomStat.CheckWispLanternCostRefund(source))
                     return false;
 
-                if (DexterityLogic.CheckHarpoonCostRefund(amount))
+                if (DexterityStat.CheckHarpoonCostRefund(amount))
                     return false;
 
-                if (ArtificeLogic.CheckSilkshotSilkCostRefund(amount))
+                if (ArtificeStat.CheckSilkshotSilkCostRefund(amount))
                     return false;
 
                 return true;
@@ -182,21 +182,21 @@ namespace BonfireSilksong
                 // If player has Weak Bind and is in reflect blue state, this check will override 
                 // CheckWeakBindRequirement and thus allow the extra bind from Claw Mirror to heal. So you get 2 heals,
                 // or even 3 with Multibinder.
-                if (ResilienceLogic.IsInBlueStateAndPlasmified(BlueState.REFLECT))
+                if (ResilienceStat.IsInBlueStateAndPlasmified(BlueState.REFLECT))
                     return true;
 
-                if (ResilienceLogic.ReflectStateHealedBlueMasks())
+                if (ResilienceStat.ReflectStateHealedBlueMasks())
                     return false;
 
-                if (IntelligenceLogic.CheckWeakBindRequirement())
+                if (IntelligenceStat.CheckWeakBindRequirement())
                 {
                     amount = (int)Math.Round(amount * 0.33f);
 
                     // don't allow healing from the additional Claw Mirror bind. With this, first bind does nothing
                     // but any following ones heal normally.
-                    if (IntelligenceLogic.ExtraBind)
+                    if (IntelligenceStat.ExtraBind)
                     {
-                        IntelligenceLogic.ExtraBind = false;
+                        IntelligenceStat.ExtraBind = false;
                         return false;
                     }
 
@@ -213,7 +213,7 @@ namespace BonfireSilksong
             static void Postfix(ref bool __result)
             {
                 if (__result)
-                    DexterityLogic.UsedHarpoon();
+                    DexterityStat.UsedHarpoon();
             }
         }
 
@@ -228,9 +228,9 @@ namespace BonfireSilksong
         {
             static void Postfix()
             {
-                if (IntelligenceLogic.AuraOrBurstEnabled)
+                if (IntelligenceStat.AuraOrBurstEnabled)
                 {
-                    IntelligenceLogic.WeaverAuraTaunt = !IntelligenceLogic.WeaverAuraTaunt;
+                    IntelligenceStat.WeaverAuraTaunt = !IntelligenceStat.WeaverAuraTaunt;
 
                     // this removed the normal damage buff
                     HeroController.instance.SilkTauntEffectConsume();
@@ -246,8 +246,8 @@ namespace BonfireSilksong
         {
             static void Postfix()
             {
-                if (IntelligenceLogic.AuraOrBurstEnabled)
-                    IntelligenceLogic.WeaverAuraRingTaunt = !IntelligenceLogic.WeaverAuraRingTaunt;
+                if (IntelligenceStat.AuraOrBurstEnabled)
+                    IntelligenceStat.WeaverAuraRingTaunt = !IntelligenceStat.WeaverAuraRingTaunt;
             }
         }
 
@@ -258,11 +258,11 @@ namespace BonfireSilksong
             static void Postfix(ref bool __result)
             {
                 if (Gameplay.BrollySpikeTool.IsEquipped &&
-                    ArtificeLogic.CheckArtificeMilestone(2) &&
+                    ArtificeStat.CheckArtificeMilestone(2) &&
                     __result)
                 {
-                    if (!ArtificeLogic.HitEnemyWithSawtoothCirclet)
-                        ArtificeLogic.HitEnemyWithSawtoothCirclet = true;
+                    if (!ArtificeStat.HitEnemyWithSawtoothCirclet)
+                        ArtificeStat.HitEnemyWithSawtoothCirclet = true;
                 }
             }
         }
@@ -274,11 +274,11 @@ namespace BonfireSilksong
             static void Postfix(ref bool __result)
             {
                 if (Gameplay.BrollySpikeTool.IsEquipped &&
-                    ArtificeLogic.CheckArtificeMilestone(2) &&
+                    ArtificeStat.CheckArtificeMilestone(2) &&
                     __result)
                 {
-                    if (!ArtificeLogic.HitEnemyWithSawtoothCirclet)
-                        ArtificeLogic.HitEnemyWithSawtoothCirclet = true;
+                    if (!ArtificeStat.HitEnemyWithSawtoothCirclet)
+                        ArtificeStat.HitEnemyWithSawtoothCirclet = true;
                 }
             }
         }
@@ -290,7 +290,7 @@ namespace BonfireSilksong
             {
                 if (__result)
                 {
-                    WisdomLogic.ToggleSummonsActivity();
+                    WisdomStat.ToggleSummonsActivity();
                 }
             }
         }
@@ -305,7 +305,7 @@ namespace BonfireSilksong
         {
             static bool Prefix(ToolItem tool, ref bool __result)
             {
-                if (ArtificeLogic.CanUseTool(tool))
+                if (ArtificeStat.CanUseTool(tool))
                 {
                     __result = true;
                     return false;
@@ -323,25 +323,25 @@ namespace BonfireSilksong
 
             static bool Prefix(bool isAutoThrow, out ToolItem __state)
             {
-                __state = ArtificeLogic.GetThrownToolItem();
+                __state = ArtificeStat.GetThrownToolItem();
 
                 // can't use Pale Nails when Wisdom's Silk Nails are enabled.
-                if (WisdomLogic.IsSilkNailsEnabled && __state.name == "Silk Boss Needle")
+                if (WisdomStat.IsSilkNailsEnabled && __state.name == "Silk Boss Needle")
                     return false;
 
                 // can't use Cogfly tool when Wisdom's Cogfly Warrior is enabled
-                if (WisdomLogic.IsCogflyWarriorEnabled && __state.name == "Cogwork Flier")
+                if (WisdomStat.IsCogflyWarriorEnabled && __state.name == "Cogwork Flier")
                     return false;
 
                 // if in any blue state, allow use of Plasmium Phial normally before final milestone.
                 // However, when final milestone is reached the behavior changes:
                 // - always get Plasmified instantly when using Phial, no matter how much hp you have
                 // - during Plasmified state, can't use Phial anymore
-                if (__state.name == "Lifeblood Syringe" && ResilienceLogic.IsInAnyBlueState())
+                if (__state.name == "Lifeblood Syringe" && ResilienceStat.IsInAnyBlueState())
                 {
                     if (!HeroController.instance.IsInLifebloodState)
                     {
-                        if (ResilienceLogic.CheckResilienceMilestone(3))
+                        if (ResilienceStat.CheckResilienceMilestone(3))
                             BlueHealthUpdate.CallUpdateBlueHP(9);
 
                         return true;
@@ -353,7 +353,7 @@ namespace BonfireSilksong
                 }
 
                 if (!isAutoThrow && __state != null)
-                    _extraToolThrows = ArtificeLogic.GetToolCopyCount(__state);
+                    _extraToolThrows = ArtificeStat.GetToolCopyCount(__state);
 
                 return true;
             }
@@ -364,11 +364,11 @@ namespace BonfireSilksong
 
                 if (_extraToolThrows <= 0)
                 {
-                    ArtificeLogic.CheckToolChargeRefund(__state);
+                    ArtificeStat.CheckToolChargeRefund(__state);
                     return;
                 }
 
-                ArtificeLogic.SetThrowFieldValues(__state, setWillThrowTool: true, setQueuedAutoThrow: true);
+                ArtificeStat.SetThrowFieldValues(__state, setWillThrowTool: true, setQueuedAutoThrow: true);
                 _extraToolThrows--;
             }
         }
@@ -379,8 +379,8 @@ namespace BonfireSilksong
             static void Postfix()
             {
                 // When in glass cannon state, block entering the Plasmified state without using Plasmium Phial.
-                if (ResilienceLogic.IsInAnyBlueState() &&
-                    !ResilienceLogic.CheckResilienceMilestone(3))
+                if (ResilienceStat.IsInAnyBlueState() &&
+                    !ResilienceStat.CheckResilienceMilestone(3))
                 {
                     HeroController.instance.ResetLifebloodState();
 

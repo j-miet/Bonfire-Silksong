@@ -9,7 +9,7 @@ namespace BonfireSilksong
         {
             static void Prefix(ClockworkHatchling __instance)
             {
-                WisdomLogic.UpdateCogflyCurrentHP(__instance);
+                WisdomStat.UpdateCogflyCurrentHP(__instance);
             }
         }
 
@@ -18,7 +18,7 @@ namespace BonfireSilksong
         {
             static void Postfix(ClockworkHatchling __instance)
             {
-                WisdomLogic.UpdateCogflyAttackCooldown(__instance);
+                WisdomStat.UpdateCogflyAttackCooldown(__instance);
             }
         }
     }

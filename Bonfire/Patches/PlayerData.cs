@@ -73,13 +73,13 @@ namespace BonfireSilksong
         {
             static void Prefix(ref int amount)
             {
-                amount = ResilienceLogic.PreventHPLossOnBlock(amount);
+                amount = ResilienceStat.PreventHPLossOnBlock(amount);
 
                 if (amount > 0)
                 {
-                    amount = ResilienceLogic.UpdateBlueStateDamageTaken(amount);
+                    amount = ResilienceStat.UpdateBlueStateDamageTaken(amount);
 
-                    if (IntelligenceLogic.CheckWeakBindRequirement())
+                    if (IntelligenceStat.CheckWeakBindRequirement())
                         amount += 1;
                 }
             }
@@ -91,20 +91,20 @@ namespace BonfireSilksong
             static bool Prefix(ref int __result)
             {
                 // override normal getter; Postfix will still run as intended.
-                __result = PatchHelpers.CustomSilkSkillCostGetter();
+                __result = LevelingPatch.CustomSilkSkillCostGetter();
 
                 return false;
             }
 
             static void Postfix(ref int __result)
             {
-                if (IntelligenceLogic.CheckWeakBindRequirement())
+                if (IntelligenceStat.CheckWeakBindRequirement())
                 {
                     if (__result > 0)
                         __result -= 1;
                 }
 
-                if (IntelligenceLogic.CheckIntelligenceMilestone(4))
+                if (IntelligenceStat.CheckIntelligenceMilestone(4))
                 {
                     if (__result > 0)
                         __result -= 1;

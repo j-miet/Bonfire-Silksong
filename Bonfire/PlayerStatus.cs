@@ -35,6 +35,7 @@ namespace BonfireSilksong
         // stat milestones
         public bool AutoReleaseNeedleStrike = false;
         public int WeaverAuraMode = 0;
+        public bool WeakBindEnabled = false;
         public int BlueMaskMode = 0;
         public bool SilkNailsEnabled = false;
         public bool CogflyWarriorEnabled = false;
@@ -64,8 +65,6 @@ namespace BonfireSilksong
         public bool RefillShardsAtBench = false;
         public bool ReduceFleaGamesScoreLimit = false;
         public bool EasierSprintmasterRaces = false;
-
-        public bool UnlockedAllCrests = false;
 
         // bench fast travel
         public bool UnlockedFastTravel = false;

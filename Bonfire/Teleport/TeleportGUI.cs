@@ -485,7 +485,7 @@ namespace BonfireSilksong
             Transform music = gm.AudioManager.transform?.Find("Music");
             if (music == null)
             {
-                Bonfire.Log.LogInfo("Music object not found");
+                Bonfire.Log.LogDebug("Music object not found");
                 return;
             }
 
@@ -494,7 +494,7 @@ namespace BonfireSilksong
             {
                 fsmRestArea.Fsm.Start();
                 fsmRestArea.SendEventSafe("REST AREA MUSIC STOP FAST");
-                Bonfire.Log.LogInfo("Rest area audio source stopped");
+                Bonfire.Log.LogDebug("Rest area audio source stopped");
             }
 
             PlayMakerFSM fsmFleaCaravan = music.Find("FleaCaravan")?.GetComponent<PlayMakerFSM>();
@@ -502,7 +502,7 @@ namespace BonfireSilksong
             {
                 fsmFleaCaravan.Fsm.Start();
                 fsmFleaCaravan.SendEventSafe("FLEA MUSIC STOP FAST");
-                Bonfire.Log.LogInfo("Flea caravan audio source stopped");
+                Bonfire.Log.LogDebug("Flea caravan audio source stopped");
             }
         }
 

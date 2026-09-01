@@ -9,7 +9,7 @@ namespace BonfireSilksong
         {
             static void Prefix(HeroNailImbuement __instance)
             {
-                StrengthLogic.RefreshFlintslateBuffDuration(__instance);
+                StrengthStat.RefreshFlintslateBuffDuration(__instance);
             }
         }
     }

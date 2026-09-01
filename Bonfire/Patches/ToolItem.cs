@@ -10,13 +10,7 @@ namespace BonfireSilksong
         {
             static void Postfix(ToolItem __instance, ref bool __result)
             {
-                if (__instance != null &&
-                    Gameplay.CompassTool != null &&
-                    __instance.name == Gameplay.CompassTool.name &&
-                    Bonfire.Instance.Status.AlwaysHaveCompassTool)
-                {
-                    __result = true;
-                }
+                __result = SettingsPatch.ToggleCompass(__instance);
             }
         }
     }

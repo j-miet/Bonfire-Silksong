@@ -9,7 +9,7 @@ namespace BonfireSilksong
         {
             static void Prefix()
             {
-                WisdomLogic.WispLanternSilkOnSpawn();
+                WisdomStat.WispLanternSilkOnSpawn();
             }
         }
 
@@ -19,7 +19,7 @@ namespace BonfireSilksong
         {
             static void Prefix(HeroWispLantern __instance)
             {
-                WisdomLogic.ApplyWispLanternSpeedBuff(__instance);
+                WisdomStat.ApplyWispLanternSpeedBuff(__instance);
             }
         }
 
@@ -29,7 +29,7 @@ namespace BonfireSilksong
         {
             static bool Prefix()
             {
-                if (WisdomLogic.BlockSummons)
+                if (WisdomStat.BlockSummons)
                     return false;
 
                 return true;

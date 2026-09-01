@@ -9,7 +9,7 @@ namespace BonfireSilksong
         {
             static void Postfix(NailAttackBase __instance)
             {
-                StrengthLogic.UpdateNeedleRange(__instance);
+                StrengthStat.UpdateNeedleRange(__instance);
             }
         }
     }

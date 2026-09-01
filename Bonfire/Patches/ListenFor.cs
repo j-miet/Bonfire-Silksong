@@ -15,7 +15,7 @@ namespace BonfireSilksong
             {
                 if (!CursorPatchLogic.AllowInput()) return false;
 
-                StrengthLogic.ReleaseNeedleChargeAutomatically();
+                StrengthStat.ReleaseNeedleChargeAutomatically();
 
                 return true;
             }
@@ -28,7 +28,7 @@ namespace BonfireSilksong
             {
                 if (!CursorPatchLogic.AllowInput()) return false;
 
-                StrengthLogic.ReleaseNeedleChargeAutomatically();
+                StrengthStat.ReleaseNeedleChargeAutomatically();
 
                 return true;
             }
@@ -61,7 +61,7 @@ namespace BonfireSilksong
         {
             static bool Prefix()
             {
-                if (ResilienceLogic.IsInBlueState(BlueState.GLASSCANNON))
+                if (ResilienceStat.IsInBlueState(BlueState.GLASSCANNON))
                     return false;
 
                 return true;
@@ -74,7 +74,7 @@ namespace BonfireSilksong
             static void Prefix()
             {
                 if (GameManager.instance.inputHandler.inputActions.Taunt.WasPressed)
-                    PatchHelpers.Taunted = true;
+                    LevelingPatch.Taunted = true;
             }
         }
 
@@ -84,7 +84,7 @@ namespace BonfireSilksong
             static void Prefix()
             {
                 if (GameManager.instance.inputHandler.inputActions.Taunt.WasPressed)
-                    PatchHelpers.Taunted = true;
+                    LevelingPatch.Taunted = true;
             }
         }
     }

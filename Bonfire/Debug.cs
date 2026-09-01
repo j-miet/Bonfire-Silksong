@@ -215,17 +215,17 @@ namespace BonfireSilksong
 
             foreach (var fsm in hc.GetComponents<PlayMakerFSM>())
             {
-                Bonfire.Log.LogInfo($"### {fsm.FsmName}");
+                Bonfire.Log.LogDebug($"### {fsm.FsmName}");
                 if (fsm == null) continue;
 
                 foreach (var s in fsm.FsmStates)
                 {
-                    Bonfire.Log.LogInfo($" == {s.Name} ==");
+                    Bonfire.Log.LogDebug($" == {s.Name} ==");
                     if (s == null) continue;
 
                     foreach (var a in s.Actions)
                     {
-                        Bonfire.Log.LogInfo($"  - {a.GetType().Name}");
+                        Bonfire.Log.LogDebug($"  - {a.GetType().Name}");
                     }
                 }
             }
@@ -233,9 +233,9 @@ namespace BonfireSilksong
 
         public static void GetAllScenes()
         {
-            Bonfire.Log.LogInfo("== All Scenes ==");
+            Bonfire.Log.LogDebug("== All Scenes ==");
             foreach (var s in Resources.FindObjectsOfTypeAll<GameMapScene>())
-                Bonfire.Log.LogInfo(s.Name);
+                Bonfire.Log.LogDebug(s.Name);
         }
 
         /// <summary>
@@ -253,7 +253,7 @@ namespace BonfireSilksong
 
             SceneTeleportMap.SceneInfo info;
 
-            Bonfire.Log.LogInfo("== Bench Scenes ==");
+            Bonfire.Log.LogDebug("== Bench Scenes ==");
             foreach (var pair in teleportMap)
             {
                 info = pair.Value;
@@ -272,7 +272,7 @@ namespace BonfireSilksong
                             t.StartsWith("top") ||
                             t.StartsWith("bot")))
                     {
-                        Bonfire.Log.LogInfo($"{pair.Key} | {marker}");
+                        Bonfire.Log.LogDebug($"{pair.Key} | {marker}");
                     }
                 }
             }

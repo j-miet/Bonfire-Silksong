@@ -9,7 +9,7 @@ namespace BonfireSilksong
         {
             static void Postfix(ref float __result)
             {
-                __result = IntelligenceLogic.UpdateBindCostVisual(__result);
+                __result = IntelligenceStat.UpdateBindCostVisual(__result);
             }
         }
     }
