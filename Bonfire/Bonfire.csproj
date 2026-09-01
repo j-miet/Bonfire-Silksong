@@ -49,6 +49,10 @@
       <HintPath>$(ManagedRefs)\UnityEngine.JSONSerializeModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="UnityEngine.Physics2DModule">
+      <HintPath>$(ManagedRefs)\UnityEngine.Physics2DModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="PlayMaker">
       <HintPath>$(ManagedRefs)\PlayMaker.dll</HintPath>
       <Private>false</Private>
