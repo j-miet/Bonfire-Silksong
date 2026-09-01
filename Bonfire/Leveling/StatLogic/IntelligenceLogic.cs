@@ -75,7 +75,7 @@ namespace BonfireSilksong
         /// <summary>
         /// Binding (healing) cost.
         /// In HK, soul container has range 0-99, focus costs 33 soul.
-        /// In HK:SS, silk container has range 0-9, with all upgrades reaching 0-18, binding costs 3 silk.
+        /// In HK:SS, silk container has range 0-9, with all upgrades reaching 0-18, bind costs 3 silk.
         /// In HK, range is then divided by 33, in Silksong by 9.
         /// => Silksong scaling is not as smooth, but ramps a bit harder on high intelligence.
         /// </summary>
@@ -121,8 +121,8 @@ namespace BonfireSilksong
                 {
                     // this has to use the total silk before Pale Burst wiped all of it, PlayerData.silk is already
                     // using the current amount.
-                    damage += PatchHelpers.TotalSilkCache * BurstSilkDamageMultiplier;
-                    PatchHelpers.TotalSilkCache = 0;
+                    damage += LevelingPatch.TotalSilkCache * BurstSilkDamageMultiplier;
+                    LevelingPatch.TotalSilkCache = 0;
                 }
             }
             else if (WeaverAuraRingTaunt || (isGUI && GUISilkBonus))
@@ -278,7 +278,7 @@ namespace BonfireSilksong
                 else if (WeaverAuraTaunt && silk >= 1)
                 {
                     // cost of 3 means conditions for Egg of Flealia are valid, otherwise take silk normally
-                    if (PatchHelpers.CustomSilkSkillCostGetter() != 3)
+                    if (LevelingPatch.CustomSilkSkillCostGetter() != 3)
                         hc.TakeSilk(1);
 
                     if (DealWeaverAuraDamage() && CheckWeakBindRequirement())
@@ -287,18 +287,18 @@ namespace BonfireSilksong
                     if (IsWeaverAuraEnabled && Bonfire.Instance.Status.ShowCustomRangeIndicator)
                     {
                         RangeIndicator.Display(
-                            WeaverAuraRange(Bonfire.Instance.Status.IntelligenceStat, isGUI: true),
+                            WeaverAuraRange(Bonfire.Instance.Status.IntelligenceStat),
                             null,
                             null);
                     }
 
                     _weaverAuraCooldown = 1f;
 
-                    Bonfire.Log.LogInfo("[IntelligenceLogic] Weaver Aura: Taunted");
+                    Bonfire.Log.LogDebug("[IntelligenceLogic] Weaver Aura: Taunted");
                 }
                 else if (WeaverAuraRingTaunt && silk >= 2)
                 {
-                    if (PatchHelpers.CustomSilkSkillCostGetter() != 3)
+                    if (LevelingPatch.CustomSilkSkillCostGetter() != 3)
                         hc.TakeSilk(2);
                     else
                         hc.TakeSilk(1);
@@ -309,14 +309,14 @@ namespace BonfireSilksong
                     if (IsWeaverAuraEnabled && Bonfire.Instance.Status.ShowCustomRangeIndicator)
                     {
                         RangeIndicator.Display(
-                            WeaverAuraRange(Bonfire.Instance.Status.IntelligenceStat, isGUI: true),
+                            WeaverAuraRange(Bonfire.Instance.Status.IntelligenceStat),
                             null,
                             null);
                     }
 
                     _weaverAuraCooldown = 1f;
 
-                    Bonfire.Log.LogInfo("[IntelligenceLogic] Weaver Aura: RingTaunted");
+                    Bonfire.Log.LogDebug("[IntelligenceLogic] Weaver Aura: RingTaunted");
                 }
                 else
                 {
@@ -484,7 +484,7 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// SilkSpool.BindCost (Postfix): Update silk spool with modified binding cost. To change the internal cost
+        /// SilkSpool.BindCost (Postfix): Update silk spool with modified bind cost. To change the internal cost
         /// value, be sure to also use UpdateBindCostFSM.
         /// </summary>
         public static float UpdateBindCostVisual(float result)
@@ -543,19 +543,19 @@ namespace BonfireSilksong
             if (Bonfire.Instance.Status.ShowCustomRangeIndicator)
             {
                 RangeIndicator.Display(
-                    WeaverAuraRange(Bonfire.Instance.Status.IntelligenceStat, isGUI: true),
+                    WeaverAuraRange(Bonfire.Instance.Status.IntelligenceStat),
                     null,
                     new Color(0.2f, 0.2f, 0.4f));
             }
 
             SpawnPrefab.SpawnHero(HeroController.instance.takeHitDoubleBlackThreadEffectPrefab);
-            HeroController.instance.GetComponent<SpriteFlash>().flashDreamImpact();
+            HeroController.instance.GetComponent<SpriteFlash>().FlashShadowRecharge();
 
             _weaverAuraCooldown = 0;
             WeaverAuraTaunt = false;
             WeaverAuraRingTaunt = false;
 
-            Bonfire.Log.LogInfo("[IntelligenceLogic] Pale Burst used");
+            Bonfire.Log.LogDebug("[IntelligenceLogic] Pale Burst used");
 
             return true;
         }

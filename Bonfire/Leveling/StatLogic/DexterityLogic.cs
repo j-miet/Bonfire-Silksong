@@ -100,18 +100,15 @@ namespace BonfireSilksong
             {
                 if (CheckDexterityMilestone(3))
                 {
-                    updatedDamage *= 3;
+                    SilkSpearSpawner.CastSilkSpear();
 
                     HeroController.instance.AddHealth(1);
 
-                    Bonfire.Log.LogDebug($"Clawline {ClawlineHitLimit}. hit: healed 1 mask and applied 3x multiplier");
+                    Bonfire.Log.LogDebug($"Clawline {ClawlineHitLimit}. hit: healed 1 mask and cast Silk Spear");
                 }
-                else
-                {
-                    updatedDamage *= 2;
 
-                    Bonfire.Log.LogDebug($"Clawline {ClawlineHitLimit}. hit: applied x2 multiplier");
-                }
+                updatedDamage *= 2;
+                Bonfire.Log.LogDebug($"Clawline {ClawlineHitLimit}. hit: applied x2 multiplier");
 
                 _clawlineHitCounter = 0;
             }
@@ -139,32 +136,6 @@ namespace BonfireSilksong
 
                 HeroController.instance.AddHealth(1);
             }
-
-            // -- original idea was to heal 2 masks from clawline and needle strike, 1 from the rest.
-            // This can stay here for now, in case crit healing needs to be adjusted for specific damage sources.
-            /*
-            string s = source.ToLower();
-
-            Bonfire.Log.LogDebug("[DexterityLogic] Crit heal");
-
-            if (CheckDexterityMilestone_3 && wasCrit)
-            {
-                if (s == "default")
-                {
-                    HeroController.instance.AddHealth(1);
-                    Bonfire.Log.LogDebug("Heal type: default");
-                }
-                else if (s == "clawline" || (isNeedle && !s.Contains("slash")))
-                {
-                    HeroController.instance.AddHealth(2);
-                    Bonfire.Log.LogDebug($"Heal type: {s}");
-                }
-                else
-                {
-                    Bonfire.Log.LogDebug("No healing");
-                }
-            }
-            */
         }
 
         /// <summary>
@@ -177,7 +148,7 @@ namespace BonfireSilksong
 
             if (Bonfire.Instance.Status.DexterityStat < 1) return;
 
-            float attackSpeed = AttackSpeed(Bonfire.Instance.Status.DexterityStat);
+            float attackSpeed = 0.5f;//AttackSpeed(Bonfire.Instance.Status.DexterityStat);
 
             _attackCooldownField?.SetValue(
                 instance,
@@ -194,7 +165,7 @@ namespace BonfireSilksong
 
             if (Bonfire.Instance.Status.DexterityStat < 1) return;
 
-            float attackSpeed = AttackSpeed(Bonfire.Instance.Status.DexterityStat);
+            float attackSpeed = 1f;//AttackSpeed(Bonfire.Instance.Status.DexterityStat);
 
             _attackDurationField?.SetValue(
                 instance,

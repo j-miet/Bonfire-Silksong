@@ -44,7 +44,7 @@ namespace BonfireSilksong
             Bonfire.Log.LogDebug($"[StrengthLogic] Apply needle damage bonuses:");
             int updated = damage;
 
-            if (CheckStrengthMilestone(3) && sourceName == "DownSlash")
+            if (CheckStrengthMilestone(3) && sourceName.ToLower().Contains("downslash"))
             {
                 updated *= 2; // 100% extra damage on pogos
 

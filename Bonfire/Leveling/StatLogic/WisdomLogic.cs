@@ -214,7 +214,7 @@ namespace BonfireSilksong
             {
                 if (SpawnSilkNails())
                 {
-                    Bonfire.Log.LogInfo("[WisdomLogic] Checking Silk Nails cooldown.");
+                    Bonfire.Log.LogDebug("[WisdomLogic] Checking Silk Nails cooldown.");
 
                     float silkNailsCD = SilkNailsSpawnCooldown(Bonfire.Instance.Status.WisdomStat);
                     if (silkNailsCD <= 0)
@@ -224,7 +224,7 @@ namespace BonfireSilksong
                     }
 
                     _silkNailCooldown = silkNailsCD;
-                    Bonfire.Log.LogInfo("Spawned Silk Nails");
+                    Bonfire.Log.LogDebug("Spawned Silk Nails");
 
                     return;
                 }

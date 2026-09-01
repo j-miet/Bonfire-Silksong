@@ -67,7 +67,7 @@ namespace BonfireSilksong
         private const float LevelingAreaButtonHeight = 40;
         private const float ApplyCancelButtonsWidth = LevelingAreaDefaultRectWidth / 2 - 15;
 
-        private const float InfoAreaRectTopX = 600f;
+        private const float InfoAreaRectTopX = 650f;
         private const float InfoAreaRectTopY = 130f;
         private const float InfoAreaRectWidth = 1200f;
         private const float InfoAreaRectHeight = 885f;
@@ -190,7 +190,7 @@ namespace BonfireSilksong
             GUILayout.BeginVertical("box");
             DrawStatLabel("");   // spacer to align with column 1, because Str doesn't have a second modifier
             DrawStatLabel("Crit Damage Bonus: " + _critDamageBonus);
-            DrawStatLabel("Binding Cost: " + _bindCost);
+            DrawStatLabel("Bind Cost: " + _bindCost);
             DrawStatLabel("Tool Regen Interval: " + _toolRegenInterval);
             DrawStatLabel("Block Chance: " + _blockChance);
             DrawStatLabel("Silk Regen Interval: " + _silkRegenInterval);
@@ -460,10 +460,9 @@ namespace BonfireSilksong
             DrawInfoStatLabel("Needle Damage: " + _needleBaseDamage);
             GUILayout.EndVertical();
 
-            // secondary (filler, add still to keep GUI aligned)
-            GUILayout.BeginVertical("box", GUILayout.Height(StrengthBoxHeight));
-            DrawInfoStatLabel("");
-            GUILayout.EndVertical();
+            // GUILayout.BeginVertical("box", GUILayout.Height(StrengthBoxHeight));
+            // DrawInfoStatLabel("");
+            // GUILayout.EndVertical();
 
             GUILayout.EndHorizontal();
 
@@ -539,10 +538,9 @@ namespace BonfireSilksong
             DrawInfoStatLabel("Crit Damage Bonus: " + _critDamageBonus);
             GUILayout.EndVertical();
 
-            // secondary (filler)
-            GUILayout.BeginVertical("box", GUILayout.Height(DexterityBoxHeight));
-            DrawInfoStatLabel("");
-            GUILayout.EndVertical();
+            // GUILayout.BeginVertical("box", GUILayout.Height(DexterityBoxHeight));
+            // DrawInfoStatLabel("");
+            // GUILayout.EndVertical();
 
             GUILayout.EndHorizontal();
 
@@ -570,12 +568,14 @@ namespace BonfireSilksong
 
             GUILayout.Label(
                 $"[{DexterityLogic.DexterityMilestone(3)}] " +
-                "All critical hits now heal 1 mask. Clawline's 7th hit will always heal 1 mask " +
-                "and deals 3x damage. Clawline damage bonus increased (25% -> 50%).",
+                "All critical hits now heal 1 mask\n" +
+                "Clawline:\n" +
+                " - damage bonus increased (25% -> 50%).\n" +
+                " - Clawline's 7th hit will always heal 1 mask and casts 'Silk Spear' silk skill without costing " +
+                "silk. Skill scales normally from silk skill damage bonuses.",
                 LevelingSystem.HighLightStatMilestone(s, 3)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
-
 
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
@@ -596,7 +596,7 @@ namespace BonfireSilksong
             GUILayout.BeginVertical("box", GUILayout.Height(IntelligenceBoxHeight));
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
             DrawInfoStatLabel("Silk Skill Damage Bonus: " + _spellDamageBonus);
-            DrawInfoStatLabel("Binding Cost: " + _bindCost);
+            DrawInfoStatLabel("Bind Cost: " + _bindCost);
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical("box", GUILayout.Height(IntelligenceBoxHeight));
@@ -638,11 +638,13 @@ namespace BonfireSilksong
                 "Toggle on/off 'Weaver's Light'.\n" +
                 "\n" +
                 "<Weaver's Light>\n" +
-                "- While active, taunt now enables an aura around you which flashes every second, consuming 1 silk " +
+                "- Taunt now enables an aura around you which flashes every second, consuming 1 silk " +
                 "dealing damage to enemies inside it. Damage and range increases with Intelligence stat.\n" +
                 "- If you use Throwing Rings: aura will instead cost 2 silk per second and has its range " +
-                "reduced by 50%, but you get +3 extra damage for each silk in spool.\n" +
-                "- Taunt no longer grants the 50% damage bonus for next hit\n" +
+                "reduced by 50%, but you get +3 extra damage from each silk in spool.\n" +
+                "- Taunt no longer grants the 50% damage bonus for next hit, however its initial cost is also" +
+                "also removed. Taunting again also disables active aura effect, meaning you can use it tactically " +
+                "without needing to wait until all your silk is depleted.\n" +
                 "- Equipping Egg of Flealia reduces aura silk cost by 1 when on max hp.",
                 LevelingSystem.HighLightStatMilestone(s, 1)
                     ? GUIStyles.LvlInfoLabelStyle
@@ -651,14 +653,13 @@ namespace BonfireSilksong
             GUILayout.Label(
                 $"[{IntelligenceLogic.IntelligenceMilestone(2)}] " +
                 "While equipping Dead Bug's Purse/Shell Satchel yellow tool, you get 'Weak Bind'. " +
-                "While Weak Bind is active" +
-                "- Bind heals 1 mask and costs 1/3 of current cost while keeping its base speed,\n" +
-                "- You take + 1 damage from everything,\n" +
-                "but you the following bonuses:\n" +
-                "- Silk Skills: cost reduced by 1, damage increased by 50% multiplicatively.\n" +
-                "- Claw Mirror: procs additional time (similar to Multibinder effect), " +
-                "binding speed increased by 33%.\n" +
-                "- Weaver's Light: gives 1 silk if at least one enemy was hit.",
+                "While Weak Bind is active:\n" +
+                "- Bind heals 1 mask and costs 1/3 of current cost, but keeps its current speed,\n" +
+                "- You take + 1 damage from everything, but you the following bonuses:\n" +
+                "  - Silk Skills: cost reduced by 1, damage increased by 50% multiplicatively.\n" +
+                "  - Claw Mirror: procs additional time (similar to Multibinder effect), binding speed increased " +
+                "by 33%.\n" +
+                "  - Weaver's Light: gives 1 silk if at least one enemy got hit by it.",
                 LevelingSystem.HighLightStatMilestone(s, 2)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
@@ -672,7 +673,7 @@ namespace BonfireSilksong
 
             GUILayout.Label(
                 $"[{IntelligenceLogic.IntelligenceMilestone(4)}] " +
-                "All Intelligence-related abilities are buffed:\n" +
+                "Give more effects to all Intelligence-focused abilities:\n" +
                 "- Silk skills: silk cost reduced by 1.\n" +
                 "- Claw Mirror: every 2 points in Intelligence adds +1 damage. Damage is applied after Artifice stat " +
                 "scaling.\n" +
@@ -680,8 +681,7 @@ namespace BonfireSilksong
                 "ability, consuming all silk when used while giving following benefits: \n" +
                 "  - Range increased by 5.\n" +
                 "  - Each silk in spool increases damage by +6.\n" +
-                "\n" +
-                "Taunting with Throwing Rings has no additional effects.",
+                "Taunting with Throwing Rings has no additional effects when Void Burst is enabled.",
                 LevelingSystem.HighLightStatMilestone(s, 4)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
@@ -705,13 +705,14 @@ namespace BonfireSilksong
             GUILayout.BeginVertical("box", GUILayout.Height(ArtificeBoxHeight));
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
             DrawInfoStatLabel("Tool Damage Bonus: " + _toolDamageBonus);
-            DrawInfoStatLabel("Tool Regen Interval: " + _toolRegenInterval);
+            DrawInfoStatLabel(
+                $"Tool Regen Interval: " +
+                $"{(_toolRegenInterval == "-" ? "- (requires 5 stat points)" : _toolRegenInterval)}");
             GUILayout.EndVertical();
 
-            // secondary (filler)
-            GUILayout.BeginVertical("box", GUILayout.Height(ArtificeBoxHeight));
-            DrawInfoStatLabel("");
-            GUILayout.EndVertical();
+            // GUILayout.BeginVertical("box", GUILayout.Height(ArtificeBoxHeight));
+            // DrawInfoStatLabel("");
+            // GUILayout.EndVertical();
 
             GUILayout.EndHorizontal();
 
@@ -734,7 +735,7 @@ namespace BonfireSilksong
                 "Rosary Cannon: has infinite, free refills. Every time you start the use animation, it becomes " +
                 "fully loaded loaded.\n" +
                 "Silkshot: silk cost removed, can apply critical hits.\n" +
-                "Sawtooth Circlet: gives 1 silk from first enemy hit.\n",
+                "Sawtooth Circlet: gives 1 silk from first enemy hit.",
                 LevelingSystem.HighLightStatMilestone(s, 2)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
@@ -744,8 +745,8 @@ namespace BonfireSilksong
                 "Rosary Cannon: +2 flat damage which is applied before Artifice stat damage bonus.\n" +
                 "Silkshot: has infinite charges.\n" +
                 "Sawtooth Circlet: horizontal range increased by 50%.\n" +
-                "Pimpillo: casts 'Rune Rage' silk skill on top of enemy on hit. Skill scales normally from any silk " +
-                "skill buffs.",
+                "Pimpillo: casts 'Rune Rage' silk skill on top of enemy on hit without costing silk. Skill scales " +
+                "normally from any silk skill damage buffs.",
                 LevelingSystem.HighLightStatMilestone(s, 3)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
@@ -832,30 +833,31 @@ namespace BonfireSilksong
                 "- You can enter Plasmified state (normally triggered with 9 blue masks) only after unlocking the " +
                 "final Resilience milestone.\n" +
                 "- Egg of Flealia gives silk cost reduction only at max blue hp.\n" +
-                "=> Both playstyles are quite risky to play early, but Vengeful will lean more towards the tanky, " +
-                "low-risk playstyle whereas with Hollow you want to minimize hits taken at all cost.\n" +
+                "=> Both playstyles are quite risky to play early, but Vengeful will lean more towards the tanky/" +
+                "low-risk, but one-dimensional playstyle whereas with Hollow you want to minimize hits taken at all " +
+                "cost to keep huge damage bonus benefits.\n" +
                 "\n" +
                 "<Vengeful>\n " +
-                "- Reflect damage back to enemies around you when it. All your non-reflect damage is reduced by 99%, " +
-                "but always dealing at least 1 damage. Only exception to this rule is the 'Memory Crystal' blue " +
-                "tool.\n" +
-                "- Base damage is 5. Damage scales from 1. Resilience stat extra blue masks count (max 8) and " +
-                "2. mask upgrades (max 5).\n" +
-                "- Bind now heals 1 blue mask.\n" +
+                "- Reflect damage back to enemies around you when you take damage. All your non-reflect damage is " +
+                "reduced by 99%, but deals always at least 1 damage. Only exception to this rule is the 'Memory " +
+                "Crystal' blue tool which deals its full damage.\n" +
+                "- Reflect base damage is 5. Damage scales from 1. Resilience stat extra blue masks count (max 8) " +
+                "and 2. mask upgrades (max 5).\n" +
+                "- Bind no longer heals normal masks, but instead 1 blue mask.\n" +
                 "- You get 1 silk after getting hit by an enemy.\n" +
-                "=> Low-risk playstyle: you can become quite tanky, but also limit offensive capabilities to running " +
-                "at enemies.\n" +
+                "=> Low-risk playstyle: you can become very tanky, but are also limited to one-dimensional " +
+                "offensive gameplay of ramming your body at enemies.\n" +
                 "\n" +
                 "<Hollow>\n" +
-                "- Bind can no longer be used.\n" +
+                "- Bind can no longer be used at all.\n" +
                 "- You can no longer benefit from stat primary damage bonuses " +
-                "(Strength, Dexterity, Intelligence, Artifice) or Luck crit chance. " +
-                "Bonuses from milestones work normally.\n" +
+                "(Strength, Dexterity, Intelligence, Artifice) or Luck crit chance, except during Plasmified state " +
+                "having unlocked final milestone. Bonuses from milestones work normally.\n" +
                 "- Damage from all sources is increased by 50%. Each active blue mask in hp bar gives 7% extra damage" +
-                "additively, masks upgrades 8% instead.\n" +
-                "All non-Resilience stat milestones require 3 less points to become active. You must still have at " +
-                "least 1 point in stat to activate any milestones.\n" +
-                "=> High-risk playstyle as healing is pretty much non-existent, but gives an universal damage boost " +
+                "additively while mask upgrades give 8% instead.\n" +
+                "- All non-Resilience stat milestones require 3 less points to become active. You must still have at " +
+                "least 1 point in a stat to activate any of its milestones.\n" +
+                "=> High-risk playstyle as healing is pretty much non-existent, but gives a universal damage boost " +
                 "and allows reaching non-Resilience milestones with fewer stat points.",
                 LevelingSystem.HighLightStatMilestone(s, 1)
                     ? GUIStyles.LvlInfoLabelStyle
@@ -863,8 +865,9 @@ namespace BonfireSilksong
 
             GUILayout.Label(
                 $"[{ResilienceLogic.ResilienceMilestone(2)}] " +
+                "Additional buffs to blue health modes:\n" +
                 "<Vengeful> Bind now heals 2 blue masks, reflect damage area increased by 1.\n" +
-                "<Hollow> You get flat +10 damage bonus which is applied after percentage bonuses. Milestone bonus " +
+                "<Hollow> You get flat +10 damage bonus which is applied after mask bonuses. Milestone bonus " +
                 "increased to 5.",
                 LevelingSystem.HighLightStatMilestone(s, 2)
                     ? GUIStyles.LvlInfoLabelStyle
@@ -873,24 +876,24 @@ namespace BonfireSilksong
             GUILayout.Label(
                 $"[{ResilienceLogic.ResilienceMilestone(3)}] " +
                 "While in Vengful/Hollow state, you can now enter Plasmified state and Plasmium Phial will instantly " +
-                "trigger Plasmified when used. While Plasmified, your use of Plasmium Phial is blocked but you get " +
-                "a more offensive variant of current state:\n" +
+                "trigger Plasmified when used. While Plasmified, your use of Plasmium Phial is again blocked but " +
+                "you get a more offensive variant of current state:\n" +
                 "\n" +
                 "<Vengeful>\n" +
                 "- Each active blue mask in hp bar now also gives additional +10 reflect damage.\n" +
                 "- Reflect damage can crit.\n" +
                 "- Reflect area increased by 2.\n" +
                 "- Penalty: you take normal amount of damage again and bind heals only the default amount of 1 during" +
-                "during Plasmification.\n" +
+                "Plasmification.\n" +
                 "\n" +
                 "<Hollow>\n" +
                 "- Active blue mask bonus increased (7% -> 20%).\n" +
                 "- Crit change and crit damage can now be applied normally\n." +
                 "- Milestone bonus increased to 10.\n" +
-                "- Penalty: you take normal amount of damage + additional 2 masks (so 1 damage becomes 3 damage).\n" +
+                "- Penalty: you take normal amount of damage + additional 2 masks (1 -> 3, 2 -> 4 and so on).\n" +
                 "\n" +
-                "Your max hp in Plasmified state is equal to your normal mask count and each mask is treated as a " +
-                "blue mask, giving you damage buffs",
+                "Your max hp in Plasmified state is equal to your normal mask count and each mask is counted as a " +
+                "blue mask while in Vengeful/Hollow state.",
                 LevelingSystem.HighLightStatMilestone(s, 3)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
@@ -914,7 +917,9 @@ namespace BonfireSilksong
             GUILayout.BeginVertical("box", GUILayout.Height(WisdomBoxHeight));
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
             DrawInfoStatLabel("Silk Gained On Enemy Hit: " + _extraSilk);
-            DrawInfoStatLabel("Silk Regen Interval: " + _silkRegenInterval);
+            DrawInfoStatLabel(
+                $"Silk Regen Interval: " +
+                $"{(_silkRegenInterval == "-" ? "- (requires 5 stat points)" : _silkRegenInterval)}");
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical("box", GUILayout.Height(WisdomBoxHeight));
@@ -1066,14 +1071,12 @@ namespace BonfireSilksong
             DrawInfoStatLabel("Rosary & Shard Increase: " + _rosaryIncrease);
             GUILayout.EndVertical();
 
-            // secondary (filler)
             // GUILayout.BeginVertical(GUILayout.Height(LuckBoxHeight));
             // DrawInfoStatLabel("");
             // GUILayout.EndVertical();
 
             GUILayout.EndHorizontal();
 
-            // milestones (if needed later)
             // GUILayout.BeginHorizontal("box");
             // GUILayout.BeginVertical();
             // GUILayout.Label("", GUIStyles.LvlInfoHeaderMilestoneStyle);
