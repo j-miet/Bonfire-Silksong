@@ -6,7 +6,7 @@ using UnityEngine;
 namespace BonfireSilksong
 {
     // not a static class because MonoBehavior is required, but should otherwise include static entities only.
-    public class LuckLogic : MonoBehaviour
+    public class LuckStat : MonoBehaviour
     {
         public static bool Crit = false;
 
@@ -37,7 +37,7 @@ namespace BonfireSilksong
 
             int critChance = 0;
 
-            if (ResilienceLogic.IsInBlueStateAndPlasmified(BlueState.GLASSCANNON))
+            if (ResilienceStat.IsInBlueStateAndPlasmified(BlueState.GLASSCANNON))
                 critChance += 10;
 
             critChance += (int)Math.Round(60.0 / (1.0 + 15.0 * Math.Exp(-0.08 * totalLck)));
@@ -111,7 +111,7 @@ namespace BonfireSilksong
 
             if (!hit.IsHeroDamage) return;
 
-            if (ResilienceLogic.GlassCannonButNotPlasmified)
+            if (ResilienceStat.GlassCannonButNotPlasmified)
             {
                 Crit = false;
                 return;

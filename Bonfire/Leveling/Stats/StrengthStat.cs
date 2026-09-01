@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace BonfireSilksong
 {
-    public static class StrengthLogic
+    public static class StrengthStat
     {
         public static int StrengthMilestone(int m)
         {

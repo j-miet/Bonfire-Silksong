@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace BonfireSilksong
 {
-    public static class WisdomLogic
+    public static class WisdomStat
     {
         public static bool BlockSummons { get; private set; } = false;
         public static bool CanBlockSummons => CheckWisdomMilestone(1) && PlayerData.instance.hasNeedolin;

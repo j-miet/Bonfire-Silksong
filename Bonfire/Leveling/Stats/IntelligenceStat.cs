@@ -13,7 +13,7 @@ namespace BonfireSilksong
         BURST
     }
 
-    public static class IntelligenceLogic
+    public static class IntelligenceStat
     {
         public const int WeaverAuraBaseDamage = 5;
         public const float WeaverAuraBaseRange = 5f; // actual aura range, used in visuals + hit detection
@@ -170,7 +170,7 @@ namespace BonfireSilksong
 
             int updatedDamage = baseDamage;
 
-            if (!ResilienceLogic.IsInBlueState(BlueState.GLASSCANNON))
+            if (!ResilienceStat.IsInBlueState(BlueState.GLASSCANNON))
                 updatedDamage = SpellDamage(baseDamage, Bonfire.Instance.Status.IntelligenceStat);
 
             if (CheckWeakBindRequirement())
@@ -334,9 +334,7 @@ namespace BonfireSilksong
         /// </summary>
         public static bool CheckWeakBindRequirement()
         {
-            // current condition: equip Dead Bug's Purse or Shell Satchel if in Steel Soul mode.
-            if ((Gameplay.DeadPurseTool.IsEquipped || Gameplay.ShellSatchelTool.IsEquipped) &&
-                CheckIntelligenceMilestone(2))
+            if (CheckIntelligenceMilestone(2) && Bonfire.Instance.Status.WeakBindEnabled)
             {
                 return true;
             }

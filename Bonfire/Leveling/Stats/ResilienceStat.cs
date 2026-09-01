@@ -13,7 +13,7 @@ namespace BonfireSilksong
         GLASSCANNON,
     }
 
-    public static class ResilienceLogic
+    public static class ResilienceStat
     {
         public const int ReflectBaseDamage = 5;
 

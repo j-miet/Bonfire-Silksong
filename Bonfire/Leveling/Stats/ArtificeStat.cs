@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace BonfireSilksong
 {
-    public static class ArtificeLogic
+    public static class ArtificeStat
     {
         public static bool HitEnemyWithSawtoothCirclet = false;
 
@@ -62,7 +62,7 @@ namespace BonfireSilksong
 
             int updatedDamage = baseDamage;
 
-            if (!ResilienceLogic.IsInBlueState(BlueState.GLASSCANNON))
+            if (!ResilienceStat.IsInBlueState(BlueState.GLASSCANNON))
                 updatedDamage = ToolDamage(baseDamage, Bonfire.Instance.Status.ArtificeStat);
 
             Bonfire.Log.LogDebug($"<Modded> Tool: {tool}. Damage: {updatedDamage}");

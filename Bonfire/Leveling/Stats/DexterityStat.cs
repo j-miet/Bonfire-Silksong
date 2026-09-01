@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace BonfireSilksong
 {
-    public static class DexterityLogic
+    public static class DexterityStat
     {
         public const int ClawlineHitLimit = 7;
 
@@ -52,7 +52,7 @@ namespace BonfireSilksong
         {
             int updatedDamage = baseDamage;
 
-            if (ResilienceLogic.GlassCannonButNotPlasmified)
+            if (ResilienceStat.GlassCannonButNotPlasmified)
             {
                 return updatedDamage;
             }
@@ -128,9 +128,9 @@ namespace BonfireSilksong
                 Bonfire.Log.LogDebug("[DexterityLogic] Crit heal");
 
                 // heal blue hp instead if in a blue state
-                if (ResilienceLogic.IsInAnyBlueState() && !HeroController.instance.IsInLifebloodState)
+                if (ResilienceStat.IsInAnyBlueState() && !HeroController.instance.IsInLifebloodState)
                 {
-                    Bonfire.Instance.StartCoroutine(ResilienceLogic.BlueStateHealBlueMasks(1));
+                    Bonfire.Instance.StartCoroutine(ResilienceStat.BlueStateHealBlueMasks(1));
                     return;
                 }
 
