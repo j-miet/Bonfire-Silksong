@@ -7,9 +7,10 @@ using HarmonyLib;
 namespace BonfireSilksong
 {
     /// <summary>
-    /// General patch logic helpers e.g. those not tied to any specific stat implementation.
+    /// General leveling system logic which needs to be injected into game code e.g. those not tied to any specific 
+    /// stat implementation.
     /// </summary>
-    public static class PatchHelpers
+    public static class LevelingPatch
     {
         public static bool Taunted = false;
         public static int TotalSilkCache = 0;
@@ -23,11 +24,11 @@ namespace BonfireSilksong
             "nailDamage");
 
         public static readonly MethodInfo CustomNailDamageGetterDamageEnemies = AccessTools.Method(
-            typeof(PatchHelpers),
+            typeof(LevelingPatch),
             nameof(CustomNeedleDamageGetter),
             new[] { typeof(DamageEnemies) });
         public static readonly MethodInfo CustomNailDamageGetterHitInstance = AccessTools.Method(
-            typeof(PatchHelpers),
+            typeof(LevelingPatch),
             nameof(CustomNeedleDamageGetter),
             new[] { typeof(HitInstance) });
 
@@ -46,8 +47,8 @@ namespace BonfireSilksong
                 return damage;
             }
 
-            if (!ResilienceLogic.IsInBlueState(BlueState.GLASSCANNON))
-                damage = StrengthLogic.UpdateNeedleBaseDamage(damage);
+            if (!ResilienceStat.IsInBlueState(BlueState.GLASSCANNON))
+                damage = StrengthStat.UpdateNeedleBaseDamage(damage);
 
             Bonfire.Log.LogDebug($"[PatchHelpers] getter (DamageEnemies) updated needle damage={damage}");
 
@@ -66,7 +67,7 @@ namespace BonfireSilksong
                 return damage;
             }
 
-            damage = StrengthLogic.UpdateNeedleBaseDamage(damage);
+            damage = StrengthStat.UpdateNeedleBaseDamage(damage);
 
             Bonfire.Log.LogDebug($"[PatchHelpers] getter (HitInstance) updated needle damage={damage}");
 
@@ -82,14 +83,14 @@ namespace BonfireSilksong
             if (Gameplay.FleaCharmTool.IsEquippedHud)
             {
                 var pd = PlayerData.instance;
-                int maxBlueHp = ResilienceLogic.BlueMasks(Bonfire.Instance.Status.ResilienceStat);
+                int maxBlueHp = ResilienceStat.BlueMasks(Bonfire.Instance.Status.ResilienceStat);
 
                 // during plasmification, game uses normal masks to track hp
                 // in any blue state, but not plasmified -> use blue masks instead
                 // otherwise use the default normal mask tracking
-                if ((ResilienceLogic.IsInAnyBlueStateAndPlasmified() && pd.health == pd.CurrentMaxHealth) ||
-                    (ResilienceLogic.IsInAnyBlueState() && pd.healthBlue == maxBlueHp) ||
-                    (!ResilienceLogic.IsInAnyBlueState() && pd.health == pd.CurrentMaxHealth))
+                if ((ResilienceStat.IsInAnyBlueStateAndPlasmified() && pd.health == pd.CurrentMaxHealth) ||
+                    (ResilienceStat.IsInAnyBlueState() && pd.healthBlue == maxBlueHp) ||
+                    (!ResilienceStat.IsInAnyBlueState() && pd.health == pd.CurrentMaxHealth))
                 {
                     return 3;
                 }
@@ -112,9 +113,9 @@ namespace BonfireSilksong
 
             if (Taunted && cost == 1)
             {
-                if (IntelligenceLogic.AuraOrBurstEnabled)
+                if (IntelligenceStat.AuraOrBurstEnabled)
                 {
-                    Bonfire.Log.LogInfo("[PatchHelpers] Refunded Taunt Cost for Aura/Burst");
+                    Bonfire.Log.LogDebug("[PatchHelpers] Refunded Taunt Cost for Aura/Burst");
                     refunded = true;
                 }
             }
@@ -136,14 +137,14 @@ namespace BonfireSilksong
             string sourceName = hitInstance.Source.name;
             var tool = hitInstance.RepresentingTool;
 
-            Bonfire.Log.LogInfo("[PatchHelpers] Recorded a hit => Hit source: " + sourceName);
-            Bonfire.Log.LogInfo("- Damage Dealt: " + hitInstance.DamageDealt);
-            Bonfire.Log.LogInfo("- Tool instance: " + tool?.name ?? "null");
+            Bonfire.Log.LogDebug("[PatchHelpers] Recorded a hit => Hit source: " + sourceName);
+            Bonfire.Log.LogDebug("- Damage Dealt: " + hitInstance.DamageDealt);
+            Bonfire.Log.LogDebug("- Tool instance: " + tool?.name ?? "null");
 
             int vanillaDamage = hitInstance.DamageDealt;
 
-            LuckLogic.CheckIfCrit(hitInstance);
-            bool isCrit = LuckLogic.Crit;
+            LuckStat.CheckIfCrit(hitInstance);
+            bool isCrit = LuckStat.Crit;
 
             // == Important ==
             // 1. Multiplicative damage scaling: just use hitInstance.DamageDealt and scale it.
@@ -159,11 +160,11 @@ namespace BonfireSilksong
             {
                 int spellDamage = hitInstance.DamageDealt;
 
-                if (WisdomLogic.IsSilkNailsEnabled && tool.name == "Silk Boss Needle")
+                if (WisdomStat.IsSilkNailsEnabled && tool.name == "Silk Boss Needle")
                 {
                     // Silk Nails: summon a weaker version of Pale Nails automatically when an enemy is nearby.
                     // This also disables use of Pale Nails so it's important to separate damage buff checks.
-                    spellDamage = WisdomLogic.SilkNailsDamage(Bonfire.Instance.Status.WisdomStat);
+                    spellDamage = WisdomStat.SilkNailsDamage(Bonfire.Instance.Status.WisdomStat);
                 }
                 else
                 {
@@ -174,11 +175,11 @@ namespace BonfireSilksong
                     // is necessary for extra scaling. As scaling requires adjusting base needle damage, it's already
                     // done earlier in patched Playerdata.nailDamage.
 
-                    spellDamage = IntelligenceLogic.ApplySpellDamageBonuses(spellDamage, tool);
+                    spellDamage = IntelligenceStat.ApplySpellDamageBonuses(spellDamage, tool);
 
-                    if (IntelligenceLogic.CheckIntelligenceMilestone(3) && isCrit)
+                    if (IntelligenceStat.CheckIntelligenceMilestone(3) && isCrit)
                     {
-                        spellDamage = DexterityLogic.ApplyCritDamage(spellDamage);
+                        spellDamage = DexterityStat.ApplyCritDamage(spellDamage);
                     }
                 }
 
@@ -190,58 +191,58 @@ namespace BonfireSilksong
             {
                 int toolDamage = hitInstance.DamageDealt;
 
-                if (WisdomLogic.IsCogflyWarriorEnabled && tool.name == "Cogwork Flier")
+                if (WisdomStat.IsCogflyWarriorEnabled && tool.name == "Cogwork Flier")
                 {
                     // Cogfly Warrior: cogfly which has Wisdom scaling and thus uses neither the original tool's damage
                     // nor tool bonuses.
-                    toolDamage = WisdomLogic.CogflyWarriorDamage(Bonfire.Instance.Status.WisdomStat);
+                    toolDamage = WisdomStat.CogflyWarriorDamage(Bonfire.Instance.Status.WisdomStat);
                 }
                 else
                 {
                     // -- red and blue tools --
 
-                    if (tool.name == "Rosary Cannon" && ArtificeLogic.CheckArtificeMilestone(3))
+                    if (tool.name == "Rosary Cannon" && ArtificeStat.CheckArtificeMilestone(3))
                     {
                         toolDamage += 2;
                     }
 
-                    toolDamage = ArtificeLogic.ApplyToolDamageBonuses(toolDamage, tool);
+                    toolDamage = ArtificeStat.ApplyToolDamageBonuses(toolDamage, tool);
 
-                    if (IntelligenceLogic.CheckIntelligenceMilestone(3))
+                    if (IntelligenceStat.CheckIntelligenceMilestone(3))
                     {
-                        toolDamage = IntelligenceLogic.ApplyClawMirrorDamageBonuses(toolDamage, tool);
+                        toolDamage = IntelligenceStat.ApplyClawMirrorDamageBonuses(toolDamage, tool);
                     }
 
                     if (isCrit)
                     {
-                        if (IntelligenceLogic.CheckWeakBindRequirement() &&
+                        if (IntelligenceStat.CheckWeakBindRequirement() &&
                             (tool.name == "Dazzle Bind" || tool.name == "Dazzle Bind Upgraded"))
                         {
                             // Claw Mirror
 
-                            toolDamage = DexterityLogic.ApplyCritDamage(toolDamage);
+                            toolDamage = DexterityStat.ApplyCritDamage(toolDamage);
                         }
-                        else if (ArtificeLogic.CheckArtificeMilestone(1) &&
+                        else if (ArtificeStat.CheckArtificeMilestone(1) &&
                             (tool.name == "Pimpilo" || tool.name == "Brolly Spike"))
                         {
                             // Pimpillo and Sawtooth Circlet
 
-                            toolDamage = DexterityLogic.ApplyCritDamage(toolDamage);
+                            toolDamage = DexterityStat.ApplyCritDamage(toolDamage);
                         }
-                        else if (ArtificeLogic.CheckArtificeMilestone(2) && ArtificeLogic.IsSilkshotTool(tool))
+                        else if (ArtificeStat.CheckArtificeMilestone(2) && ArtificeStat.IsSilkshotTool(tool))
                         {
                             // Silkshot
 
-                            toolDamage = DexterityLogic.ApplyCritDamage(toolDamage);
+                            toolDamage = DexterityStat.ApplyCritDamage(toolDamage);
                         }
                     }
 
                     if (tool.name == "Brolly Spike" &&
-                        ArtificeLogic.CheckArtificeMilestone(2) &&
-                        ArtificeLogic.HitEnemyWithSawtoothCirclet)
+                        ArtificeStat.CheckArtificeMilestone(2) &&
+                        ArtificeStat.HitEnemyWithSawtoothCirclet)
                     {
                         HeroController.instance.AddSilk(1, false);
-                        ArtificeLogic.HitEnemyWithSawtoothCirclet = false;
+                        ArtificeStat.HitEnemyWithSawtoothCirclet = false;
                     }
                 }
 
@@ -251,11 +252,11 @@ namespace BonfireSilksong
             {
                 int clawLineDamage = hitInstance.DamageDealt;
 
-                clawLineDamage = DexterityLogic.ApplyClawlineDamageBonuses(clawLineDamage);
+                clawLineDamage = DexterityStat.ApplyClawlineDamageBonuses(clawLineDamage);
 
-                if (DexterityLogic.CheckDexterityMilestone(2) && isCrit)
+                if (DexterityStat.CheckDexterityMilestone(2) && isCrit)
                 {
-                    clawLineDamage = DexterityLogic.ApplyCritDamage(clawLineDamage);
+                    clawLineDamage = DexterityStat.ApplyCritDamage(clawLineDamage);
                 }
 
                 hitInstance.DamageDealt = clawLineDamage;
@@ -274,11 +275,11 @@ namespace BonfireSilksong
 
                 int needleDamage = hitInstance.DamageDealt;
 
-                needleDamage = StrengthLogic.ApplyNeedleDamageBonuses(needleDamage, sourceName);
+                needleDamage = StrengthStat.ApplyNeedleDamageBonuses(needleDamage, sourceName);
 
                 if (isCrit)
                 {
-                    needleDamage = DexterityLogic.ApplyCritDamage(needleDamage);
+                    needleDamage = DexterityStat.ApplyCritDamage(needleDamage);
                 }
 
                 hitInstance.DamageDealt = needleDamage;
@@ -287,11 +288,11 @@ namespace BonfireSilksong
             {
                 // custom damage type: handles all primary damage logic in WeaverAuraDamage
 
-                int auraDamage = IntelligenceLogic.WeaverAuraDamage(Bonfire.Instance.Status.IntelligenceStat);
+                int auraDamage = IntelligenceStat.WeaverAuraDamage(Bonfire.Instance.Status.IntelligenceStat);
 
-                if (IntelligenceLogic.CheckIntelligenceMilestone(3) && isCrit)
+                if (IntelligenceStat.CheckIntelligenceMilestone(3) && isCrit)
                 {
-                    auraDamage = DexterityLogic.ApplyCritDamage(auraDamage);
+                    auraDamage = DexterityStat.ApplyCritDamage(auraDamage);
                 }
 
                 hitInstance.DamageDealt = auraDamage;
@@ -300,11 +301,11 @@ namespace BonfireSilksong
             {
                 // custom damage type: handles all primary damage logic in ReflectDamage
 
-                int reflectDamage = ResilienceLogic.ReflectDamage(Bonfire.Instance.Status.ResilienceStat);
+                int reflectDamage = ResilienceStat.ReflectDamage(Bonfire.Instance.Status.ResilienceStat);
 
-                if (ResilienceLogic.IsInBlueStateAndPlasmified(BlueState.REFLECT) && isCrit)
+                if (ResilienceStat.IsInBlueStateAndPlasmified(BlueState.REFLECT) && isCrit)
                 {
-                    reflectDamage = DexterityLogic.ApplyCritDamage(reflectDamage);
+                    reflectDamage = DexterityStat.ApplyCritDamage(reflectDamage);
                 }
 
                 hitInstance.DamageDealt = reflectDamage;
@@ -312,14 +313,14 @@ namespace BonfireSilksong
 
             // -- additional checks after hitInstance's own logic has been applied --
 
-            if (ResilienceLogic.IsInBlueState(BlueState.GLASSCANNON))
+            if (ResilienceStat.IsInBlueState(BlueState.GLASSCANNON))
             {
-                hitInstance.DamageDealt = ResilienceLogic.ApplyGlassCannonDamageBonus(hitInstance.DamageDealt);
+                hitInstance.DamageDealt = ResilienceStat.ApplyGlassCannonDamageBonus(hitInstance.DamageDealt);
             }
 
             // while in reflect state, all non-reflect damage is reduced by 99% but is always at least 1.
             // Only exception is the Memory Crystal blue tool which fits the 'sacrifice hp to deal damage' theme.
-            if (ResilienceLogic.IsInBlueState(BlueState.REFLECT) && sourceName != "Bonfire-Reflect")
+            if (ResilienceStat.IsInBlueState(BlueState.REFLECT) && sourceName != "Bonfire-Reflect")
             {
                 if (tool?.name != "Revenge Crystal")
                 {
@@ -330,10 +331,10 @@ namespace BonfireSilksong
 
             DamageOverlay.UpdateData(sourceName, tool?.name, vanillaDamage, hitInstance.DamageDealt);
 
-            Bonfire.Log.LogInfo("=> Modified Damage Output: " + hitInstance.DamageDealt);
+            Bonfire.Log.LogDebug("=> Modified Damage Output: " + hitInstance.DamageDealt);
 
-            DexterityLogic.ApplyCritHeal(isCrit);
-            LuckLogic.Crit = false;
+            DexterityStat.ApplyCritHeal(isCrit);
+            LuckStat.Crit = false;
         }
     }
 }

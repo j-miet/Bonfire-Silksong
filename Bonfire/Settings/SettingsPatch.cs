@@ -4,9 +4,9 @@ using HutongGames.PlayMaker.Actions;
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Additional settings logic e.g. for Harmony patches.
+    /// Settings logic which needs to be injected into game code.
     /// </summary>
-    public static class SettingsLogic
+    public static class SettingsPatch
     {
         /// <summary>
         /// CurrencyManager.ProcessAddCurrency (Postfix) + CurrencyManager.ProcessTakeCurrency (Postfix): shell shards 
@@ -36,8 +36,8 @@ namespace BonfireSilksong
         /// </summary>
         public static bool KeepBeastChapelDoorStateOpen(PlayerDataBoolTest instance)
         {
-            // if player uses unlock all crests feature, the beast crest unlock prevents fighting Savage Beastfly boss, 
-            // thus preventing getting the second encounter and its mask shard reward.
+            // if player uses the crest unlock feature on beast crest, the unlock prevents fighting Savage Beastfly 
+            // boss, thus preventing getting the second encounter and its mask shard reward.
             // This fix intercepts the check when player enters the chapel of the beast gate: normally it would
             // check if player already has the crest (in this case always true) and set door open/closed. Luckily 
             // there's a helper flag for boss kill called 'defeatedBoneFlyerGiant' which can be then used for tracking 
@@ -49,10 +49,9 @@ namespace BonfireSilksong
             // [Note] there's also PlayerData.instance.chapelClosed_beast, but game will override its value before door 
             // state logic, making it useless for this particular issue
 
-            if (Bonfire.Instance.Status.UnlockedAllCrests
-                        && instance.boolName.Value == "chapelClosed_beast"
-                        && Gameplay.WarriorCrest.IsUnlocked
-                        && !PlayerData.instance.defeatedBoneFlyerGiant)
+            if (instance.boolName.Value == "chapelClosed_beast"
+                && Gameplay.WarriorCrest.IsUnlocked
+                && !PlayerData.instance.defeatedBoneFlyerGiant)
             {
                 // FSM event to keep the chapel gate open. It has other values: "CLOSE" which means its closed
                 // when scene loads and "DO CLOSE" which triggers the door closing animation
@@ -89,5 +88,20 @@ namespace BonfireSilksong
             return false;
         }
 
+        /// <summary>
+        /// Toolitem.IsEquipped (Postfix): Have compass effect on map without equipping the tool.
+        /// </summary>
+        public static bool ToggleCompass(ToolItem tool)
+        {
+            if (tool != null &&
+                Gameplay.CompassTool != null &&
+                tool.name == Gameplay.CompassTool.name &&
+                Bonfire.Instance.Status.AlwaysHaveCompassTool)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 }

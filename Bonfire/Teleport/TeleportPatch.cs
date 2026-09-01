@@ -4,9 +4,9 @@ using System.Linq;
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Additional bench teleport logic e.g. for Harmony patches.
+    /// Bench teleport logic which needs to be injected into game code.
     /// </summary>
-    public static class TeleportLogic
+    public static class TeleportPatch
     {
         /// <summary>
         /// HeroController.FinishedEnteringScene (Postfix):
