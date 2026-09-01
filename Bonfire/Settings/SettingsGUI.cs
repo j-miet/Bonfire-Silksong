@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace BonfireSilksong
@@ -13,6 +15,9 @@ namespace BonfireSilksong
 
         public void DrawExtraSettingsButton()
         {
+            if (_crestDict.Count == 0)
+                InitCrestDictionary();
+
             GUI.backgroundColor = Color.white;
             GUILayout.BeginVertical("box");
 
@@ -222,11 +227,15 @@ namespace BonfireSilksong
         private const float SettingsAdjustButtonWidth = 60f;
         private const float SettingsAdjustButtonHeight = 30f;
 
-        private const float StatusResetWidth = 550;
-        private const float StatusResetHeight = 210f;
+        private const float StatusResetWidth = 600f;
+        private const float StatusResetHeight = 530f;
 
-        private const float CrestUnlockWidth = 600f;
-        private const float CrestUnlockHeight = 530f;
+        private const float CrestUnlockWidth = 420f;
+        private const float CrestUnlockHeight = 610f;
+
+        private readonly string[] _crestNames = { "Wanderer", "Reaper", "Warrior", "Witch", "Toolmaster", "Spell" };
+        private readonly Dictionary<string, ToolCrest> _crestDict = new Dictionary<string, ToolCrest>();
+        private bool _allCrestsUnlocked = false;
 
         private static bool _hpBarColorsInitialized;
         private static Color _bossColor;
@@ -318,10 +327,12 @@ namespace BonfireSilksong
 
             GUI.enabled = GameManager.instance.inputHandler.gameController.IsAttached;
 
+            GUILayout.Space(10);
             GUILayout.Label("Custom cursor (enabled if a GamePad device is detected)", GUIStyles.SettingsHeader2);
 
             GUILayout.Label(
-                $"Cursor speed (range {CustomCursor.MinSpeed} - {CustomCursor.MaxSpeed}]");
+                $"Cursor speed (range {CustomCursor.MinSpeed} - {CustomCursor.MaxSpeed}, " +
+                "will also scale scroll speed)");
 
             GUILayout.BeginHorizontal(GUILayout.Width(160));
             if (CustomCursor.Button(
@@ -329,7 +340,7 @@ namespace BonfireSilksong
                     GUILayout.Width(SettingsAdjustButtonWidth),
                     GUILayout.Height(SettingsAdjustButtonHeight)))
             {
-                s.CustomCursorSpeed = Mathf.Max(50, s.CustomCursorSpeed - 10);
+                s.CustomCursorSpeed = Mathf.Max(50, s.CustomCursorSpeed - s.AdjustButtonStep);
             }
 
             GUILayout.Space(10);
@@ -345,7 +356,7 @@ namespace BonfireSilksong
                     GUILayout.Width(SettingsAdjustButtonWidth),
                     GUILayout.Height(SettingsAdjustButtonHeight)))
             {
-                s.CustomCursorSpeed = Mathf.Min(1000, s.CustomCursorSpeed + 10);
+                s.CustomCursorSpeed = Mathf.Min(1000, s.CustomCursorSpeed + s.AdjustButtonStep);
             }
 
             GUILayout.EndHorizontal();
@@ -358,21 +369,54 @@ namespace BonfireSilksong
             GUI.enabled = true;
         }
 
-        private void DrawVisualSettings()
+        private void DrawOverlaySettings()
         {
             var s = Bonfire.Instance.Status;
 
             int widthMax = (int)(BonfireGUI.Width - DamageOverlay.Width - DamageOverlay.BoxOffset);
             int heightMax = (int)(BonfireGUI.Height - DamageOverlay.Height - DamageOverlay.BoxOffset);
 
-            GUILayout.Label("Visual", GUIStyles.SettingsHeader2);
+            GUILayout.Space(10);
+            GUILayout.Label("Components", GUIStyles.SettingsHeader2);
+
+            GUILayout.BeginHorizontal(GUILayout.Width(520));
+            s.EnemyHealthBarsEnabled = CustomCursor.Toggle(
+                s.EnemyHealthBarsEnabled,
+                "Display enemy health bars");
+
+            GUILayout.Label("(");
+            GUILayout.Label("enemy", GUIStyles.EnemyHpStyle);
+            GUILayout.Label("/");
+            GUILayout.Label("boss", GUIStyles.BossHpStyle);
+            GUILayout.Label("→");
+            GUILayout.Label("has default hotkey LeftControl + H)");
+            GUILayout.EndVertical();
+
+            GUILayout.BeginHorizontal(GUILayout.Width(370));
+            GUILayout.Space(15);
+
+            GUI.enabled = s.EnemyHealthBarsEnabled;
+            s.EnemyHpBarColorProgression = CustomCursor.Toggle(
+                s.EnemyHpBarColorProgression,
+                "Progressive HP bar values");
+
+            GUILayout.Label("(");
+            GUILayout.Label("high", GUIStyles.HpHighStyle);
+            GUILayout.Label("→");
+            GUILayout.Label("medium", GUIStyles.HpMediumStyle);
+            GUILayout.Label("→");
+            GUILayout.Label("low", GUIStyles.HpLowStyle);
+            GUILayout.Label(")");
+            GUI.enabled = true;
+
+            GUILayout.EndHorizontal();
 
             s.ShowCustomRangeIndicator = CustomCursor.Toggle(
                 s.ShowCustomRangeIndicator,
                 "Display damage range indicator in Taunt/Reflect.");
             s.ShowDamageOverlay = CustomCursor.Toggle(
                 s.ShowDamageOverlay,
-                "Display info from latest enemy damaging instance (has default hotkey LeftControl + J).");
+                "Display info from latest enemy damaging instance (has default hotkey LeftControl + L).");
 
             GUI.enabled = s.ShowDamageOverlay;
             GUILayout.BeginHorizontal(GUILayout.Width(450));
@@ -437,60 +481,28 @@ namespace BonfireSilksong
 
             GUILayout.EndHorizontal();
             GUI.enabled = true;
-            GUILayout.Space(10);
+        }
 
-            GUILayout.Label("Audio", GUIStyles.SettingsHeader2);
-            GUI.enabled = s.UnlockedFastTravel;
+        private void DrawFastTravelSettings()
+        {
+            var s = Bonfire.Instance.Status;
+
+            GUILayout.Space(10);
             s.ResetMusicAfterTeleport = CustomCursor.Toggle(
                 s.ResetMusicAfterTeleport,
-                "Resets music after bench fast travel.\n" +
+                "Resets music after bench fast travel\n" +
+                "\n" +
                 "Normally music/atmosphere carries over to target scene, but then fades out and gets replaced with " +
                 "the music from new scene. After fast travel, previous sound effects can linger much longer than " +
                 "they should. With this enabled, existing music track cuts off immediately and the new one starts to " +
                 "play as soon as scene transition is completed.",
                 GUIStyles.WordWrapToggleStyle,
-                GUILayout.Width(SettingsWidth - SettingsOuterOffset - SettingsInnerOffset - 50)
-                );
-            GUI.enabled = true;
+                GUILayout.Width(SettingsWidth - SettingsOuterOffset - SettingsInnerOffset - 50));
         }
 
         private void DrawGameplaySettings()
         {
             var s = Bonfire.Instance.Status;
-
-            GUILayout.Label("Enemy HP bars", GUIStyles.SettingsHeader2);
-
-            GUILayout.BeginHorizontal(GUILayout.Width(480));
-            s.EnemyHealthBarsEnabled = CustomCursor.Toggle(
-                s.EnemyHealthBarsEnabled,
-                "Display enemy health bars");
-
-            GUILayout.Label("(");
-            GUILayout.Label("enemy", GUIStyles.EnemyHpStyle);
-            GUILayout.Label("/");
-            GUILayout.Label("boss", GUIStyles.BossHpStyle);
-            GUILayout.Label("→");
-            GUILayout.Label("has default hotkey LeftControl + H)");
-            GUILayout.EndVertical();
-
-            GUILayout.BeginHorizontal(GUILayout.Width(370));
-            GUILayout.Space(15);
-
-            GUI.enabled = s.EnemyHealthBarsEnabled;
-            s.EnemyHpBarColorProgression = CustomCursor.Toggle(
-                s.EnemyHpBarColorProgression,
-                "Progressive HP bar values");
-
-            GUILayout.Label("(");
-            GUILayout.Label("high", GUIStyles.HpHighStyle);
-            GUILayout.Label("→");
-            GUILayout.Label("medium", GUIStyles.HpMediumStyle);
-            GUILayout.Label("→");
-            GUILayout.Label("low", GUIStyles.HpLowStyle);
-            GUILayout.Label(")");
-            GUI.enabled = true;
-
-            GUILayout.EndHorizontal();
 
             GUILayout.Space(10);
             GUILayout.Label("Delivery Quests", GUIStyles.SettingsHeader2);
@@ -530,37 +542,36 @@ namespace BonfireSilksong
             // adjust step size
             GUILayout.BeginVertical("box");
             GUILayout.Label("General", GUIStyles.SettingsHeader);
-
             DrawAdjustUI();
-
             GUILayout.EndVertical();
+
             GUILayout.Space(20);
 
             GUILayout.BeginVertical("box");
-            GUILayout.Label("Controls/Visuals/Audio", GUIStyles.SettingsHeader);
-
-            // settings
+            GUILayout.Label("Overlay", GUIStyles.SettingsHeader);
             DrawCursorSettings();
             GUILayout.Space(10);
-            DrawVisualSettings();
-
+            DrawOverlaySettings();
             GUILayout.EndVertical();
+
             GUILayout.Space(20);
 
-            // gameplay
+            GUILayout.BeginVertical("box");
+            GUILayout.Label("Bench Fast Travel", GUIStyles.SettingsHeader);
+            DrawFastTravelSettings();
+            GUILayout.EndVertical();
+
+            GUILayout.Space(20);
+
             GUILayout.BeginVertical("box");
             GUILayout.Label("Gameplay", GUIStyles.SettingsHeader);
-
             DrawGameplaySettings();
-
             GUILayout.EndVertical();
         }
 
         private void DrawCrestUnlockButton()
         {
-            if (Bonfire.Instance.Status.UnlockedAllCrests) return;
-
-            if (CustomCursor.Button("Unlock All Crests (asks for confirmation)", GUILayout.Height(30f)))
+            if (CustomCursor.Button("Crest Unlocking", GUILayout.Height(30f)))
             {
                 PendingSettingsWindow = false;
                 PendingCrestUnlock = true;
@@ -570,47 +581,43 @@ namespace BonfireSilksong
         private void DrawCrestUnlockConfirmContent()
         {
             GUILayout.Space(10);
-            GUILayout.Label(
-                "Unlocking all crests is permanent and cannot be undone.\n",
-                GUIStyles.CrestUnlockLabelStyle
-            );
-            GUILayout.Label("Are you sure?", GUIStyles.CrestUnlockLabelStyle);
-
-            GUILayout.Space(15);
             GUILayout.BeginHorizontal();
-
             GUILayout.FlexibleSpace();
-            if (CustomCursor.Button(
-                    "Yes\nUnlock all crests",
-                    GUIStyles.CrestUnlockButtonStyle,
-                    GUILayout.Width(200f),
-                    GUILayout.Height(50f)))
-            {
-                PendingSettingsWindow = true;
-                PendingCrestUnlock = false;
-                Bonfire.Instance.Status.UnlockedAllCrests = true;
+            GUILayout.Label(
+                $"{(_allCrestsUnlocked ? "All crests already unlocked" : "")}",
+                GUIStyles.CrestUnlockLabelStyle);
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
 
-                Bonfire.Log.LogDebug("[SettingsGUI] Unlocking all crests");
-                foreach (var crest in Resources.FindObjectsOfTypeAll<ToolCrest>())
-                {
-                    Bonfire.Log.LogDebug("Crest name: " + crest.name);
-                    if (!crest.IsUnlocked)
-                        crest.Unlock();
-                }
 
-                Bonfire.Instance.SaveSettings();
-            }
+            GUILayout.Space(10);
+            CrestUnlockButton("Wanderer", "Wanderer");
+            CrestUnlockButton("Reaper", "Reaper");
+            CrestUnlockButton("Beast", "Warrior");
+            CrestUnlockButton("Witch", "Witch");
+            CrestUnlockButton("Architect", "Toolmaster");
+            CrestUnlockButton("Shaman", "Spell");
 
             GUILayout.Space(30);
+            CrestUnlockButton("Unlock All Crests", "All");
+            GUILayout.Space(30);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+
+            Color closeOld = GUI.backgroundColor;
+            GUI.backgroundColor = new Color(1f, 0.6f, 0.6f);
+
             if (CustomCursor.Button(
-                    "No\nLeave my crests alone",
-                    GUIStyles.CrestUnlockButtonStyle,
-                    GUILayout.Width(200f),
-                    GUILayout.Height(50f)))
+                "Close Window",
+                GUIStyles.CrestUnlockButtonStyle,
+                GUILayout.Width(150f),
+                GUILayout.Height(50f)))
             {
                 PendingSettingsWindow = true;
                 PendingCrestUnlock = false;
             }
+            GUI.backgroundColor = closeOld;
 
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -633,8 +640,6 @@ namespace BonfireSilksong
             GUILayout.Label(
                 "Resets your mod configurations for CURRENT SAVE SLOT which includes: \n" +
                 "- Leveling data -\n" +
-                "- Crest unlock flag -\n" +
-                " (so can use unlock feature again on new save)\n" +
                 "- Bench fast travel unlock + safety checks -\n" +
                 "(to prevent softlocks e.g. with Act 3 Abyss travel on new saves)\n" +
                 "\n" +
@@ -685,6 +690,100 @@ namespace BonfireSilksong
 
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
+        }
+
+        private void InitCrestDictionary()
+        {
+            var toolcrests = Resources.FindObjectsOfTypeAll<ToolCrest>();
+            if (toolcrests == null) return;
+
+            foreach (var crest in toolcrests)
+            {
+                if (_crestNames.Contains(crest.name))
+                    _crestDict[crest.name] = crest;
+            }
+
+            Bonfire.Log.LogDebug("[SettingsGUI] Crest dictionary initialized.");
+
+            foreach (var c in _crestDict.Values)
+            {
+                if (!c.IsUnlocked)
+                    return;
+            }
+
+            _allCrestsUnlocked = true;
+
+            Bonfire.Log.LogDebug("All crests already unlocked.");
+        }
+
+        private void CrestUnlockButton(string displayName, string crestName)
+        {
+            GUILayout.Space(10);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+
+            if (crestName == "All")
+            {
+                GUI.enabled = !_allCrestsUnlocked;
+
+                Color bgOld = GUI.backgroundColor;
+                GUI.backgroundColor = new Color(0.6f, 0.6f, 1f);
+
+                if (CustomCursor.Button(
+                    $"{displayName}",
+                    GUIStyles.CrestUnlockButtonStyle,
+                    GUILayout.Width(250f),
+                    GUILayout.Height(40f)))
+                {
+                    UnlockCrest("All");
+                }
+                GUI.backgroundColor = bgOld;
+
+                GUI.enabled = true;
+            }
+            else
+            {
+                bool unlocked = _crestDict[crestName].IsUnlocked;
+                GUI.enabled = !unlocked;
+
+                if (CustomCursor.Button(
+                    $"{displayName} {(unlocked ? " (Unlocked)" : "")}",
+                    GUIStyles.CrestUnlockButtonStyle,
+                    GUILayout.Width(250f),
+                    GUILayout.Height(40f)))
+                {
+                    UnlockCrest(crestName);
+                }
+                GUI.enabled = true;
+            }
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+        }
+
+        private void UnlockCrest(string name)
+        {
+            if (name == "All")
+            {
+                foreach (var c in _crestDict.Values)
+                {
+                    if (c.IsUnlocked) continue;
+
+                    c.Unlock();
+
+                    Bonfire.Log.LogDebug("Crest Unlocked: " + name);
+                }
+
+                _allCrestsUnlocked = true;
+            }
+            else if (_crestDict.Keys.Contains(name))
+            {
+                _crestDict[name].Unlock();
+
+                Bonfire.Log.LogDebug("Crest Unlocked: " + name);
+            }
+
+            Bonfire.Instance.SaveSettings();
         }
 
         private void ResetPlayerStatus()
