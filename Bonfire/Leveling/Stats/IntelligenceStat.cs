@@ -1,6 +1,5 @@
 using System;
 
-using GlobalSettings;
 using HutongGames.PlayMaker;
 using UnityEngine;
 
@@ -48,10 +47,10 @@ namespace BonfireSilksong
             switch (m)
             {
                 case 1: return 1;
-                case 2: return 2;
-                case 3: return 3;
-                case 4: return 4;
-                default: return 999;
+                case 2: return 10;
+                case 3: return 25;
+                case 4: return 35;
+                default: return 99;
             }
         }
 
@@ -131,7 +130,7 @@ namespace BonfireSilksong
             }
 
             if (!isGUI)
-                Bonfire.Log.LogDebug($"[IntelligenceLogic] Challenge taunt final damage: {damage}");
+                Bonfire.Log.LogDebug($"[IntelligenceStat] Challenge taunt final damage: {damage}");
 
             return damage;
         }
@@ -155,7 +154,7 @@ namespace BonfireSilksong
             }
 
             if (!isGUI)
-                Bonfire.Log.LogDebug($"[IntelligenceLogic] Challenge taunt range: {range}");
+                Bonfire.Log.LogDebug($"[IntelligenceStat] Challenge taunt range: {range}");
 
             return range;
         }
@@ -165,7 +164,7 @@ namespace BonfireSilksong
         /// </summary>
         public static int ApplySpellDamageBonuses(int baseDamage, ToolItem spell)
         {
-            Bonfire.Log.LogDebug($"[IntelligenceLogic]");
+            Bonfire.Log.LogDebug($"[IntelligenceStat]");
             Bonfire.Log.LogDebug($"<Vanilla> Silk Skill: {spell}. Damage: {baseDamage}");
 
             int updatedDamage = baseDamage;
@@ -190,7 +189,7 @@ namespace BonfireSilksong
         {
             if (tool.name != "Dazzle Bind" && tool.name != "Dazzle Bind Upgraded") return baseDamage;
 
-            Bonfire.Log.LogDebug($"[IntelligenceLogic]");
+            Bonfire.Log.LogDebug($"[IntelligenceStat]");
             Bonfire.Log.LogDebug($"<Vanilla> Claw Mirror damage: {baseDamage}");
 
             int updatedDamage = baseDamage;
@@ -217,7 +216,7 @@ namespace BonfireSilksong
         /// </summary>
         public static bool DealWeaverAuraDamage()
         {
-            Bonfire.Log.LogDebug("[IntelligenceLogic] Weaver Aura Hit Detection");
+            Bonfire.Log.LogDebug("[IntelligenceStat] Weaver Aura Hit Detection");
 
             var hc = HeroController.instance;
             bool didHit = false;
@@ -294,7 +293,7 @@ namespace BonfireSilksong
 
                     _weaverAuraCooldown = 1f;
 
-                    Bonfire.Log.LogDebug("[IntelligenceLogic] Weaver Aura: Taunted");
+                    Bonfire.Log.LogDebug("[IntelligenceStat] Weaver Aura: Taunted");
                 }
                 else if (WeaverAuraRingTaunt && silk >= 2)
                 {
@@ -316,7 +315,7 @@ namespace BonfireSilksong
 
                     _weaverAuraCooldown = 1f;
 
-                    Bonfire.Log.LogDebug("[IntelligenceLogic] Weaver Aura: RingTaunted");
+                    Bonfire.Log.LogDebug("[IntelligenceStat] Weaver Aura: RingTaunted");
                 }
                 else
                 {
@@ -394,7 +393,7 @@ namespace BonfireSilksong
                 if (fsm.FsmName != "Bind")
                     continue;
 
-                Bonfire.Log.LogDebug("[IntelligenceLogic] Update bind FSM values");
+                Bonfire.Log.LogDebug("[IntelligenceStat] Update bind FSM values");
 
                 // cost
                 silkCost = fsm.FsmVariables.GetFsmInt("Silk Cost");
@@ -553,7 +552,7 @@ namespace BonfireSilksong
             WeaverAuraTaunt = false;
             WeaverAuraRingTaunt = false;
 
-            Bonfire.Log.LogDebug("[IntelligenceLogic] Pale Burst used");
+            Bonfire.Log.LogDebug("[IntelligenceStat] Pale Burst used");
 
             return true;
         }

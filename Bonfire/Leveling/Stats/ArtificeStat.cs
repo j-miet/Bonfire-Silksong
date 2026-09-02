@@ -15,11 +15,11 @@ namespace BonfireSilksong
         {
             switch (m)
             {
-                case 1: return 1;
-                case 2: return 2;
-                case 3: return 3;
-                case 4: return 4;
-                default: return 999;
+                case 1: return 10;
+                case 2: return 20;
+                case 3: return 30;
+                case 4: return 40;
+                default: return 99;
             }
         }
 
@@ -57,7 +57,7 @@ namespace BonfireSilksong
         /// </summary>
         public static int ApplyToolDamageBonuses(int baseDamage, ToolItem tool)
         {
-            Bonfire.Log.LogDebug($"[ArtificeLogic]");
+            Bonfire.Log.LogDebug($"[ArtificeStat]");
             Bonfire.Log.LogDebug($"<Vanilla> Tool: {tool}. Damage: {baseDamage}");
 
             int updatedDamage = baseDamage;
@@ -92,7 +92,7 @@ namespace BonfireSilksong
             }
             else
             {
-                Bonfire.Log.LogDebug("[ArtificeLogic] Checking tool regen conditions");
+                Bonfire.Log.LogDebug("[ArtificeStat] Checking tool regen conditions");
                 int toolRegenInterval = ToolRegenInterval(Bonfire.Instance.Status.ArtificeStat);
                 if (toolRegenInterval <= 0)
                 {

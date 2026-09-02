@@ -67,7 +67,8 @@ namespace BonfireSilksong
                 return damage;
             }
 
-            damage = StrengthStat.UpdateNeedleBaseDamage(damage);
+            if (!ResilienceStat.IsInBlueState(BlueState.GLASSCANNON))
+                damage = StrengthStat.UpdateNeedleBaseDamage(damage);
 
             Bonfire.Log.LogDebug($"[PatchHelpers] getter (HitInstance) updated needle damage={damage}");
 
@@ -136,12 +137,25 @@ namespace BonfireSilksong
 
             string sourceName = hitInstance.Source.name;
             var tool = hitInstance.RepresentingTool;
+            int vanillaDamage = hitInstance.DamageDealt;
+
+            // override name for damage sources which still use the default hitInstance e.g. Silk Nails uses Pale Nails
+            // silk skill underneath; this makes it easier to handle damage calculations + differentiate sources when
+            // debugging/using damage display feature.
+            // Custom damage instances already define the source earlier e.g. "Bonfire-Reflect" so they're already ok.
+            // To further identify mod damage sources, their names should begin with 'Bonfire-' prefix.
+            if (tool != null)
+            {
+                if (WisdomStat.IsSilkNailsEnabled && tool.name == "Silk Boss Needle")
+                    sourceName = "Bonfire-SilkNails";
+
+                if (WisdomStat.IsCogflyWarriorEnabled && tool.name == "Cogwork Flier")
+                    sourceName = "Bonfire-CogflyWarrior";
+            }
 
             Bonfire.Log.LogDebug("[PatchHelpers] Recorded a hit => Hit source: " + sourceName);
-            Bonfire.Log.LogDebug("- Damage Dealt: " + hitInstance.DamageDealt);
+            Bonfire.Log.LogDebug("- Damage Dealt: " + vanillaDamage);
             Bonfire.Log.LogDebug("- Tool instance: " + tool?.name ?? "null");
-
-            int vanillaDamage = hitInstance.DamageDealt;
 
             LuckStat.CheckIfCrit(hitInstance);
             bool isCrit = LuckStat.Crit;
@@ -156,100 +170,120 @@ namespace BonfireSilksong
             // - write a custom formula which also checks all possible buffs conditions this source can receive.
             // - apply any increments post-buff, meaning the flat +X damage would only benefit from the few remaining
             // modifiers such as the crest bonuses mentioned earlier.
-            if (tool?.Type == ToolItemType.Skill)
+            if (sourceName == "Bonfire-WeaverAura")
             {
+                // Custom Weaver Aura damage source
+
+                int auraDamage = IntelligenceStat.WeaverAuraDamage(Bonfire.Instance.Status.IntelligenceStat);
+
+                if (IntelligenceStat.CheckIntelligenceMilestone(3) && isCrit)
+                {
+                    auraDamage = DexterityStat.ApplyCritDamage(auraDamage);
+                }
+
+                hitInstance.DamageDealt = auraDamage;
+            }
+            else if (sourceName == "Bonfire-Reflect")
+            {
+                // Custom Reflect damage source
+
+                int reflectDamage = ResilienceStat.ReflectDamage(Bonfire.Instance.Status.ResilienceStat);
+
+                if (ResilienceStat.IsInBlueStateAndPlasmified(BlueState.REFLECT) && isCrit)
+                {
+                    reflectDamage = DexterityStat.ApplyCritDamage(reflectDamage);
+                }
+
+                hitInstance.DamageDealt = reflectDamage;
+            }
+            else if (sourceName == "Bonfire-SilkNails")
+            {
+                // Silk Nails: summon a weaker version of Pale Nails automatically when an enemy is nearby.
+                // This also disables use of Pale Nails so it's important to separate damage buff checks.
+                hitInstance.DamageDealt = WisdomStat.SilkNailsDamage(Bonfire.Instance.Status.WisdomStat);
+            }
+            else if (sourceName == "Bonfire-CogflyWarrior")
+            {
+                // Cogfly Warrior: cogfly which has Wisdom scaling and thus uses neither the original tool's damage
+                // nor tool bonuses.
+                hitInstance.DamageDealt = WisdomStat.CogflyWarriorDamage(Bonfire.Instance.Status.WisdomStat);
+            }
+            else if (tool?.Type == ToolItemType.Skill)
+            {
+                // -- silk skills --
+                // 1. The "Type == ToolItemType.Skill" is enough to target only the silk skills.
+                // 2. Silk skill damage scales normally from needle upgrades, or specifically, the needle damage
+                // itself. To balance strength stat: only base game scaling works, after that intelligence stat
+                // is necessary for extra scaling. As scaling requires adjusting base needle damage, it's already
+                // done earlier in patched Playerdata.nailDamage.
+
                 int spellDamage = hitInstance.DamageDealt;
 
-                if (WisdomStat.IsSilkNailsEnabled && tool.name == "Silk Boss Needle")
-                {
-                    // Silk Nails: summon a weaker version of Pale Nails automatically when an enemy is nearby.
-                    // This also disables use of Pale Nails so it's important to separate damage buff checks.
-                    spellDamage = WisdomStat.SilkNailsDamage(Bonfire.Instance.Status.WisdomStat);
-                }
-                else
-                {
-                    // -- silk skills --
-                    // 1. The "Type == ToolItemType.Skill" is enough to target only the silk skills.
-                    // 2. Silk skill damage scales normally from needle upgrades, or specifically, the needle damage
-                    // itself. To balance strength stat: only base game scaling works, after that intelligence stat
-                    // is necessary for extra scaling. As scaling requires adjusting base needle damage, it's already
-                    // done earlier in patched Playerdata.nailDamage.
+                spellDamage = IntelligenceStat.ApplySpellDamageBonuses(spellDamage, tool);
 
-                    spellDamage = IntelligenceStat.ApplySpellDamageBonuses(spellDamage, tool);
-
-                    if (IntelligenceStat.CheckIntelligenceMilestone(3) && isCrit)
-                    {
-                        spellDamage = DexterityStat.ApplyCritDamage(spellDamage);
-                    }
+                if (IntelligenceStat.CheckIntelligenceMilestone(3) && isCrit)
+                {
+                    spellDamage = DexterityStat.ApplyCritDamage(spellDamage);
                 }
 
                 hitInstance.DamageDealt = spellDamage;
             }
-            else if (tool != null &&
-                (tool.Type == ToolItemType.Red || tool.Type == ToolItemType.Blue) &&
-                tool.name != "Silk Nails")
+            else if (tool != null && (tool.Type == ToolItemType.Red || tool.Type == ToolItemType.Blue))
             {
+                // -- red and blue tools --
+
                 int toolDamage = hitInstance.DamageDealt;
 
-                if (WisdomStat.IsCogflyWarriorEnabled && tool.name == "Cogwork Flier")
+                if (tool.name == "Rosary Cannon" && ArtificeStat.CheckArtificeMilestone(3))
                 {
-                    // Cogfly Warrior: cogfly which has Wisdom scaling and thus uses neither the original tool's damage
-                    // nor tool bonuses.
-                    toolDamage = WisdomStat.CogflyWarriorDamage(Bonfire.Instance.Status.WisdomStat);
+                    toolDamage += 2;
                 }
-                else
+
+                toolDamage = ArtificeStat.ApplyToolDamageBonuses(toolDamage, tool);
+
+                if (IntelligenceStat.CheckIntelligenceMilestone(3))
                 {
-                    // -- red and blue tools --
+                    toolDamage = IntelligenceStat.ApplyClawMirrorDamageBonuses(toolDamage, tool);
+                }
 
-                    if (tool.name == "Rosary Cannon" && ArtificeStat.CheckArtificeMilestone(3))
+                if (isCrit)
+                {
+                    if (IntelligenceStat.CheckWeakBindRequirement() &&
+                        (tool.name == "Dazzle Bind" || tool.name == "Dazzle Bind Upgraded"))
                     {
-                        toolDamage += 2;
+                        // Claw Mirror
+
+                        toolDamage = DexterityStat.ApplyCritDamage(toolDamage);
                     }
-
-                    toolDamage = ArtificeStat.ApplyToolDamageBonuses(toolDamage, tool);
-
-                    if (IntelligenceStat.CheckIntelligenceMilestone(3))
+                    else if (ArtificeStat.CheckArtificeMilestone(1) &&
+                        (tool.name == "Pimpilo" || tool.name == "Brolly Spike"))
                     {
-                        toolDamage = IntelligenceStat.ApplyClawMirrorDamageBonuses(toolDamage, tool);
-                    }
+                        // Pimpillo and Sawtooth Circlet
 
-                    if (isCrit)
+                        toolDamage = DexterityStat.ApplyCritDamage(toolDamage);
+                    }
+                    else if (ArtificeStat.CheckArtificeMilestone(2) && ArtificeStat.IsSilkshotTool(tool))
                     {
-                        if (IntelligenceStat.CheckWeakBindRequirement() &&
-                            (tool.name == "Dazzle Bind" || tool.name == "Dazzle Bind Upgraded"))
-                        {
-                            // Claw Mirror
+                        // Silkshot
 
-                            toolDamage = DexterityStat.ApplyCritDamage(toolDamage);
-                        }
-                        else if (ArtificeStat.CheckArtificeMilestone(1) &&
-                            (tool.name == "Pimpilo" || tool.name == "Brolly Spike"))
-                        {
-                            // Pimpillo and Sawtooth Circlet
-
-                            toolDamage = DexterityStat.ApplyCritDamage(toolDamage);
-                        }
-                        else if (ArtificeStat.CheckArtificeMilestone(2) && ArtificeStat.IsSilkshotTool(tool))
-                        {
-                            // Silkshot
-
-                            toolDamage = DexterityStat.ApplyCritDamage(toolDamage);
-                        }
+                        toolDamage = DexterityStat.ApplyCritDamage(toolDamage);
                     }
+                }
 
-                    if (tool.name == "Brolly Spike" &&
-                        ArtificeStat.CheckArtificeMilestone(2) &&
-                        ArtificeStat.HitEnemyWithSawtoothCirclet)
-                    {
-                        HeroController.instance.AddSilk(1, false);
-                        ArtificeStat.HitEnemyWithSawtoothCirclet = false;
-                    }
+                if (tool.name == "Brolly Spike" &&
+                    ArtificeStat.CheckArtificeMilestone(2) &&
+                    ArtificeStat.HitEnemyWithSawtoothCirclet)
+                {
+                    HeroController.instance.AddSilk(1, false);
+                    ArtificeStat.HitEnemyWithSawtoothCirclet = false;
                 }
 
                 hitInstance.DamageDealt = toolDamage;
             }
             else if (sourceName == "Harpoon Damager" || sourceName == "Harpoon Dash Damager")
             {
+                // Clawline
+
                 int clawLineDamage = hitInstance.DamageDealt;
 
                 clawLineDamage = DexterityStat.ApplyClawlineDamageBonuses(clawLineDamage);
@@ -283,32 +317,6 @@ namespace BonfireSilksong
                 }
 
                 hitInstance.DamageDealt = needleDamage;
-            }
-            else if (sourceName == "Bonfire-WeaverAura")
-            {
-                // custom damage type: handles all primary damage logic in WeaverAuraDamage
-
-                int auraDamage = IntelligenceStat.WeaverAuraDamage(Bonfire.Instance.Status.IntelligenceStat);
-
-                if (IntelligenceStat.CheckIntelligenceMilestone(3) && isCrit)
-                {
-                    auraDamage = DexterityStat.ApplyCritDamage(auraDamage);
-                }
-
-                hitInstance.DamageDealt = auraDamage;
-            }
-            else if (sourceName == "Bonfire-Reflect")
-            {
-                // custom damage type: handles all primary damage logic in ReflectDamage
-
-                int reflectDamage = ResilienceStat.ReflectDamage(Bonfire.Instance.Status.ResilienceStat);
-
-                if (ResilienceStat.IsInBlueStateAndPlasmified(BlueState.REFLECT) && isCrit)
-                {
-                    reflectDamage = DexterityStat.ApplyCritDamage(reflectDamage);
-                }
-
-                hitInstance.DamageDealt = reflectDamage;
             }
 
             // -- additional checks after hitInstance's own logic has been applied --

@@ -32,12 +32,23 @@ namespace BonfireSilksong
             if (CustomCursor.Button(
                 $"Style: {lvlStyleName}",
                 GUIStyles.ButtonStyle,
-                GUILayout.Width(250f),
-                GUILayout.Height(40f))
-                && PlayerData.instance.atBench)
+                GUILayout.Width(240f),
+                GUILayout.Height(40f)))
             {
                 ChangeLevelingMenuStyle();
             }
+
+            GUILayout.Space(20);
+
+            if (CustomCursor.Button(
+                "Mod Info",
+                GUIStyles.ButtonStyle,
+                GUILayout.Width(240f),
+                GUILayout.Height(40f)))
+            {
+                InfoWindow.PendingInfoWindow = true;
+            }
+
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -413,9 +424,7 @@ namespace BonfireSilksong
 
             GUI.color = Color.white;
             GUI.backgroundColor = Color.white;
-            if (!SettingsGUI.PendingSettingsWindow &&
-                !SettingsGUI.PendingCrestUnlock &&
-                !SettingsGUI.PendingStatusReset)
+            if (BonfireGUI.NoWindowsPending)
             {
                 _infoScrollPos = CustomCursor.BeginScrollView(_infoScrollPos);
             }
@@ -431,9 +440,7 @@ namespace BonfireSilksong
             DrawLuckInfo();
             GUILayout.EndVertical();
 
-            if (!SettingsGUI.PendingSettingsWindow &&
-                !SettingsGUI.PendingCrestUnlock &&
-                !SettingsGUI.PendingStatusReset)
+            if (BonfireGUI.NoWindowsPending)
             {
                 CustomCursor.EndScrollView();
             }
@@ -568,7 +575,7 @@ namespace BonfireSilksong
 
             GUILayout.Label(
                 $"[{DexterityStat.DexterityMilestone(3)}] " +
-                "All critical hits now heal 1 mask\n" +
+                "All critical hits now heal 1 mask.\n" +
                 "Clawline:\n" +
                 " - damage bonus increased (25% -> 50%).\n" +
                 " - Clawline's 7th hit will always heal 1 mask and casts 'Silk Spear' silk skill without costing " +
@@ -941,7 +948,7 @@ namespace BonfireSilksong
             GUILayout.Label("Silk Nails", GUIStyles.LvlInfoHeaderSecondaryStyle);
             DrawInfoStatLabel("Damage (single nail): " + _silkNailsDamage);
             DrawInfoStatLabel("Spawn Cooldown: " + _silkNailsSpawnCooldown);
-            GUILayout.Label("Cogwork Warrior", GUIStyles.LvlInfoHeaderSecondaryStyle);
+            GUILayout.Label("Cogfly Warrior", GUIStyles.LvlInfoHeaderSecondaryStyle);
             DrawInfoStatLabel("Damage: " + _cogflyDamage);
             DrawInfoStatLabel("Attack Cooldown: " + _cogflyAttackCooldown);
             GUILayout.Label("Wispfire Lantern", GUIStyles.LvlInfoHeaderSecondaryStyle);
@@ -965,7 +972,7 @@ namespace BonfireSilksong
                 "you disable/re-enable all your following summons: \n" +
                 "- Wispfire Lantern\n" +
                 "- Silk Nails\n" +
-                "- Cogwork Warrior.\n" +
+                "- Cogfly Warrior.\n" +
                 "\n" +
                 "GUI buttons are also disabled during this 'BLOCKED' state.\n" +
                 "\n" +
@@ -1032,7 +1039,8 @@ namespace BonfireSilksong
                 "<Silk Nails>\n" +
                 "- Has its own damage and spawn cooldown scaling from Wisdom.\n" +
                 "- Spawns automatically when enemies are near.\n" +
-                "- Doesn't have a silk cost.\n",
+                "- Doesn't have a silk cost.\n" +
+                "- While Silk Nails is enabled, you cannot use Pale Nails silk skill.",
                 LevelingSystem.HighLightStatMilestone(s, 1)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);

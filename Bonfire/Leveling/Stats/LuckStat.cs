@@ -5,8 +5,7 @@ using UnityEngine;
 
 namespace BonfireSilksong
 {
-    // not a static class because MonoBehavior is required, but should otherwise include static entities only.
-    public class LuckStat : MonoBehaviour
+    public static class LuckStat
     {
         public static bool Crit = false;
 
@@ -17,7 +16,7 @@ namespace BonfireSilksong
                 case 1: return 1;
                 case 2: return 2;
                 case 3: return 3;
-                default: return 999;
+                default: return 99;
             }
         }
 
@@ -69,7 +68,7 @@ namespace BonfireSilksong
         {
             var s = Bonfire.Instance.Status;
 
-            Bonfire.Log.LogDebug("[LuckLogic] Check currency values");
+            Bonfire.Log.LogDebug("[LuckStat] Check currency values");
             Bonfire.Log.LogDebug("<Vanilla> rosary and shell shard values:");
             Bonfire.Log.LogDebug($"small={GetRosaries("small", instance)}");
             Bonfire.Log.LogDebug($"medium={GetRosaries("medium", instance)}");
@@ -126,7 +125,7 @@ namespace BonfireSilksong
 
             int critRoll = UnityEngine.Random.Range(1, 101);
 
-            Bonfire.Log.LogDebug($"[LuckLogic] Crit chance: {critChance}. Rolled {critRoll}.");
+            Bonfire.Log.LogDebug($"[LuckStat] Crit chance: {critChance}. Rolled {critRoll}.");
 
             bool didCrit = critRoll <= critChance;
             if (didCrit)

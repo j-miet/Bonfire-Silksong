@@ -34,10 +34,10 @@ namespace BonfireSilksong
             switch (m)
             {
                 case 1: return 1;
-                case 2: return 2;
-                case 3: return 3;
-                case 4: return 4;
-                default: return 999;
+                case 2: return 20;
+                case 3: return 30;
+                case 4: return 40;
+                default: return 99;
             }
         }
 
@@ -184,7 +184,7 @@ namespace BonfireSilksong
             }
             else
             {
-                Bonfire.Log.LogDebug("[WisdomLogic] Checking silk regen conditions");
+                Bonfire.Log.LogDebug("[WisdomStat] Checking silk regen conditions");
                 int silkRegenInterval = SilkRegenInterval(Bonfire.Instance.Status.WisdomStat);
                 if (silkRegenInterval <= 0)
                 {
@@ -214,7 +214,7 @@ namespace BonfireSilksong
             {
                 if (SpawnSilkNails())
                 {
-                    Bonfire.Log.LogDebug("[WisdomLogic] Checking Silk Nails cooldown.");
+                    Bonfire.Log.LogDebug("[WisdomStat] Checking Silk Nails cooldown.");
 
                     float silkNailsCD = SilkNailsSpawnCooldown(Bonfire.Instance.Status.WisdomStat);
                     if (silkNailsCD <= 0)
@@ -289,7 +289,7 @@ namespace BonfireSilksong
             MinMaxFloat mmfDelay = (MinMaxFloat)_wispSpawnStartDelay?.GetValue(instance);
             MinMaxFloat mmfSpawnCd = (MinMaxFloat)_wispSpawnCooldown?.GetValue(instance);
 
-            Bonfire.Log.LogDebug("[WisdomLogic] Wispfire Lantern stats:");
+            Bonfire.Log.LogDebug("[WisdomStat] Wispfire Lantern stats:");
             Bonfire.Log.LogDebug("- Delay start: " + mmfDelay.Start);
             Bonfire.Log.LogDebug("- Delay End " + mmfDelay.End);
             Bonfire.Log.LogDebug("- Cd start: " + mmfSpawnCd.Start);
@@ -325,12 +325,12 @@ namespace BonfireSilksong
             if (BlockSummons)
             {
                 BlockSummons = false;
-                Bonfire.Log.LogDebug("[WisdomLogic] Summons are blocked.");
+                Bonfire.Log.LogDebug("[WisdomStat] Summons are blocked.");
             }
             else
             {
                 BlockSummons = true;
-                Bonfire.Log.LogDebug("[WisdomLogic] Summons are active.");
+                Bonfire.Log.LogDebug("[WisdomStat] Summons are active.");
             }
 
             HeroController.instance.GetComponent<SpriteFlash>().flashFocusHeal();

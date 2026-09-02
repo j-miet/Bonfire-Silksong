@@ -28,9 +28,9 @@ namespace BonfireSilksong
             switch (m)
             {
                 case 1: return 1;
-                case 2: return 2;
-                case 3: return 35;
-                default: return 999;
+                case 2: return 20;
+                case 3: return 40;
+                default: return 99;
             }
         }
 
@@ -98,7 +98,7 @@ namespace BonfireSilksong
 
             // skip log printing when GUI calls this
             if (!isGUI)
-                Bonfire.Log.LogDebug($"[ResilienceLogic] Reflect damage: {damage}");
+                Bonfire.Log.LogDebug($"[ResilienceStat] Reflect damage: {damage}");
 
             return damage;
         }
@@ -121,7 +121,7 @@ namespace BonfireSilksong
                 range += 3f;
 
             if (!isGUI)
-                Bonfire.Log.LogDebug($"[ResilienceLogic] Reflect effect area: {range}");
+                Bonfire.Log.LogDebug($"[ResilienceStat] Reflect effect area: {range}");
 
             return range;
         }
@@ -161,7 +161,7 @@ namespace BonfireSilksong
                 if (updated > res)
                     masks -= updated - res;
 
-                Bonfire.Log.LogDebug("[ResilienceLogic] Blue hp healed in Reflect state: " + masks);
+                Bonfire.Log.LogDebug("[ResilienceStat] Blue hp healed in Reflect state: " + masks);
 
                 GameManager.instance.QueuedBlueHealth = masks;
                 EventRegister.SendEvent(EventRegisterEvents.AddQueuedBlueHealth);
@@ -182,7 +182,7 @@ namespace BonfireSilksong
             if (CheckResilienceMilestone(2) || IsInBlueState(BlueState.GLASSCANNON))
             {
                 damage += 10;
-                Bonfire.Log.LogDebug($"[ResilienceLogic] Applied glass cannon flat bonus");
+                Bonfire.Log.LogDebug($"[ResilienceStat] Applied glass cannon flat bonus");
             }
 
             return damage;
@@ -210,7 +210,7 @@ namespace BonfireSilksong
             }
 
             if (!isGUI)
-                Bonfire.Log.LogDebug($"[ResilienceLogic] Glass cannon mask bonus: {bonus}");
+                Bonfire.Log.LogDebug($"[ResilienceStat] Glass cannon mask bonus: {bonus}");
 
             return bonus;
         }
@@ -244,7 +244,7 @@ namespace BonfireSilksong
             }
 
             if (!isGUI)
-                Bonfire.Log.LogDebug($"[ResilienceLogic] Glass cannon milestone bonus: {m}");
+                Bonfire.Log.LogDebug($"[ResilienceStat] Glass cannon milestone bonus: {m}");
 
             return m;
         }
@@ -288,7 +288,7 @@ namespace BonfireSilksong
             if (updated > res)
                 masks -= updated - res;
 
-            Bonfire.Log.LogDebug("[ResilienceLogic] Healed blue masks on crit: " + masks);
+            Bonfire.Log.LogDebug("[ResilienceStat] Healed blue masks on crit: " + masks);
 
             GameManager.instance.QueuedBlueHealth = masks;
             EventRegister.SendEvent(EventRegisterEvents.AddQueuedBlueHealth);
@@ -321,7 +321,7 @@ namespace BonfireSilksong
                 damageTaken = Math.Max(1, amount - 1);
             }
 
-            Bonfire.Log.LogDebug($"[ResilienceLogic] Damage taken in blue state: {damageTaken}");
+            Bonfire.Log.LogDebug($"[ResilienceStat] Damage taken in blue state: {damageTaken}");
 
             return damageTaken;
         }
@@ -334,7 +334,7 @@ namespace BonfireSilksong
         {
             if (instance.cState.evading || instance.cState.invulnerable) return;
 
-            Bonfire.Log.LogDebug("[ResilienceLogic] Took damage from hazard type: " + hazardType);
+            Bonfire.Log.LogDebug("[ResilienceStat] Took damage from hazard type: " + hazardType);
 
             HandleReflectDamageHitLogic(hazardType); // reflect damage logic, triggered only outside iframes
 
@@ -421,7 +421,7 @@ namespace BonfireSilksong
         // Create a reflect damage HitInstance and apply it on enemies in range.
         private static void DealReflectDamage()
         {
-            Bonfire.Log.LogDebug("[ResilienceLogic] Reflecting damage to enemies.");
+            Bonfire.Log.LogDebug("[ResilienceStat] Reflecting damage to enemies.");
 
             if (!IsInBlueState(BlueState.REFLECT))
                 return;

@@ -11,10 +11,10 @@ namespace BonfireSilksong
         {
             switch (m)
             {
-                case 1: return 1;
-                case 2: return 2;
-                case 3: return 3;
-                default: return 999;
+                case 1: return 5;
+                case 2: return 15;
+                case 3: return 30;
+                default: return 99;
             }
         }
 
@@ -41,7 +41,7 @@ namespace BonfireSilksong
         /// </summary>
         public static int ApplyNeedleDamageBonuses(int damage, string sourceName)
         {
-            Bonfire.Log.LogDebug($"[StrengthLogic] Apply needle damage bonuses:");
+            Bonfire.Log.LogDebug($"[StrengthStat] Apply needle damage bonuses:");
             int updated = damage;
 
             if (CheckStrengthMilestone(3) && sourceName.ToLower().Contains("downslash"))
@@ -148,7 +148,7 @@ namespace BonfireSilksong
 
             if ((float)_nailChargeTimerField.GetValue(HeroController.instance) > CurrentChargeLimit)
             {
-                Bonfire.Log.LogDebug("[StrengthLogic] Attempting to release needle strike automatically");
+                Bonfire.Log.LogDebug("[StrengthStat] Attempting to release needle strike automatically");
                 var fsm = FindNeedleStrikeFSM();
 
                 if (fsm == null)

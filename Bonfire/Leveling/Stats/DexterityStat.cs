@@ -11,10 +11,10 @@ namespace BonfireSilksong
         {
             switch (m)
             {
-                case 1: return 1;
-                case 2: return 2;
-                case 3: return 3;
-                default: return 999;
+                case 1: return 5;
+                case 2: return 10;
+                case 3: return 25;
+                default: return 99;
             }
         }
 
@@ -61,7 +61,7 @@ namespace BonfireSilksong
 
             HeroController.instance.GetComponent<SpriteFlash>().FlashGrimmflame();
 
-            Bonfire.Log.LogDebug($"[DexterityLogic] Applied Crit Damage, damage = {updatedDamage}");
+            Bonfire.Log.LogDebug($"[DexterityStat] Applied Crit Damage, damage = {updatedDamage}");
 
             return updatedDamage;
         }
@@ -83,7 +83,7 @@ namespace BonfireSilksong
 
             if (Bonfire.Instance.Status.DexterityStat < 1) return baseDamage;
 
-            Bonfire.Log.LogDebug($"[DexterityLogic] Apply Clawline damage bonuses");
+            Bonfire.Log.LogDebug($"[DexterityStat] Apply Clawline damage bonuses");
 
             if (CheckDexterityMilestone(3))
             {
@@ -125,7 +125,7 @@ namespace BonfireSilksong
         {
             if (CheckDexterityMilestone(3) && wasCrit)
             {
-                Bonfire.Log.LogDebug("[DexterityLogic] Crit heal");
+                Bonfire.Log.LogDebug("[DexterityStat] Crit heal");
 
                 // heal blue hp instead if in a blue state
                 if (ResilienceStat.IsInAnyBlueState() && !HeroController.instance.IsInLifebloodState)

@@ -37,7 +37,7 @@ namespace BonfireSilksong
             GUILayout.Label($"  Tool/Skill: {_dpsData.tool ?? "-"}");
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label($"  Base: {_dpsData.damage}");
+            GUILayout.Label($"  Vanilla: {_dpsData.damageBase}");
             GUILayout.Space(15);
             GUILayout.Label($"  Modded: {_dpsData.damageUpdated}");
             GUILayout.EndHorizontal();
@@ -50,7 +50,7 @@ namespace BonfireSilksong
         {
             _dpsData.source = source;
             _dpsData.tool = tool;
-            _dpsData.damage = damage;
+            _dpsData.damageBase = damage;
             _dpsData.damageUpdated = damageUpdated;
         }
 
@@ -59,7 +59,7 @@ namespace BonfireSilksong
         private const float TopLeftY = 5f;
         private const float BoxOffsetDoubled = BoxOffset * 2;
 
-        private static (string source, string tool, int damage, int damageUpdated) _dpsData;
+        private static (string source, string tool, int damageBase, int damageUpdated) _dpsData;
         private static bool _colorsInitialized = false;
         private static Color _textColor;
         private static Color _bgColor;
