@@ -21,11 +21,13 @@ namespace BonfireSilksong
             GUI.backgroundColor = Color.white;
             GUILayout.BeginVertical("box");
 
+            GUI.enabled = BonfireGUI.NoWindowsPending;
             if (CustomCursor.Button("Extra Settings", GUIStyles.ButtonStyle, GUILayout.Height(40f)))
             {
                 PendingCrestUnlock = false;
                 PendingSettingsWindow = true;
             }
+            GUI.enabled = true;
 
             GUILayout.EndVertical();
         }
@@ -231,9 +233,10 @@ namespace BonfireSilksong
         private const float StatusResetHeight = 530f;
 
         private const float CrestUnlockWidth = 420f;
-        private const float CrestUnlockHeight = 610f;
+        private const float CrestUnlockHeight = 650f;
 
-        private readonly string[] _crestNames = { "Wanderer", "Reaper", "Warrior", "Witch", "Toolmaster", "Spell" };
+        private readonly string[] _crestNames = {
+            "Hunter_v3", "Wanderer", "Reaper", "Warrior", "Witch", "Toolmaster", "Spell" };
         private readonly Dictionary<string, ToolCrest> _crestDict = new Dictionary<string, ToolCrest>();
         private bool _allCrestsUnlocked = false;
 
@@ -294,6 +297,7 @@ namespace BonfireSilksong
             // adjust step size
             GUILayout.Label($"Adjust button step size (how much -/+ buttons changes the target value; range 5-100)");
             GUILayout.BeginHorizontal(GUILayout.Width(160));
+
             if (CustomCursor.Button(
                     $"-",
                     GUILayout.Width(SettingsAdjustButtonWidth),
@@ -537,9 +541,6 @@ namespace BonfireSilksong
 
         private void DrawToggleSettings()
         {
-            var s = Bonfire.Instance.Status;
-
-            // adjust step size
             GUILayout.BeginVertical("box");
             GUILayout.Label("General", GUIStyles.SettingsHeader);
             DrawAdjustUI();
@@ -591,6 +592,7 @@ namespace BonfireSilksong
 
 
             GUILayout.Space(10);
+            CrestUnlockButton("Hunter - 2. Evolution", "Hunter_v3");
             CrestUnlockButton("Wanderer", "Wanderer");
             CrestUnlockButton("Reaper", "Reaper");
             CrestUnlockButton("Beast", "Warrior");
@@ -749,7 +751,7 @@ namespace BonfireSilksong
                 if (CustomCursor.Button(
                     $"{displayName} {(unlocked ? " (Unlocked)" : "")}",
                     GUIStyles.CrestUnlockButtonStyle,
-                    GUILayout.Width(250f),
+                    GUILayout.Width(320f),
                     GUILayout.Height(40f)))
                 {
                     UnlockCrest(crestName);

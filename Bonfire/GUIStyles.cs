@@ -11,9 +11,11 @@ namespace BonfireSilksong
         public static Font TrajanNormal;
 
         public static GUIStyle WordWrapToggleStyle;
+        public static GUIStyle WordWrapLabelStyle;
         public static GUIStyle LabelCenteredStyle;
         public static GUIStyle SettingsHeader;
         public static GUIStyle SettingsHeader2;
+        public static GUIStyle SettingsHeader3;
 
         public static GUIStyle LevelHeaderStyle;
         public static GUIStyle LabelStyle;
@@ -64,6 +66,13 @@ namespace BonfireSilksong
                     wordWrap = true
                 };
             }
+            if (WordWrapLabelStyle == null)
+            {
+                WordWrapLabelStyle = new GUIStyle(GUI.skin.label)
+                {
+                    wordWrap = true
+                };
+            }
 
             if (LabelCenteredStyle == null)
             {
@@ -90,8 +99,19 @@ namespace BonfireSilksong
                 {
                     font = TrajanNormal,
                     fontStyle = FontStyle.Bold,
-                    fontSize = 12,
+                    fontSize = 13,
                     normal = { textColor = new Color(0.4f, 0.4f, 0.8f) }
+                };
+            }
+
+            if (SettingsHeader3 == null)
+            {
+                SettingsHeader3 = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 12,
+                    normal = { textColor = new Color(0.8f, 0.8f, 0.4f) }
                 };
             }
 
@@ -239,7 +259,7 @@ namespace BonfireSilksong
                 FastTravelConfirmHeaderStyle = new GUIStyle(GUI.skin.label)
                 {
                     font = TrajanNormal,
-                    fontSize = 11,
+                    fontSize = 12,
                     alignment = TextAnchor.MiddleCenter,
                     normal = { textColor = new Color(0.8f, 0.7f, 0.3f) }
                 };

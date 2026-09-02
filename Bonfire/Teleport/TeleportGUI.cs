@@ -13,6 +13,8 @@ namespace BonfireSilksong
     /// </summary>
     public class TeleportGUI
     {
+        public static bool PendingFastTravelUnlockWindow = false;
+
         public bool FastTravelDisplay { get; private set; } = false;
 
         public void CloseFastTravelMenu() => Bonfire.Instance.StartCoroutine(CloseFastTravelMenuRoutine());
@@ -33,6 +35,7 @@ namespace BonfireSilksong
             else if (hasBenchPins) text += "\n(Locked, need a map from Shakra)";
             else text += "\n(Locked, need a map + Bench Pins from Shakra)";
 
+            GUI.enabled = BonfireGUI.NoWindowsPending;
             if (CustomCursor.Button(text, GUIStyles.ButtonStyle, GUILayout.Height(40f)))
             {
                 CustomCursor.ResetCursorPosition();
@@ -57,6 +60,7 @@ namespace BonfireSilksong
 
                 BlockInventoryInputs();
             }
+            GUI.enabled = true;
 
             GUI.backgroundColor = Color.white;
 
@@ -141,6 +145,8 @@ namespace BonfireSilksong
 
             if (PlayerData.instance.defeatedBellBeast)
             {
+                PendingFastTravelUnlockWindow = true;
+
                 GUI.color = new Color(0, 0, 0, 0.8f);
                 GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
 
@@ -599,6 +605,7 @@ namespace BonfireSilksong
                             {
                                 GUI.color = Color.white;
                                 GUI.backgroundColor = new Color(0.8f, 0.4f, 0f);
+                                _selectedFullName = mapArea + ": " + customName;
                             }
                             else
                             {
@@ -612,7 +619,6 @@ namespace BonfireSilksong
                             {
                                 _selectedPin = mapPin;
                                 _selectedScene = null;
-                                _selectedFullName = mapArea + ": " + customName;
 
                                 var gameMap = GameManager.instance.gameMap;
                                 Vector2 benchPos = BenchTeleport.GetBenchPinPositionInMapSpace(mapPin);
@@ -693,6 +699,7 @@ namespace BonfireSilksong
                 {
                     GUI.color = Color.white;
                     GUI.backgroundColor = new Color(0.8f, 0.4f, 0f);
+                    _selectedFullName = areaName + ": " + customName;
                 }
                 else
                 {
@@ -706,7 +713,6 @@ namespace BonfireSilksong
                 if (CustomCursor.Button(customName + " ★", buttonStyle, GUILayout.Height(30f)))
                 {
                     _selectedPin = null;
-                    _selectedFullName = areaName + ": " + customName;
                     _selectedScene = loc.Scene;
                 }
 
@@ -792,6 +798,8 @@ namespace BonfireSilksong
 
                 Bonfire.Instance.Status.UnlockedFastTravel = true;
                 Bonfire.Instance.SaveSettings();
+
+                PendingFastTravelUnlockWindow = false;
             }
 
             GUILayout.FlexibleSpace();

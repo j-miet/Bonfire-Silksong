@@ -22,6 +22,21 @@ namespace BonfireSilksong
         public static float Width => 1920f;
         public static float Height => 1080f;
 
+        /// <summary>
+        /// Verifies no top-level windows are open/requesting to be opened.
+        /// </summary>
+        public static bool NoWindowsPending
+        {
+            get
+            {
+                return !(SettingsGUI.PendingSettingsWindow ||
+                    SettingsGUI.PendingCrestUnlock ||
+                    SettingsGUI.PendingStatusReset ||
+                    TeleportGUI.PendingFastTravelUnlockWindow ||
+                    InfoWindow.PendingInfoWindow);
+            }
+        }
+
 
         private bool _benchCheck = false;
 
@@ -95,9 +110,7 @@ namespace BonfireSilksong
                 GUI.contentColor = Color.white;
                 GUI.color = Color.white;
 
-                GUI.enabled = !(SettingsGUI.PendingSettingsWindow ||
-                                SettingsGUI.PendingCrestUnlock ||
-                                SettingsGUI.PendingStatusReset);
+                GUI.enabled = NoWindowsPending;
                 DrawBenchUI();
                 GUI.enabled = true;
 
@@ -105,12 +118,17 @@ namespace BonfireSilksong
                 Settings.DrawExtraSettingsUI();
                 Settings.DrawCrestUnlockUI();
                 Settings.DrawPlayerStatusResetUI();
+
+                InfoWindow.Display();
             }
             else
             {
+                // don't reset PendingFastTravelUnlockWindow here: it will disable itself when closed via button
+                // press. 
                 SettingsGUI.PendingCrestUnlock = false;
                 SettingsGUI.PendingSettingsWindow = false;
                 SettingsGUI.PendingStatusReset = false;
+                InfoWindow.PendingInfoWindow = false;
             }
 
             if (!PlayerData.instance.atBench && _benchCheck)
