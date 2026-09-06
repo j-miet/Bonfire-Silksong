@@ -37,52 +37,55 @@ namespace BonfireSilksong
             {
                 case "strength":
                     return (Bonfire.Instance.Status.StrengthStat
-                    + Instance.StrengthIncrease
-                    + MilestoneBonus
-                    >= StrengthStat.StrengthMilestone(m))
-                    && (Bonfire.Instance.Status.StrengthStat + Instance.StrengthIncrease >= 1);
+                        + Instance.StrengthIncrease
+                        + MilestoneBonus
+                        >= StrengthStat.StrengthMilestone(m)) &&
+                        (Bonfire.Instance.Status.StrengthStat + Instance.StrengthIncrease >= 1);
 
                 case "dexterity":
                     return (Bonfire.Instance.Status.DexterityStat
-                    + Instance.DexterityIncrease
-                    + MilestoneBonus
-                    >= DexterityStat.DexterityMilestone(m))
-                    && (Bonfire.Instance.Status.DexterityStat + Instance.DexterityIncrease >= 1); ;
+                        + Instance.DexterityIncrease
+                        + MilestoneBonus
+                        >= DexterityStat.DexterityMilestone(m)) &&
+                        (Bonfire.Instance.Status.DexterityStat + Instance.DexterityIncrease >= 1); ;
 
                 case "intelligence":
                     return (Bonfire.Instance.Status.IntelligenceStat
-                    + Instance.IntelligenceIncrease
-                    + MilestoneBonus
-                    >= IntelligenceStat.IntelligenceMilestone(m))
-                    && (Bonfire.Instance.Status.IntelligenceStat + Instance.IntelligenceIncrease >= 1);
+                        + Instance.IntelligenceIncrease
+                        + MilestoneBonus
+                        >= IntelligenceStat.IntelligenceMilestone(m)) &&
+                        (Bonfire.Instance.Status.IntelligenceStat + Instance.IntelligenceIncrease >= 1);
 
                 case "artifice":
                     return (Bonfire.Instance.Status.ArtificeStat
-                    + Instance.ArtificeIncrease
-                    + MilestoneBonus
-                    >= ArtificeStat.ArtificeMilestone(m))
-                    && (Bonfire.Instance.Status.ArtificeStat + Instance.ArtificeIncrease >= 1);
+                        + Instance.ArtificeIncrease
+                        + MilestoneBonus
+                        >= ArtificeStat.ArtificeMilestone(m)) &&
+                        (Bonfire.Instance.Status.ArtificeStat + Instance.ArtificeIncrease >= 1);
 
                 case "resilience":
                     return (Bonfire.Instance.Status.ResilienceStat
-                    + Instance.ResilienceIncrease
-                    + MilestoneBonus
-                    >= ResilienceStat.ResilienceMilestone(m))
-                    && (Bonfire.Instance.Status.ResilienceStat + Instance.ResilienceIncrease >= 1);
+                        + Instance.ResilienceIncrease
+                        + MilestoneBonus
+                        >= ResilienceStat.ResilienceMilestone(m)) &&
+                        (Bonfire.Instance.Status.ResilienceStat + Instance.ResilienceIncrease >= 1);
 
                 case "wisdom":
                     return (Bonfire.Instance.Status.WisdomStat
-                    + Instance.WisdomIncrease
-                    + MilestoneBonus
-                    >= WisdomStat.WisdomMilestone(m))
-                    && (Bonfire.Instance.Status.WisdomStat + Instance.WisdomIncrease >= 1);
+                        + Instance.WisdomIncrease
+                        + MilestoneBonus
+                        >= WisdomStat.WisdomMilestone(m)) &&
+                        (Bonfire.Instance.Status.WisdomStat + Instance.WisdomIncrease >= 1);
 
                 case "luck":
                     return (Bonfire.Instance.Status.LuckStat
-                    + Instance.LuckIncrease
-                    + MilestoneBonus
-                    >= LuckStat.LuckMilestone(m))
-                    && (Bonfire.Instance.Status.LuckStat + Instance.LuckIncrease >= 1);
+                        + Instance.LuckIncrease
+                        + MilestoneBonus
+                        >= LuckStat.LuckMilestone(m)) &&
+                        (Bonfire.Instance.Status.LuckStat + Instance.LuckIncrease >= 1);
+
+                case "global":
+                    return GlobalStat.CheckGlobalMilestone((GlobalMilestone)m);
 
                 default:
                     return false;
@@ -113,10 +116,10 @@ namespace BonfireSilksong
             var s = Bonfire.Instance.Status;
 
             return s.StrengthStat + s.DexterityStat + s.IntelligenceStat
-                    + s.ArtificeStat + s.ResilienceStat + s.WisdomStat + s.LuckStat
-                    + s.PendingRelicLevels
-                    + s.PendingRosaryLevels
-                    + 1; // base level
+                + s.ArtificeStat + s.ResilienceStat + s.WisdomStat + s.LuckStat
+                + s.PendingRelicLevels
+                + s.PendingRosaryLevels
+                + 1; // base level
         }
 
         public static int DisplayPendingRosaryLevel()
@@ -268,8 +271,17 @@ namespace BonfireSilksong
             s.PendingRosaryLevels = 0;
             s.PendingRelicLevels = 0;
 
-            silkEaters.Take(s.RespecCost);
-            s.RespecCost++;
+            if (!GlobalStat.CheckGlobalMilestone(GlobalMilestone.RESPECFREE))
+            {
+                if (s.RespecCost > 0)
+                    silkEaters.Take(s.RespecCost);
+
+                s.RespecCost++;
+            }
+            else
+            {
+                s.RespecCost = 0;
+            }
 
             ResetMilestoneFlags();
 
@@ -423,6 +435,7 @@ namespace BonfireSilksong
             s.BlueMaskMode = (int)BlueState.DISABLED;
             s.SilkNailsEnabled = false;
             s.CogflyWarriorEnabled = false;
+            s.PinwielderEnabled = false;
 
             MilestoneBonus = ResilienceStat.GetGlassCannonMilestoneBonus(0);
             WisdomStat.UpdateCogflyWarriorSpawnLimit();

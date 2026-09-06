@@ -114,7 +114,6 @@ namespace BonfireSilksong
                 DrawBenchUI();
                 GUI.enabled = true;
 
-                Teleport.FastTravelUnlockNotification();
                 Settings.DrawExtraSettingsUI();
                 Settings.DrawCrestUnlockUI();
                 Settings.DrawPlayerStatusResetUI();
@@ -162,20 +161,35 @@ namespace BonfireSilksong
         {
             if (Bonfire.IsNotGamePlayState()) return;
 
-            // bench teleport: check if user presses "Inventory", "Quick Map", "Map" or menu cancel keys, and if so, 
-            // close fast travel menu
+            var inputActions = GameManager.instance?.inputHandler?.inputActions;
+
+            // bench teleport -> close fast travel menu if user presses one the following inputs:
+            // "Inventory", "Quick Map", "Map", "QuickCast" ('Spell/Tool' in-game) or menu cancel (Escape on keyboard)
             if (Teleport.FastTravelDisplay)
             {
-                var inputActions = GameManager.instance?.inputHandler?.inputActions;
                 if (inputActions == null) return;
 
                 if (inputActions.OpenInventoryMap.WasPressed ||
                     inputActions.QuickMap.WasPressed ||
                     inputActions.OpenInventory.WasPressed ||
-                    inputActions.MenuCancel.WasPressed)
+                    inputActions.MenuCancel.WasPressed ||
+                    inputActions.QuickCast.WasPressed)
                 {
                     Teleport.CloseFastTravelMenu();
                 }
+            }
+
+            // close the uppermost pending window using "QuickCast" input.
+            if (inputActions.QuickCast.WasPressed && PlayerData.instance.atBench)
+            {
+                if (SettingsGUI.PendingCrestUnlock || SettingsGUI.PendingStatusReset)
+                {
+                    SettingsGUI.PendingCrestUnlock = false;
+                    SettingsGUI.PendingStatusReset = false;
+                    SettingsGUI.PendingSettingsWindow = true;
+                }
+                else if (SettingsGUI.PendingSettingsWindow) SettingsGUI.PendingSettingsWindow = false;
+                else if (InfoWindow.PendingInfoWindow) InfoWindow.PendingInfoWindow = false;
             }
         }
 

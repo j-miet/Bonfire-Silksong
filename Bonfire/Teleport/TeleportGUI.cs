@@ -21,22 +21,14 @@ namespace BonfireSilksong
 
         public void DrawBenchFastTravelButton()
         {
-            if (!Bonfire.Instance.Status.UnlockedFastTravel) return;
-
             GUI.backgroundColor = new Color(0.8f, 0.5f, 0.2f);
             GUILayout.BeginVertical("box");
 
             bool hasAnyMap = PlayerData.instance.HasAnyMap;
             bool hasBenchPins = PlayerData.instance.hasPinBench;
-            string text = "Fast travel";
 
-            if (hasAnyMap && hasBenchPins) { }
-            else if (hasAnyMap) text += "\n(Locked, need Bench Pins from Shakra)";
-            else if (hasBenchPins) text += "\n(Locked, need a map from Shakra)";
-            else text += "\n(Locked, need a map + Bench Pins from Shakra)";
-
-            GUI.enabled = BonfireGUI.NoWindowsPending;
-            if (CustomCursor.Button(text, GUIStyles.ButtonStyle, GUILayout.Height(40f)))
+            GUI.enabled = BonfireGUI.NoWindowsPending && GlobalStat.CheckFastTravelCondition;
+            if (CustomCursor.Button("Fast Travel", GUIStyles.ButtonStyle, GUILayout.Height(40f)))
             {
                 CustomCursor.ResetCursorPosition();
 
@@ -139,6 +131,7 @@ namespace BonfireSilksong
             }
         }
 
+        /*
         public void FastTravelUnlockNotification()
         {
             if (Bonfire.Instance.Status.UnlockedFastTravel) return;
@@ -178,6 +171,7 @@ namespace BonfireSilksong
                 CustomCursor.EndGroup();
             }
         }
+        */
 
 
         // MapPin -> (location scene, location bench marker) tuple
@@ -762,6 +756,7 @@ namespace BonfireSilksong
             GUILayout.EndHorizontal();
         }
 
+        /*
         private void DrawFastTravelUnlockModalPopup()
         {
             GUILayout.Space(10);
@@ -805,5 +800,6 @@ namespace BonfireSilksong
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
         }
+        */
     }
 }

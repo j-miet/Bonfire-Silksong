@@ -9,18 +9,6 @@ namespace BonfireSilksong
     public static class SettingsPatch
     {
         /// <summary>
-        /// CurrencyManager.ProcessAddCurrency (Postfix) + CurrencyManager.ProcessTakeCurrency (Postfix): shell shards 
-        /// replenishment to full when visiting a bench.
-        /// </summary>
-        public static void RefillShellShardsAtBench(CurrencyType type)
-        {
-            if (Bonfire.Instance.Status.RefillShardsAtBench && !PlayerData.instance.atBench) return;
-            if (type != CurrencyType.Shard) return;
-
-            PlayerData.instance.ShellShards = Gameplay.GetCurrencyCap(CurrencyType.Shard);
-        }
-
-        /// <summary>
         /// SprintRaceController.GetRaceInfo (Postfix): reduce SprintMaster Swift's run speed by 50%.
         /// </summary>
         public static float MakeSprintmasterRaceEasier(float currentBaseSpeed)
@@ -84,22 +72,6 @@ namespace BonfireSilksong
         public static bool DeliveryQuestTimerCheck()
         {
             if (!Bonfire.Instance.Status.DeliveryQuestsRemoveTimer) return true;
-
-            return false;
-        }
-
-        /// <summary>
-        /// Toolitem.IsEquipped (Postfix): Have compass effect on map without equipping the tool.
-        /// </summary>
-        public static bool ToggleCompass(ToolItem tool)
-        {
-            if (tool != null &&
-                Gameplay.CompassTool != null &&
-                tool.name == Gameplay.CompassTool.name &&
-                Bonfire.Instance.Status.AlwaysHaveCompassTool)
-            {
-                return true;
-            }
 
             return false;
         }

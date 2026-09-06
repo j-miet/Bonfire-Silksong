@@ -32,6 +32,7 @@ namespace BonfireSilksong
             nameof(CustomNeedleDamageGetter),
             new[] { typeof(HitInstance) });
 
+
         /// <summary>
         /// DamageEnemies.DoDamage (Transpiler):
         /// Override normal getter behavior: strength will scale needle base damage for all sources except silk skills. 
@@ -127,17 +128,86 @@ namespace BonfireSilksong
         }
 
         /// <summary>
+        /// HealthManager.OnEnable (Postfix): Update enemy rosary and shell shard drop count.
+        /// </summary>
+        public static void UpdateCurrencyDrops(HealthManager instance)
+        {
+            var s = Bonfire.Instance.Status;
+
+            int small = GetRosaries("small", instance);
+            int medium = GetRosaries("medium", instance);
+            int large = GetRosaries("large", instance);
+            int shards = GetShellShards(instance);
+
+            Bonfire.Log.LogDebug("[LuckStat] Check currency values");
+            Bonfire.Log.LogDebug("<Vanilla> rosary and shell shard values:");
+            Bonfire.Log.LogDebug($"small={small}");
+            Bonfire.Log.LogDebug($"medium={medium}");
+            Bonfire.Log.LogDebug($"large={large}");
+            Bonfire.Log.LogDebug($"shards={shards}");
+
+            int baseRosaryBonus = GlobalStat.IncreaseCurrencyBaseDrops(s.LuckStat);
+
+            if (baseRosaryBonus > 0)
+            {
+                int modulo = baseRosaryBonus % GlobalStat.ExtraRosaryThreshold;
+                if (modulo == 0)
+                {
+                    medium += baseRosaryBonus / GlobalStat.ExtraRosaryThreshold;
+                }
+                else
+                {
+                    medium += baseRosaryBonus / GlobalStat.ExtraRosaryThreshold;
+                    small += modulo;
+                }
+
+                shards += baseRosaryBonus;
+            }
+
+            int luck = s.LuckStat;
+            if (luck > 0)
+            {
+                small = LuckStat.IncreaseRosaryCount(small, luck);
+                medium = LuckStat.IncreaseRosaryCount(medium, luck);
+                large = LuckStat.IncreaseRosaryCount(large, luck);
+                shards = LuckStat.IncreaseRosaryCount(shards, luck);
+            }
+
+            if (GlobalStat.CheckGlobalMilestone(GlobalMilestone.CURRENCYMULTIPLIER))
+            {
+                small = GlobalStat.ApplyCurrencyMultiplier(small);
+                medium = GlobalStat.ApplyCurrencyMultiplier(medium);
+                large = GlobalStat.ApplyCurrencyMultiplier(large);
+                shards = GlobalStat.ApplyCurrencyMultiplier(shards);
+            }
+
+            Bonfire.Log.LogDebug("<Modded> rosary and shell shard values:");
+            Bonfire.Log.LogDebug($"Base value bonus: {baseRosaryBonus}");
+            Bonfire.Log.LogDebug($"small={small}");
+            Bonfire.Log.LogDebug($"medium={medium}");
+            Bonfire.Log.LogDebug($"large={large}");
+            Bonfire.Log.LogDebug($"shards={shards}");
+
+            // SetGeo: these determine how many rosary beads of each type are dropped, not the value of that type. 
+            // Their actual currency values are: small/shell shard = 1, medium = 5, large = 15.
+            instance.SetGeoSmall(small);
+            instance.SetGeoMedium(medium);
+            instance.SetGeoLarge(large);
+            instance.SetShellShards(shards);
+        }
+
+        /// <summary>
         /// HealthManager.Hit (Prefix): Handle stat damage calculations before game calls HealthManager.TakeDamage
         /// for actual health subtraction logic.
         /// Pass by references: HitInstance is a struct value type and its DamageDealt value needs to be updated.
         /// </summary>
-        public static void ApplyHitDamageBonuses(ref HitInstance hitInstance)
+        public static void ApplyHitBonuses(HealthManager hm, ref HitInstance hit)
         {
-            if (hitInstance.Source == null) return;
+            if (!hit.IsHeroDamage || hit.Source == null) return;
 
-            string sourceName = hitInstance.Source.name;
-            var tool = hitInstance.RepresentingTool;
-            int vanillaDamage = hitInstance.DamageDealt;
+            string sourceName = hit.Source.name;
+            var tool = hit.RepresentingTool;
+            int vanillaDamage = hit.DamageDealt;
 
             // override name for damage sources which still use the default hitInstance e.g. Silk Nails uses Pale Nails
             // silk skill underneath; this makes it easier to handle damage calculations + differentiate sources when
@@ -157,13 +227,13 @@ namespace BonfireSilksong
             Bonfire.Log.LogDebug("- Damage Dealt: " + vanillaDamage);
             Bonfire.Log.LogDebug("- Tool instance: " + tool?.name ?? "null");
 
-            LuckStat.CheckIfCrit(hitInstance);
+            LuckStat.CheckIfCrit(hit);
             bool isCrit = LuckStat.Crit;
 
             // == Important ==
             // 1. Multiplicative damage scaling: just use hitInstance.DamageDealt and scale it.
             // 2. Additive scaling: at this point the game has already applied most if not all buffs.
-            // Thus using simply 'hitInstance.DamageDealt = newValue' would not modify the base value, making any 
+            // Thus, using simply 'hit.DamageDealt = newValue' would not modify the base value, making any 
             // damage buffs e.g. Flintslate for needle hits, useless. Solution is to pick one of following routes: 
             // - find the base damage of damage source and patch it e.g. PlayerData.nailDamage getter for needle 
             // base damage.
@@ -181,7 +251,7 @@ namespace BonfireSilksong
                     auraDamage = DexterityStat.ApplyCritDamage(auraDamage);
                 }
 
-                hitInstance.DamageDealt = auraDamage;
+                hit.DamageDealt = auraDamage;
             }
             else if (sourceName == "Bonfire-Reflect")
             {
@@ -194,19 +264,19 @@ namespace BonfireSilksong
                     reflectDamage = DexterityStat.ApplyCritDamage(reflectDamage);
                 }
 
-                hitInstance.DamageDealt = reflectDamage;
+                hit.DamageDealt = reflectDamage;
             }
             else if (sourceName == "Bonfire-SilkNails")
             {
                 // Silk Nails: summon a weaker version of Pale Nails automatically when an enemy is nearby.
                 // This also disables use of Pale Nails so it's important to separate damage buff checks.
-                hitInstance.DamageDealt = WisdomStat.SilkNailsDamage(Bonfire.Instance.Status.WisdomStat);
+                hit.DamageDealt = WisdomStat.SilkNailsDamage(Bonfire.Instance.Status.WisdomStat);
             }
             else if (sourceName == "Bonfire-CogflyWarrior")
             {
                 // Cogfly Warrior: cogfly which has Wisdom scaling and thus uses neither the original tool's damage
                 // nor tool bonuses.
-                hitInstance.DamageDealt = WisdomStat.CogflyWarriorDamage(Bonfire.Instance.Status.WisdomStat);
+                hit.DamageDealt = WisdomStat.CogflyWarriorDamage(Bonfire.Instance.Status.WisdomStat);
             }
             else if (tool?.Type == ToolItemType.Skill)
             {
@@ -217,7 +287,7 @@ namespace BonfireSilksong
                 // is necessary for extra scaling. As scaling requires adjusting base needle damage, it's already
                 // done earlier in patched Playerdata.nailDamage.
 
-                int spellDamage = hitInstance.DamageDealt;
+                int spellDamage = hit.DamageDealt;
 
                 spellDamage = IntelligenceStat.ApplySpellDamageBonuses(spellDamage, tool);
 
@@ -226,15 +296,17 @@ namespace BonfireSilksong
                     spellDamage = DexterityStat.ApplyCritDamage(spellDamage);
                 }
 
-                hitInstance.DamageDealt = spellDamage;
+                hit.DamageDealt = spellDamage;
             }
             else if (tool != null && (tool.Type == ToolItemType.Red || tool.Type == ToolItemType.Blue))
             {
                 // -- red and blue tools --
 
-                int toolDamage = hitInstance.DamageDealt;
+                string tName = tool.name;
 
-                if (tool.name == "Rosary Cannon" && ArtificeStat.CheckArtificeMilestone(3))
+                int toolDamage = hit.DamageDealt;
+
+                if (tName == "Rosary Cannon" && ArtificeStat.CheckArtificeMilestone(3))
                 {
                     toolDamage += 2;
                 }
@@ -249,18 +321,20 @@ namespace BonfireSilksong
                 if (isCrit)
                 {
                     if (IntelligenceStat.CheckWeakBindRequirement() &&
-                        (tool.name == "Dazzle Bind" || tool.name == "Dazzle Bind Upgraded"))
+                        (tName == "Dazzle Bind" || tool.name == "Dazzle Bind Upgraded"))
                     {
                         // Claw Mirror
 
                         toolDamage = DexterityStat.ApplyCritDamage(toolDamage);
                     }
                     else if (ArtificeStat.CheckArtificeMilestone(1) &&
-                        (tool.name == "Pimpilo" || tool.name == "Brolly Spike"))
+                        (tName == "Pimpilo" || tName == "Brolly Spike"))
                     {
                         // Pimpillo and Sawtooth Circlet
 
                         toolDamage = DexterityStat.ApplyCritDamage(toolDamage);
+
+                        ArtificeStat.CastRuneRageOnHit(hm, in hit);
                     }
                     else if (ArtificeStat.CheckArtificeMilestone(2) && ArtificeStat.IsSilkshotTool(tool))
                     {
@@ -268,7 +342,36 @@ namespace BonfireSilksong
 
                         toolDamage = DexterityStat.ApplyCritDamage(toolDamage);
                     }
+                    else if (LuckStat.IsPinwielderEnabled &&
+                        (tName == "Straight Pin" || tName == "Tri Pin" || tName == "Harpoon"))
+                    {
+                        // Straight Pin, Threefold Pin and Longpin
+                        if (tName == "Tri Pin")
+                        {
+                            if (LuckStat.CheckLuckMilestone(4))
+                            {
+                                toolDamage += 30;
+                            }
+                            else if (LuckStat.CheckLuckMilestone(2))
+                            {
+                                toolDamage += 8;
+                            }
+                        }
+                        else if (tool.name == "Straight Pin")
+                        {
+                            if (LuckStat.CheckLuckMilestone(2))
+                                HeroController.instance.AddSilk(1, false);
+
+                            if (LuckStat.CheckLuckMilestone(3))
+                                toolDamage = DexterityStat.ApplyCritDamage(toolDamage);
+                        }
+
+                        if (tName == "Tri Pin" || tName == "Harpoon")
+                            toolDamage = DexterityStat.ApplyCritDamage(toolDamage);
+                    }
                 }
+
+                LuckStat.CastThreadStormOnHit(hm, in hit, isCrit);
 
                 if (tool.name == "Brolly Spike" &&
                     ArtificeStat.CheckArtificeMilestone(2) &&
@@ -278,13 +381,13 @@ namespace BonfireSilksong
                     ArtificeStat.HitEnemyWithSawtoothCirclet = false;
                 }
 
-                hitInstance.DamageDealt = toolDamage;
+                hit.DamageDealt = toolDamage;
             }
             else if (sourceName == "Harpoon Damager" || sourceName == "Harpoon Dash Damager")
             {
                 // Clawline
 
-                int clawLineDamage = hitInstance.DamageDealt;
+                int clawLineDamage = hit.DamageDealt;
 
                 clawLineDamage = DexterityStat.ApplyClawlineDamageBonuses(clawLineDamage);
 
@@ -293,9 +396,9 @@ namespace BonfireSilksong
                     clawLineDamage = DexterityStat.ApplyCritDamage(clawLineDamage);
                 }
 
-                hitInstance.DamageDealt = clawLineDamage;
+                hit.DamageDealt = clawLineDamage;
             }
-            else if (hitInstance.IsNailDamage)
+            else if (hit.IsNailDamage)
             {
                 // -- basic needle hits + needle strike --
                 // 1. The sourceName with Slash/UpSlash/DownSlash/AltSlash can be used to identify the direction,
@@ -307,7 +410,7 @@ namespace BonfireSilksong
                 // 3. IsUsingNeedleDamageMult would also apply to Silk Skills because in vanilla they do scale
                 // from needle upgrade count. However after base game upgrade scaling, Intelligence handles the rest.
 
-                int needleDamage = hitInstance.DamageDealt;
+                int needleDamage = hit.DamageDealt;
 
                 needleDamage = StrengthStat.ApplyNeedleDamageBonuses(needleDamage, sourceName);
 
@@ -316,14 +419,21 @@ namespace BonfireSilksong
                     needleDamage = DexterityStat.ApplyCritDamage(needleDamage);
                 }
 
-                hitInstance.DamageDealt = needleDamage;
+                hit.DamageDealt = needleDamage;
             }
 
             // -- additional checks after hitInstance's own logic has been applied --
 
             if (ResilienceStat.IsInBlueState(BlueState.GLASSCANNON))
             {
-                hitInstance.DamageDealt = ResilienceStat.ApplyGlassCannonDamageBonus(hitInstance.DamageDealt);
+                hit.DamageDealt = ResilienceStat.ApplyGlassCannonDamageBonus(hit.DamageDealt);
+            }
+
+            if (LuckStat.IsPinwielderEnabled && tool?.name == "Straight Pin")
+            {
+                hit.DamageDealt = (int)Math.Max(Math.Round(hit.DamageDealt * 0.25), 1);
+                Bonfire.Log.LogDebug(
+                    $"Pinwielder state enabled, Straight Pin damage reduced to {hit.DamageDealt}");
             }
 
             // while in reflect state, all non-reflect damage is reduced by 99% but is always at least 1.
@@ -332,17 +442,34 @@ namespace BonfireSilksong
             {
                 if (tool?.name != "Revenge Crystal")
                 {
-                    hitInstance.DamageDealt = (int)Math.Max(Math.Round(hitInstance.DamageDealt * 0.01), 1);
-                    Bonfire.Log.LogDebug($"Reflect state enabled, damage reduced to {hitInstance.DamageDealt}");
+                    // round to ceiling value, Straight Pin has 5/8/11/14/17 damage scaling which becomes 2/2/3/4/5.
+                    hit.DamageDealt = (int)Math.Max(Math.Ceiling(hit.DamageDealt * 0.01), 1);
+                    Bonfire.Log.LogDebug($"Reflect state enabled, damage reduced to {hit.DamageDealt}");
                 }
             }
 
-            DamageOverlay.UpdateData(sourceName, tool?.name, vanillaDamage, hitInstance.DamageDealt);
+            DamageOverlay.UpdateData(sourceName, tool?.name, vanillaDamage, hit.DamageDealt);
 
-            Bonfire.Log.LogDebug("=> Modified Damage Output: " + hitInstance.DamageDealt);
+            Bonfire.Log.LogDebug("=> Modified Damage Output: " + hit.DamageDealt);
 
             DexterityStat.ApplyCritHeal(isCrit);
             LuckStat.Crit = false;
+        }
+
+
+        // helpers for getting current rosary and shell shard values
+        private static int GetRosaries(string size, HealthManager enemy)
+        {
+            FieldInfo fi = enemy.GetType().GetField(size + "GeoDrops", BindingFlags.NonPublic | BindingFlags.Instance);
+            object rosaries = fi.GetValue(enemy);
+            return rosaries == null ? 0 : (int)rosaries;
+        }
+
+        private static int GetShellShards(HealthManager enemy)
+        {
+            FieldInfo fi = enemy.GetType().GetField("shellShardDrops", BindingFlags.NonPublic | BindingFlags.Instance);
+            object shards = fi.GetValue(enemy);
+            return shards == null ? 0 : (int)shards;
         }
     }
 }

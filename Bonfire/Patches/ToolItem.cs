@@ -1,4 +1,3 @@
-using GlobalSettings;
 using HarmonyLib;
 
 namespace BonfireSilksong
@@ -10,7 +9,11 @@ namespace BonfireSilksong
         {
             static void Postfix(ToolItem __instance, ref bool __result)
             {
-                __result = SettingsPatch.ToggleCompass(__instance);
+                if (GlobalStat.CheckGlobalMilestone(GlobalMilestone.QOLTOOLS) &&
+                    GlobalStat.ToggleCompassTool(__instance))
+                {
+                    __result = true;
+                }
             }
         }
     }

@@ -88,13 +88,14 @@ namespace BonfireSilksong
         private const float InfoButtonWidth = InfoAreaRectWidth / 2.5f;
         private const float InfoButtonHeight = 40f;
 
+        private const float GlobalBoxHeight = 150f;
         private const float StrengthBoxHeight = 80f;
         private const float DexterityBoxHeight = 120f;
         private const float IntelligenceBoxHeight = 120f;
         private const float ArtificeBoxHeight = 120f;
         private const float ResilienceBoxHeight = 260f;
         private const float WisdomBoxHeight = 350f;
-        private const float LuckBoxHeight = 120f;
+        private const float LuckBoxHeight = 270f;
 
         private Vector2 _infoScrollPos;
 
@@ -115,6 +116,8 @@ namespace BonfireSilksong
         private string _totalRes;
         private string _totalWsdm;
         private string _totalLuck;
+
+        private string _rosaryBaseIncrease;
 
         private string _needleBaseDamage;
 
@@ -146,7 +149,7 @@ namespace BonfireSilksong
         private string _lanternSpawnCooldown;
 
         private string _critChance;
-        private string _rosaryIncrease;
+        private string _rosaryCountIncrease;
 
         private string _applyText;
 
@@ -194,7 +197,7 @@ namespace BonfireSilksong
             DrawStatLabel("Silk Skill Damage Bonus: " + _spellDamageBonus);
             DrawStatLabel("Tool Damage Bonus: " + _toolDamageBonus);
             DrawStatLabel("Lifeblood Masks: " + _extraMasks);
-            DrawStatLabel("Silk Gained On Enemy Hit: " + _extraSilk);
+            DrawStatLabel("Extra Silk on Needle Hits: " + _extraSilk);
             DrawStatLabel("Crit Chance: " + _critChance);
             GUILayout.EndVertical();
 
@@ -205,7 +208,7 @@ namespace BonfireSilksong
             DrawStatLabel("Tool Regen Interval: " + _toolRegenInterval);
             DrawStatLabel("Block Chance: " + _blockChance);
             DrawStatLabel("Silk Regen Interval: " + _silkRegenInterval);
-            DrawStatLabel("Rosary & Shard Increase: " + _rosaryIncrease);
+            DrawStatLabel("");
             GUILayout.EndVertical();
 
             GUILayout.EndHorizontal();
@@ -225,10 +228,10 @@ namespace BonfireSilksong
 
             GUI.backgroundColor = Color.green;
             if (CustomCursor.Button(
-                _applyText,
-                GUIStyles.ButtonStyle,
-                GUILayout.Width(ApplyCancelButtonsWidth),
-                GUILayout.Height(LevelingAreaButtonHeight))
+                    _applyText,
+                    GUIStyles.ButtonStyle,
+                    GUILayout.Width(ApplyCancelButtonsWidth),
+                    GUILayout.Height(LevelingAreaButtonHeight))
                 && PlayerData.instance.atBench)
             {
                 ls.ApplyLevel();
@@ -238,10 +241,10 @@ namespace BonfireSilksong
 
             GUI.backgroundColor = Color.white;
             if (CustomCursor.Button(
-                "Cancel",
-                GUIStyles.ButtonStyle,
-                GUILayout.Width(ApplyCancelButtonsWidth),
-                GUILayout.Height(LevelingAreaButtonHeight))
+                    "Cancel",
+                    GUIStyles.ButtonStyle,
+                    GUILayout.Width(ApplyCancelButtonsWidth),
+                    GUILayout.Height(LevelingAreaButtonHeight))
                 && PlayerData.instance.atBench)
             {
                 ls.ResetPendingLevelUp();
@@ -253,8 +256,9 @@ namespace BonfireSilksong
             GUILayout.FlexibleSpace();
 
             GUI.backgroundColor = Color.red;
+            int r = s.RespecCost;
             if (CustomCursor.Button(
-                    $"Respec ({s.RespecCost} " + $"{(s.RespecCost > 1 ? "Silkeaters" : "Silkeater")})",
+                    $"Respec" + $"{(r <= 0 ? "" : $" ({r} {(r > 1 ? $"Silkeaters" : "Silkeater")})")}",
                     GUIStyles.ButtonStyle,
                     GUILayout.Width(LevelingAreaDefaultRectWidth),
                     GUILayout.Height(LevelingAreaButtonHeight))
@@ -335,7 +339,7 @@ namespace BonfireSilksong
             DrawStatLabelExtended($"{_toolDamageBonus}\n{_toolRegenInterval}");
             DrawStatLabelExtended($"{_extraMasks}\n{_blockChance}");
             DrawStatLabelExtended($"{_extraSilk}\n{_silkRegenInterval}");
-            DrawStatLabelExtended($"{_critChance}\n{_rosaryIncrease}");
+            DrawStatLabelExtended($"{_critChance}");
             GUILayout.EndVertical();
 
             GUILayout.EndHorizontal();
@@ -383,8 +387,9 @@ namespace BonfireSilksong
             GUILayout.FlexibleSpace();
 
             GUI.backgroundColor = Color.red;
+            int r = s.RespecCost;
             if (CustomCursor.Button(
-                    $"Respec ({s.RespecCost} " + $"{(s.RespecCost > 1 ? "Silkeaters" : "Silkeater")})",
+                    $"Respec" + $"{(r <= 0 ? "" : $" ({r} {(r > 1 ? $"Silkeaters" : "Silkeater")})")}",
                     GUIStyles.ButtonStyle,
                     GUILayout.Width(LevelingAreaDefaultRectWidth),
                     GUILayout.Height(LevelingAreaButtonHeight))
@@ -431,6 +436,7 @@ namespace BonfireSilksong
             GUI.backgroundColor = Color.white;
 
             GUILayout.BeginVertical();
+            DrawGlobalLevelInfo();
             DrawStrengthInfo();
             DrawDexterityInfo();
             DrawIntelligenceInfo();
@@ -451,10 +457,149 @@ namespace BonfireSilksong
             GUI.enabled = true;
         }
 
+        private void DrawGlobalLevelInfo()
+        {
+            string s = "Global";
+            var status = Bonfire.Instance.Status;
+
+            GUILayout.BeginVertical("box");
+            Color colorOld = GUI.color;
+            GUI.color = Color.cyan;
+            GUILayout.Label("Global", GUIStyles.LabelStyle);
+            GUI.color = colorOld;
+
+            // lvl data
+            GUILayout.BeginHorizontal();
+
+            int cLvl = _currentLvl - status.PendingRelicLevels - status.PendingRosaryLevels;
+            int rosaryLvl = _rosaryLevel - status.PendingRosaryLevels;
+            int spentRosaries = status.TotalSpentRosaries + status.PendingRosaries;
+            int relicLvl = _currentLvl - _rosaryLevel;
+            int relicsIn = relicLvl - status.PendingRelicLevels;
+            int relicsLeft = _availableRelicLevels + status.PendingRelicLevels;
+
+            Color afterColor = GUIStyles.LvlInfoGlobalLvlDataStyle.normal.textColor;
+            float wbox = BoxWidth;
+            float w = 320f;
+
+            GUILayout.BeginVertical("box", GUILayout.Height(GlobalBoxHeight), GUILayout.Width(wbox));
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"Current Level: {cLvl}", GUIStyles.LvlInfoHeaderPrimaryStyle, GUILayout.Width(w));
+            if (_currentLvl > cLvl)
+            {
+                GUI.color = afterColor;
+                GUILayout.Label($" -› {_currentLvl}", GUIStyles.LvlInfoGlobalLvlDataStyle);
+                GUI.color = colorOld;
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"Rosary Levels: {rosaryLvl}", GUIStyles.LvlInfoLabelStyle, GUILayout.Width(w));
+            if (_rosaryLevel > rosaryLvl)
+            {
+                GUI.color = afterColor;
+                GUILayout.Label($" -› {_rosaryLevel}", GUIStyles.LvlInfoLabelStyle);
+                GUI.color = colorOld;
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"Rosaries spent in total: {status.TotalSpentRosaries}",
+                GUIStyles.LvlInfoLabelStyle,
+                GUILayout.Width(w));
+            if (spentRosaries > status.TotalSpentRosaries)
+            {
+                GUI.color = afterColor;
+                GUILayout.Label($" -› {spentRosaries}", GUIStyles.LvlInfoLabelStyle);
+                GUI.color = colorOld;
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"Relic Levels: {relicsIn} ({relicsLeft} available)",
+                GUIStyles.LvlInfoLabelStyle,
+                GUILayout.Width(w));
+            if (status.PendingRelicLevels > 0)
+            {
+                GUI.color = afterColor;
+                GUILayout.Label($" -› {relicLvl} ({_availableRelicLevels} available)", GUIStyles.LvlInfoLabelStyle);
+                GUI.color = colorOld;
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.EndVertical();
+
+            GUI.color = colorOld;
+
+            // global bonuses
+            GUILayout.BeginVertical("box", GUILayout.Height(GlobalBoxHeight));
+            GUILayout.Label("Bonus", GUIStyles.LvlInfoGlobalBonusStyle);
+            DrawInfoStatLabel($"Rosary & Shell Shard Drop Count: {_rosaryBaseIncrease}\n");
+            GUILayout.EndVertical();
+
+            GUILayout.EndHorizontal();
+
+            // unlocks
+            GUILayout.BeginHorizontal("box");
+            GUILayout.BeginVertical();
+
+            GUILayout.Label("Unlocks", GUIStyles.LvlInfoGlobalUnlockStyle);
+
+            GUILayout.Label(
+                $"★ {GlobalStat.GetGlobalMilestoneString(GlobalMilestone.CURRENCYBASE)}\n" +
+                "Increases the base amount of rosary beads and shell shards dropped by enemies.\n" +
+                $"Starts at +1 and gains another +1 every {GlobalStat.ExtraRosaryThreshold} levels.",
+                LevelingSystem.HighLightStatMilestone(s, (int)GlobalMilestone.CURRENCYBASE)
+                    ? GUIStyles.LvlInfoLabelStyle
+                    : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.Label(
+                $"★ {GlobalStat.GetGlobalMilestoneString(GlobalMilestone.BENCHTELEPORT)}\n" +
+                "Unlocks access to bench fast travel.",
+                LevelingSystem.HighLightStatMilestone(s, (int)GlobalMilestone.BENCHTELEPORT)
+                    ? GUIStyles.LvlInfoLabelStyle
+                    : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.Label(
+                $"★ {GlobalStat.GetGlobalMilestoneString(GlobalMilestone.QOLTOOLS)}\n" +
+                "The effects of the Compass and Magnetite Brooch are always active once you obtain the " +
+                "corresponding tool.",
+                LevelingSystem.HighLightStatMilestone(s, (int)GlobalMilestone.QOLTOOLS)
+                    ? GUIStyles.LvlInfoLabelStyle
+                    : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.Label(
+                $"★ {GlobalStat.GetGlobalMilestoneString(GlobalMilestone.SHARDREFILL)}\n" +
+                "Shell Shards are fully replenished during bench visits.",
+                LevelingSystem.HighLightStatMilestone(s, (int)GlobalMilestone.SHARDREFILL)
+                    ? GUIStyles.LvlInfoLabelStyle
+                    : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.Label(
+                $"★ {GlobalStat.GetGlobalMilestoneString(GlobalMilestone.CURRENCYMULTIPLIER)}\n" +
+                "All rosary and shell shard drops from enemies are doubled.",
+                LevelingSystem.HighLightStatMilestone(s, (int)GlobalMilestone.CURRENCYMULTIPLIER)
+                    ? GUIStyles.LvlInfoLabelStyle
+                    : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.Label(
+                $"★ {GlobalStat.GetGlobalMilestoneString(GlobalMilestone.RESPECFREE)}\n" +
+                "Respec cost removed.",
+                LevelingSystem.HighLightStatMilestone(s, (int)GlobalMilestone.RESPECFREE)
+                    ? GUIStyles.LvlInfoLabelStyle
+                    : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+
+            GUILayout.EndVertical();
+        }
+
         // info boxes for all stats
         private void DrawStrengthInfo()
         {
-            string s = "strength";
+            string s = "Strength";
 
             GUILayout.BeginVertical("box");
             GUILayout.Label("Strength", GUIStyles.LabelStyle);
@@ -500,7 +645,7 @@ namespace BonfireSilksong
             GUI.backgroundColor = bgOld;
 
             GUILayout.Label(
-                $"[{StrengthStat.StrengthMilestone(1)}] " +
+                $"[{StrengthStat.StrengthMilestone(1)} points]\n" +
                 "Needle strike: active charge time reduced by 20%. " +
                 "Can toggle on/off automatic release when fully charged.",
                 LevelingSystem.HighLightStatMilestone(s, 1)
@@ -508,16 +653,16 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{StrengthStat.StrengthMilestone(2)}] " +
+                $"[{StrengthStat.StrengthMilestone(2)} points]\n" +
                 "Needle range increased by 33%. Needle strike initial charge time reduced by 20%.",
                 LevelingSystem.HighLightStatMilestone(s, 2)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{StrengthStat.StrengthMilestone(3)}] " +
+                $"[{StrengthStat.StrengthMilestone(3)} points]\n" +
                 "Flintslate and Flea Brew tools have infinite buff duration. " +
-                "Downslash damage increased by 100%. " +
+                "Downslash damage increased by 100%.\n" +
                 "Needle strike: both initial and active charge time reduction buffed (20% -> 40%).",
                 LevelingSystem.HighLightStatMilestone(s, 3)
                     ? GUIStyles.LvlInfoLabelStyle
@@ -531,7 +676,7 @@ namespace BonfireSilksong
 
         private void DrawDexterityInfo()
         {
-            string s = "dexterity";
+            string s = "Dexterity";
 
             GUILayout.BeginVertical("box");
             GUILayout.Label("Dexterity", GUIStyles.LabelStyle);
@@ -558,7 +703,7 @@ namespace BonfireSilksong
             GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
 
             GUILayout.Label(
-                $"[{DexterityStat.DexterityMilestone(1)}] " +
+                $"[{DexterityStat.DexterityMilestone(1)} points]\n" +
                 "Clawline damage increased by 25%. " +
                 $"Every {DexterityStat.ClawlineHitLimit}th hit from Clawline deals 2x damage " +
                 "(default Clawline use counts as 2 hits).",
@@ -567,14 +712,14 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{DexterityStat.DexterityMilestone(2)}] " +
+                $"[{DexterityStat.DexterityMilestone(2)} points]\n" +
                 "Clawline silk cost removed, can now critically hit.",
                 LevelingSystem.HighLightStatMilestone(s, 2)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{DexterityStat.DexterityMilestone(3)}] " +
+                $"[{DexterityStat.DexterityMilestone(3)} points]\n" +
                 "All critical hits now heal 1 mask.\n" +
                 "Clawline:\n" +
                 " - damage bonus increased (25% -> 50%).\n" +
@@ -657,13 +802,13 @@ namespace BonfireSilksong
             GUI.backgroundColor = bgOld;
 
             GUILayout.Label(
-                $"[{IntelligenceStat.IntelligenceMilestone(1)}] " +
+                $"[{IntelligenceStat.IntelligenceMilestone(1)} point]\n" +
                 "Toggle on/off 'Weaver's Light'.\n" +
                 "\n" +
                 "<Weaver's Light>\n" +
                 "- Taunt now enables an aura around you which flashes every second, consuming 1 silk " +
                 "dealing damage to enemies inside it. Damage and range increases with Intelligence stat.\n" +
-                "- If you use Throwing Rings: aura will instead cost 2 silk per second and has its range " +
+                "- If you taunt with Throwing Rings: aura will instead cost 2 silk per second and has its range " +
                 "reduced by 50%, but you get +3 extra damage from each silk in spool.\n" +
                 "- Taunt no longer grants the 50% damage bonus for next hit, however its initial cost is also" +
                 "also removed. Taunting again also disables active aura effect, meaning you can use it tactically " +
@@ -674,10 +819,12 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{IntelligenceStat.IntelligenceMilestone(2)}] " +
-                "Toggle on/off 'Weak Bind'. While Weak Bind is active:\n" +
+                $"[{IntelligenceStat.IntelligenceMilestone(2)} points]\n" +
+                "Toggle on/off 'Weak Bind'.\n" +
+                "\n" +
+                "<Weak Bind>\n" +
                 "- Bind heals 1 mask and costs 1/3 of current cost, but keeps its current speed,\n" +
-                "- You take + 1 damage from everything, but you the following bonuses:\n" +
+                "- You take + 1 damage from everything, but get the following bonuses:\n" +
                 "  - Silk Skills: cost reduced by 1, damage increased by 50% multiplicatively.\n" +
                 "  - Claw Mirror: procs additional time (similar to Multibinder effect), binding speed increased " +
                 "by 33%.\n" +
@@ -687,14 +834,14 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{IntelligenceStat.IntelligenceMilestone(3)}] " +
+                $"[{IntelligenceStat.IntelligenceMilestone(3)} points]\n" +
                 "Silk skills, Claw Mirror and Taunt can crit. Equipping Claw Mirror increases binding speed by 33%.",
             LevelingSystem.HighLightStatMilestone(s, 3)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{IntelligenceStat.IntelligenceMilestone(4)}] " +
+                $"[{IntelligenceStat.IntelligenceMilestone(4)} points]\n" +
                 "Give more effects to all Intelligence-focused abilities:\n" +
                 "- Silk skills: silk cost reduced by 1.\n" +
                 "- Claw Mirror: every 2 points in Intelligence adds +1 damage. Damage is applied after Artifice stat " +
@@ -703,6 +850,7 @@ namespace BonfireSilksong
                 "ability, consuming all silk when used while giving following benefits: \n" +
                 "  - Range increased by 5.\n" +
                 "  - Each silk in spool increases damage by +6.\n" +
+                "\n" +
                 "Taunting with Throwing Rings has no additional effects when Void Burst is enabled.",
                 LevelingSystem.HighLightStatMilestone(s, 4)
                     ? GUIStyles.LvlInfoLabelStyle
@@ -745,7 +893,7 @@ namespace BonfireSilksong
             GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
 
             GUILayout.Label(
-                $"[{ArtificeStat.ArtificeMilestone(1)}] " +
+                $"[{ArtificeStat.ArtificeMilestone(1)} points]\n" +
                 "Pimpillo: has 2x tool capacity and can apply critical hits.\n" +
                 "Sawtooth Circlet: can apply critical hits.",
                 LevelingSystem.HighLightStatMilestone(s, 1)
@@ -753,9 +901,9 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{ArtificeStat.ArtificeMilestone(2)}] " +
-                "Rosary Cannon: has infinite, free refills. Every time you start the use animation, it becomes " +
-                "fully loaded loaded.\n" +
+                $"[{ArtificeStat.ArtificeMilestone(2)} points]\n" +
+                "Rosary Cannon: has infinite, free refills -> every time you begin the use animation, it becomes " +
+                "fully loaded.\n" +
                 "Silkshot: silk cost removed, can apply critical hits.\n" +
                 "Sawtooth Circlet: gives 1 silk from first enemy hit.",
                 LevelingSystem.HighLightStatMilestone(s, 2)
@@ -763,7 +911,7 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{ArtificeStat.ArtificeMilestone(3)}] " +
+                $"[{ArtificeStat.ArtificeMilestone(3)} points]\n" +
                 "Rosary Cannon: +2 flat damage which is applied before Artifice stat damage bonus.\n" +
                 "Silkshot: has infinite charges.\n" +
                 "Sawtooth Circlet: horizontal range increased by 50%.\n" +
@@ -774,7 +922,7 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{ArtificeStat.ArtificeMilestone(4)}] " +
+                $"[{ArtificeStat.ArtificeMilestone(4)} points]\n" +
                 "Offensive red tool has 33% chance to spawn a copy of itself when used. " +
                 "When a copy is spawned, neither original nor copy cost charges.\n" +
                 "Following tools cannot benefit from this: Silkshot, Delver's Drill, Rosary Cannon, " +
@@ -845,7 +993,7 @@ namespace BonfireSilksong
             GUI.backgroundColor = bgOld;
 
             GUILayout.Label(
-                $"[{ResilienceStat.ResilienceMilestone(1)}] " +
+                $"[{ResilienceStat.ResilienceMilestone(1)} point]\n" +
                 "You can now select 'Vengeful' or 'Hollow' blue health mode.\n" +
                 "\n" +
                 "When Vengeful/Hollow is active:\n" +
@@ -886,7 +1034,7 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{ResilienceStat.ResilienceMilestone(2)}] " +
+                $"[{ResilienceStat.ResilienceMilestone(2)} points]\n" +
                 "Additional buffs to blue health modes:\n" +
                 "<Vengeful> Bind now heals 2 blue masks, reflect damage area increased by 1.\n" +
                 "<Hollow> You get flat +10 damage bonus which is applied after mask bonuses. Milestone bonus " +
@@ -896,7 +1044,7 @@ namespace BonfireSilksong
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{ResilienceStat.ResilienceMilestone(3)}] " +
+                $"[{ResilienceStat.ResilienceMilestone(3)} points]\n" +
                 "While in Vengful/Hollow state, you can now enter Plasmified state and Plasmium Phial will instantly " +
                 "trigger Plasmified when used. While Plasmified, your use of Plasmium Phial is again blocked but " +
                 "you get a more offensive variant of current state:\n" +
@@ -938,7 +1086,7 @@ namespace BonfireSilksong
 
             GUILayout.BeginVertical("box", GUILayout.Height(WisdomBoxHeight));
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
-            DrawInfoStatLabel("Silk Gained On Enemy Hit: " + _extraSilk);
+            DrawInfoStatLabel("Extra Silk on Needle hits: " + _extraSilk);
             DrawInfoStatLabel(
                 $"Silk Regen Interval: " +
                 $"{(_silkRegenInterval == "-" ? "- (requires 5 stat points)" : _silkRegenInterval)}");
@@ -966,10 +1114,9 @@ namespace BonfireSilksong
 
             GUI.enabled = LevelingSystem.HighLightStatMilestone(s, 1) && PlayerData.instance.hasNeedolin;
             GUILayout.Label(
-                $"[Quality of Life]\n" +
+                $"[{WisdomStat.GetBlockSummonsString}]\n" +
                 "\n" +
-                "If you have unlocked 1. Wisdom milestone and use Needolin, " +
-                "you disable/re-enable all your following summons: \n" +
+                "If you use Needolin, you disable/re-enable all your following summons: \n" +
                 "- Wispfire Lantern\n" +
                 "- Silk Nails\n" +
                 "- Cogfly Warrior.\n" +
@@ -1033,20 +1180,20 @@ namespace BonfireSilksong
             GUI.backgroundColor = bgOld;
 
             GUILayout.Label(
-                $"[{WisdomStat.WisdomMilestone(1)}] " +
+                $"[{WisdomStat.WisdomMilestone(1)} point]\n" +
                 "Toggle on/off 'Silk Nails' which is a weaker version of Pale Nails silk skill.\n" +
                 "\n" +
                 "<Silk Nails>\n" +
                 "- Has its own damage and spawn cooldown scaling from Wisdom.\n" +
                 "- Spawns automatically when enemies are near.\n" +
                 "- Doesn't have a silk cost.\n" +
-                "- While Silk Nails is enabled, you cannot use Pale Nails silk skill.",
+                "- While Silk Nails is enabled, you can no longer use Pale Nails silk skill.",
                 LevelingSystem.HighLightStatMilestone(s, 1)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{WisdomStat.WisdomMilestone(2)}] " +
+                $"[{WisdomStat.WisdomMilestone(2)} points]\n" +
                 "Toggle on/off 'Cogfly Warrior' which is a stronger version of Cogfly.\n" +
                 "\n" +
                 "<Cogfly Warrior>\n" +
@@ -1054,21 +1201,21 @@ namespace BonfireSilksong
                 "- Has no max hit limit, meaning the minion will never die + it auto-summons itself if some game " +
                 "event ends up destroying it (e.g. cutscenes).\n" +
                 "- Total cogfly amount limited to 1, final milestone increases this by 1.\n" +
-                "- While Cogfly Warrior is enabled, you cannot use Cogfly tool.",
+                "- While Cogfly Warrior is enabled, you can no longer use Cogfly tool.",
                 LevelingSystem.HighLightStatMilestone(s, 2)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{WisdomStat.WisdomMilestone(3)}] " +
+                $"[{WisdomStat.WisdomMilestone(3)} points]\n" +
                 "Wispfire Lantern silk cost removed, attack delay halved and spawn cooldown is down to 2 seconds.\n" +
-                "[Reminder] Wispfire Lantern has no Wisdom stat scaling, only tool damage matters.",
+                "=> Wispfire Lantern has no Wisdom stat scaling, only this and the next milestone buffs it.",
                 LevelingSystem.HighLightStatMilestone(s, 3)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
             GUILayout.Label(
-                $"[{WisdomStat.WisdomMilestone(4)}] " +
+                $"[{WisdomStat.WisdomMilestone(4)} points]\n" +
                 "All of Wisdom's offensive abilities buffed:\n" +
                 "- Silk Nails: Can now critically hit.\n" +
                 "- Cogfly Warrior: summons a second cogfly.\n" +
@@ -1085,6 +1232,8 @@ namespace BonfireSilksong
 
         private void DrawLuckInfo()
         {
+            string s = "Luck";
+
             GUILayout.BeginVertical("box");
             GUILayout.Label("Luck", GUIStyles.LabelStyle);
 
@@ -1094,20 +1243,94 @@ namespace BonfireSilksong
             GUILayout.BeginVertical("box", GUILayout.Height(LuckBoxHeight));
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
             DrawInfoStatLabel("Crit Chance: " + _critChance);
-            DrawInfoStatLabel("Rosary & Shard Increase: " + _rosaryIncrease);
+            DrawInfoStatLabel($"Increase in Rosary and Shard Drops: {_rosaryCountIncrease}*");
+
             GUILayout.EndVertical();
-
-            // GUILayout.BeginVertical(GUILayout.Height(LuckBoxHeight));
-            // DrawInfoStatLabel("");
-            // GUILayout.EndVertical();
-
             GUILayout.EndHorizontal();
 
-            // GUILayout.BeginHorizontal("box");
-            // GUILayout.BeginVertical();
-            // GUILayout.Label("", GUIStyles.LvlInfoHeaderMilestoneStyle);
-            // GUILayout.EndVertical();
-            // GUILayout.EndHorizontal();
+            // milestones
+            GUILayout.BeginHorizontal("box");
+            GUILayout.BeginVertical();
+
+            GUILayout.Label("Milestones", GUIStyles.LvlInfoHeaderMilestoneStyle);
+
+            // Pinwielder Toggle
+            GUI.enabled = LuckStat.CheckLuckMilestone(1);
+
+            Color bgOld = GUI.backgroundColor;
+
+            string pinwielderToggle = "Pinwielder: " +
+                $"{(Bonfire.Instance.Status.PinwielderEnabled ? "ENABLED" : "DISABLED")}";
+            GUI.backgroundColor = _infoButtonColor;
+            if (CustomCursor.Button(
+                pinwielderToggle,
+                GUIStyles.LvlInfoButtonStyle,
+                GUILayout.Width(InfoButtonWidth),
+                GUILayout.Height(InfoButtonHeight)))
+            {
+                Bonfire.Instance.Status.PinwielderEnabled = !Bonfire.Instance.Status.PinwielderEnabled;
+            }
+            GUI.enabled = true;
+            GUILayout.Space(5);
+
+            GUI.backgroundColor = bgOld;
+
+            GUILayout.Label(
+                $"[{LuckStat.LuckMilestone(1)} points]\n" +
+                "Can toggle \"Pinwielder\" on/off.\n" +
+                "\n" +
+                "<Pinwielder>\n" +
+                "- All of the Luck milestone bonuses require Pinwielder state to be active.\n" +
+                "- Focuses on 3 pin tools: Straight Pin, Threefold Pin and Longpin.\n" +
+                "- Has infinite ranged attack, but with very low damage output in early game. Relies a lot on " +
+                "higher crit chance, milestone bonuses and buffs from other stat trees. Later on with final " +
+                "milestones, high crit chance and various other synergies, damage output will be very high." +
+                "- Later milestones will also utilize Thread Storm silk skill:\n" +
+                "\n" +
+                "=> Pinwielder's Thread Storm effect:\n" +
+                "- Casts the Thread Storm silk skill normally except it spawns on top of enemy. Skill scales from " +
+                "silk skill damage bonuses.\n" +
+                "- Only one instance of Thread Storm can be active at a time: effect cannot be re-triggered until " +
+                "previous one ends.\n" +
+                "- You can no longer cast Thread Storm skill normally.\n" +
+                "\n" +
+                "# Initial bonuses #\n" +
+                "- Straight Pin: has infinite charges, but deals 1/4 of its normal damage (rounded up to the next " +
+                "integer value)\n" +
+                "- Threefold Pin & Longpin: can now critically hit.",
+                LevelingSystem.HighLightStatMilestone(s, 1)
+                    ? GUIStyles.LvlInfoLabelStyle
+                    : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.Label(
+                $"[{LuckStat.LuckMilestone(2)} points]\n" +
+                "Straight Pin: can now critically hit + crits give 1 silk.\n" +
+                "Threefold Pin: crits get +8 damage which is applied before Dexterity crit multiplier.",
+                LevelingSystem.HighLightStatMilestone(s, 2)
+                    ? GUIStyles.LvlInfoLabelStyle
+                    : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.Label(
+                $"[{LuckStat.LuckMilestone(3)} points]\n" +
+                "Longpin: casts Thread Storm on crit. " +
+                $"Effect lasts for {LuckStat.ThreadStormDuration} seconds.",
+                LevelingSystem.HighLightStatMilestone(s, 3)
+                    ? GUIStyles.LvlInfoLabelStyle
+                    : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.Label(
+                $"[{LuckStat.LuckMilestone(4)} points]\n" +
+                "- Straight Pin: crit casts Thread Storm with effect duration of " +
+                $"{LuckStat.ThreadStormDuration} seconds.\n" +
+                "- Threefold Pin: crit damage bonus buffed (+8 -> +30).\n" +
+                "- Longpin: now always casts Thread Storm on enemy hit (no crit required), effect lasts " +
+                $"{LuckStat.ThreadStormDurationExtended} seconds.",
+                LevelingSystem.HighLightStatMilestone(s, 4)
+                    ? GUIStyles.LvlInfoLabelStyle
+                    : GUIStyles.LvlInfoLabelDisabledStyle);
+
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
         }
@@ -1166,7 +1389,7 @@ namespace BonfireSilksong
                 text,
                 GUIStyles.LvlInfoLabelStyle,
                 GUILayout.Width(BoxWidth),
-                 GUILayout.Height(LevelingAreaButtonHeight));
+                GUILayout.Height(LevelingAreaButtonHeight));
         }
 
         private void DrawUIPanels()
@@ -1284,6 +1507,9 @@ namespace BonfireSilksong
             _totalLuck = luckNew.ToString();
 
             // stat formula strings
+            // Global
+            _rosaryBaseIncrease = "+" + GlobalStat.IncreaseCurrencyBaseDrops(_currentLvl).ToString();
+
             // Strength
             _needleBaseDamage = StrengthStat.NeedleDamage(5 + 4 * PlayerData.instance.nailUpgrades, strNew).ToString();
 
@@ -1372,7 +1598,7 @@ namespace BonfireSilksong
 
             // Luck
             _critChance = LuckStat.CritChance(luckNew).ToString() + "%";
-            _rosaryIncrease = LuckStat.GetRosaryIncreasePercentage(s.LuckStat, ls.LuckIncrease);
+            _rosaryCountIncrease = (LuckStat.IncreaseRosaryCount(100, luckNew) - 100).ToString() + "%";
 
             // "Apply" button label
             int pRelics = s.PendingRelicLevels;

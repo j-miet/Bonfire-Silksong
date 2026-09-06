@@ -11,11 +11,11 @@ namespace BonfireSilksong
         public static Font TrajanNormal;
 
         public static GUIStyle WordWrapToggleStyle;
-        public static GUIStyle WordWrapLabelStyle;
         public static GUIStyle LabelCenteredStyle;
         public static GUIStyle SettingsHeader;
         public static GUIStyle SettingsHeader2;
         public static GUIStyle SettingsHeader3;
+        public static GUIStyle SettingsHeader4;
 
         public static GUIStyle LevelHeaderStyle;
         public static GUIStyle LabelStyle;
@@ -38,11 +38,14 @@ namespace BonfireSilksong
         public static GUIStyle FastTravelConfirmHeaderStyle;
         public static GUIStyle FastTravelConfirmDestinationStyle;
 
+        public static GUIStyle LvlInfoGlobalLvlDataStyle;
+        public static GUIStyle LvlInfoGlobalBonusStyle;
+        public static GUIStyle LvlInfoGlobalUnlockStyle;
         public static GUIStyle LvlInfoHeaderPrimaryStyle;
         public static GUIStyle LvlInfoHeaderSecondaryStyle;
         public static GUIStyle LvlInfoHeaderMilestoneStyle;
-        public static GUIStyle LvlInfoLabelStyle;
         public static GUIStyle LvlInfoButtonStyle;
+        public static GUIStyle LvlInfoLabelStyle;
         public static GUIStyle LvlInfoLabelDisabledStyle;
 
         public static void EnsureFonts()
@@ -66,13 +69,6 @@ namespace BonfireSilksong
                     wordWrap = true
                 };
             }
-            if (WordWrapLabelStyle == null)
-            {
-                WordWrapLabelStyle = new GUIStyle(GUI.skin.label)
-                {
-                    wordWrap = true
-                };
-            }
 
             if (LabelCenteredStyle == null)
             {
@@ -88,7 +84,7 @@ namespace BonfireSilksong
                 {
                     font = TrajanNormal,
                     fontStyle = FontStyle.Bold,
-                    fontSize = 14,
+                    fontSize = 15,
                     normal = { textColor = new Color(1f, 1f, 1f) }
                 };
             }
@@ -99,7 +95,7 @@ namespace BonfireSilksong
                 {
                     font = TrajanNormal,
                     fontStyle = FontStyle.Bold,
-                    fontSize = 13,
+                    fontSize = 14,
                     normal = { textColor = new Color(0.4f, 0.4f, 0.8f) }
                 };
             }
@@ -110,8 +106,19 @@ namespace BonfireSilksong
                 {
                     font = TrajanNormal,
                     fontStyle = FontStyle.Bold,
-                    fontSize = 12,
+                    fontSize = 13,
                     normal = { textColor = new Color(0.8f, 0.8f, 0.4f) }
+                };
+            }
+
+            if (SettingsHeader4 == null)
+            {
+                SettingsHeader4 = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 12,
+                    normal = { textColor = new Color(0.8f, 0.4f, 0.4f) }
                 };
             }
 
@@ -256,6 +263,7 @@ namespace BonfireSilksong
             }
 
             if (FastTravelConfirmHeaderStyle == null)
+            {
                 FastTravelConfirmHeaderStyle = new GUIStyle(GUI.skin.label)
                 {
                     font = TrajanNormal,
@@ -263,8 +271,10 @@ namespace BonfireSilksong
                     alignment = TextAnchor.MiddleCenter,
                     normal = { textColor = new Color(0.8f, 0.7f, 0.3f) }
                 };
+            }
 
             if (FastTravelConfirmDestinationStyle == null)
+            {
                 FastTravelConfirmDestinationStyle = new GUIStyle(GUI.skin.label)
                 {
                     font = TrajanBold,
@@ -272,6 +282,40 @@ namespace BonfireSilksong
                     alignment = TextAnchor.MiddleCenter,
                     normal = { textColor = Color.white }
                 };
+            }
+
+            if (LvlInfoGlobalLvlDataStyle == null)
+            {
+                LvlInfoGlobalLvlDataStyle = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 17,
+                    normal = { textColor = new Color(0.6f, 0.8f, 0.6f) }
+                };
+            }
+
+            if (LvlInfoGlobalBonusStyle == null)
+            {
+                LvlInfoGlobalBonusStyle = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 17,
+                    normal = { textColor = new Color(0.8f, 0.4f, 0.4f) }
+                };
+            }
+
+            if (LvlInfoGlobalUnlockStyle == null)
+            {
+                LvlInfoGlobalUnlockStyle = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 17,
+                    normal = { textColor = new Color(0.4f, 0.1f, 0.8f) }
+                };
+            }
 
             if (LvlInfoHeaderPrimaryStyle == null)
             {
@@ -306,16 +350,6 @@ namespace BonfireSilksong
                 };
             }
 
-            if (LvlInfoLabelStyle == null)
-            {
-                LvlInfoLabelStyle = new GUIStyle(GUI.skin.label)
-                {
-                    font = TrajanNormal,
-                    fontStyle = FontStyle.Bold,
-                    fontSize = 14,
-                };
-            }
-
             if (LvlInfoButtonStyle == null)
             {
                 LvlInfoButtonStyle = new GUIStyle(GUI.skin.button)
@@ -326,6 +360,16 @@ namespace BonfireSilksong
                     fontSize = 12,
                 };
                 LvlInfoButtonStyle.normal.background = Texture2D.whiteTexture;
+            }
+
+            if (LvlInfoLabelStyle == null)
+            {
+                LvlInfoLabelStyle = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 14,
+                };
             }
 
             if (LvlInfoLabelDisabledStyle == null)

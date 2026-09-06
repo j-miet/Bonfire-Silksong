@@ -325,6 +325,10 @@ namespace BonfireSilksong
             {
                 __state = ArtificeStat.GetThrownToolItem();
 
+                // can't use Thread Storm while Luck's Pinwielder is enabled
+                if (LuckStat.IsPinwielderEnabled && __state.name == "Thread Sphere")
+                    return false;
+
                 // can't use Pale Nails when Wisdom's Silk Nails are enabled.
                 if (WisdomStat.IsSilkNailsEnabled && __state.name == "Silk Boss Needle")
                     return false;
@@ -361,6 +365,8 @@ namespace BonfireSilksong
             static void Postfix(ToolItem __state)
             {
                 if (__state == null) return;
+
+                LuckStat.CheckStraightPinRefund(__state);
 
                 if (_extraToolThrows <= 0)
                 {

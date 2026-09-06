@@ -417,10 +417,16 @@ namespace BonfireSilksong
 
             s.ShowCustomRangeIndicator = CustomCursor.Toggle(
                 s.ShowCustomRangeIndicator,
-                "Display damage range indicator in Taunt/Reflect.");
+                "Display range indicator for Weaver's Light & Reflect damage sources.");
             s.ShowDamageOverlay = CustomCursor.Toggle(
                 s.ShowDamageOverlay,
-                "Display info from latest enemy damaging instance (has default hotkey LeftControl + L).");
+                "Display info from latest enemy damaging instance (has default hotkey LeftControl + L).\n" +
+                "The damage number displayed here is often different from final value. For example:\n" +
+                "- Each enemy has a set of damage modifiers which can increase/decrease this by certain multiplier\n" +
+                "- Some multihit sources like Rune Rage silk skill or Threefold Pin red tool deal less damage if " +
+                "additional projectiles hit same target.",
+                GUIStyles.WordWrapToggleStyle,
+                GUILayout.Width(SettingsWidth - SettingsOuterOffset - SettingsInnerOffset - 50));
 
             GUI.enabled = s.ShowDamageOverlay;
             GUILayout.BeginHorizontal(GUILayout.Width(450));
@@ -521,14 +527,6 @@ namespace BonfireSilksong
 
             GUILayout.Space(10);
             GUILayout.Label("Other", GUIStyles.SettingsHeader2);
-
-            s.AlwaysHaveCompassTool = CustomCursor.Toggle(
-                s.AlwaysHaveCompassTool,
-                "Compass on minimap");
-
-            s.RefillShardsAtBench = CustomCursor.Toggle(
-                s.RefillShardsAtBench,
-                "Refill shell shards to full at bench");
 
             s.ReduceFleaGamesScoreLimit = CustomCursor.Toggle(
                 s.ReduceFleaGamesScoreLimit,
@@ -811,8 +809,6 @@ namespace BonfireSilksong
                 EnemyHpBarColorProgression = s.EnemyHpBarColorProgression,
                 DeliveryQuestsRemoveTimer = s.DeliveryQuestsRemoveTimer,
                 DeliveryQuestsRemoveDamage = s.DeliveryQuestsRemoveDamage,
-                AlwaysHaveCompassTool = s.AlwaysHaveCompassTool,
-                RefillShardsAtBench = s.RefillShardsAtBench,
                 ReduceFleaGamesScoreLimit = s.ReduceFleaGamesScoreLimit,
                 EasierSprintmasterRaces = s.EasierSprintmasterRaces,
             };

@@ -10,7 +10,7 @@ namespace BonfireSilksong
         {
             static void Postfix(CurrencyType type)
             {
-                SettingsPatch.RefillShellShardsAtBench(type);
+                GlobalStat.RefillShellShardsAtBench(type);
             }
         }
 
@@ -20,7 +20,7 @@ namespace BonfireSilksong
         {
             static void Postfix(CurrencyType type)
             {
-                SettingsPatch.RefillShellShardsAtBench(type);
+                GlobalStat.RefillShellShardsAtBench(type);
             }
         }
     }

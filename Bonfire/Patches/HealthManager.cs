@@ -16,7 +16,7 @@ namespace BonfireSilksong
                 {
                     EnemyHealth.AddEnemyHpData(__instance);
 
-                    LuckStat.UpdateCurrencyDrops(__instance);
+                    LevelingPatch.UpdateCurrencyDrops(__instance);
                 }
             }
         }
@@ -62,7 +62,7 @@ namespace BonfireSilksong
             }
         }
 
-        // Use ref here because HitInstance is struct and its damage value won't update otherwise.
+        // Use ref here because HitInstance is a struct (value type) and its damage value won't update otherwise.
         //
         // public IHitResponder.HitResponse Hit(HitInstance hitInstance)
         [HarmonyPatch(typeof(HealthManager), "Hit")]
@@ -70,9 +70,7 @@ namespace BonfireSilksong
         {
             static void Prefix(HealthManager __instance, ref HitInstance hitInstance)
             {
-                LevelingPatch.ApplyHitDamageBonuses(ref hitInstance);
-
-                ArtificeStat.CastRuneRageOnHit(__instance, in hitInstance);
+                LevelingPatch.ApplyHitBonuses(__instance, ref hitInstance);
             }
         }
     }

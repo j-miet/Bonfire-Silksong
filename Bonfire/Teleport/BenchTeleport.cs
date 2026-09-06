@@ -247,7 +247,7 @@ namespace BonfireSilksong
 
         private static bool CanTeleport()
         {
-            if (Bonfire.Instance == null || !Bonfire.Instance.Status.UnlockedFastTravel)
+            if (Bonfire.Instance == null || !GlobalStat.CheckFastTravelCondition)
                 return false;
 
             if (GameManager.instance == null || GameManager.instance.IsMemoryScene())
