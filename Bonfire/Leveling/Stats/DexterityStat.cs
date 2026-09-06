@@ -32,7 +32,7 @@ namespace BonfireSilksong
         {
             if (totalDex <= 0) return 1f;
 
-            return (float)Math.Round(2.7 / (1.0 + 1.82 * Math.Exp(-0.08 * (totalDex + 1))) - 0.01, 2);
+            return (float)Math.Round(2.7 / (1.0 + 1.82 * Math.Exp(-0.05 * (totalDex + 1))) - 0.01, 2);
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace BonfireSilksong
         {
             if (totalDex <= 0) return (int)(needleDamage * 1.2f);
 
-            return (int)(needleDamage * (1.2 + Math.Log(totalDex + 1)));
+            return (int)(needleDamage * (1.2 + Math.Log(1 + totalDex / 5.0)));
         }
 
         /// <summary>

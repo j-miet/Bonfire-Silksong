@@ -297,7 +297,7 @@ namespace BonfireSilksong
             if (hm != null &&
                 hm.gameObject != null &&
                 hm.hp > 0 &&
-                hit.RepresentingTool != null &&
+                hit.RepresentingTool?.Type == ToolItemType.Red &&
                 hit.RepresentingTool.name == "Pimpilo" &&
                 CheckArtificeMilestone(3))
             {

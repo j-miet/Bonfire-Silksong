@@ -64,7 +64,7 @@ namespace BonfireSilksong
         {
             if (totalRes <= 0) return 0f;
 
-            return (float)(0.72 / (1.0 + 12.0 * Math.Exp(-0.09 * totalRes)));
+            return (float)(0.72 / (1.0 + 12.0 * Math.Exp(-0.07 * totalRes)));
         }
 
         /// <summary>

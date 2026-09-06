@@ -10,6 +10,7 @@ namespace BonfireSilksong
     {
         public static bool BlockSummons { get; private set; } = false;
         public static bool CanBlockSummons => CheckWisdomMilestone(1) && PlayerData.instance.hasNeedolin;
+        public static string GetBlockSummonsString => $"{WisdomMilestone(1)} point & unlock 'Needolin'";
         public static bool IsSilkNailsEnabled
         {
             get
@@ -55,7 +56,7 @@ namespace BonfireSilksong
         {
             if (totalWsdm < ExtraSilkLevelThreshold) return baseSilk;
 
-            return (int)(baseSilk + Math.Floor(totalWsdm / ExtraSilkLevelThreshold));
+            return (int)(baseSilk + Math.Floor(totalWsdm / (float)ExtraSilkLevelThreshold));
         }
 
         /// <summary>
@@ -76,13 +77,13 @@ namespace BonfireSilksong
 
             if (totalWsdm <= 1) return damage;
 
-            if (totalWsdm < WisdomMilestone(4))
+            if (totalWsdm <= 30)
             {
                 damage += (int)Math.Floor(totalWsdm * 0.5f);
             }
             else
             {
-                damage += 5 + totalWsdm - 10;
+                damage += 10 + totalWsdm - 30;
             }
 
             return damage;
@@ -99,15 +100,17 @@ namespace BonfireSilksong
         {
             int damage = CogflyWarriorBaseDamage;
 
-            if (totalWsdm <= 1) return damage;
+            if (totalWsdm <= 1 || !CheckWisdomMilestone(2)) return damage;
 
-            if (totalWsdm <= WisdomMilestone(2))
+            int m2 = WisdomMilestone(2);
+
+            if (totalWsdm <= m2)
             {
-                damage += (int)Math.Floor(totalWsdm * 0.25f);
+                damage += (int)Math.Floor(totalWsdm * 0.2f);
             }
             else
             {
-                damage += 3 + (int)Math.Floor(totalWsdm * 0.5f);
+                damage += 4 + (int)Math.Floor((totalWsdm - m2) * 0.5f);
             }
 
             return damage;
@@ -340,7 +343,7 @@ namespace BonfireSilksong
 
 
         private const int SilkRegenUnlockLevel = 5;
-        private const float ExtraSilkLevelThreshold = 20f;
+        private const int ExtraSilkLevelThreshold = 20;
         private const int SilkNailsBaseDamage = 1;
         private const float SilkNailsActivationRange = 12f;
         private const int CogflyWarriorBaseDamage = 2;

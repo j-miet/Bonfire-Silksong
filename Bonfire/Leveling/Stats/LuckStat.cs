@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 
 using UnityEngine;
 
@@ -7,15 +6,21 @@ namespace BonfireSilksong
 {
     public static class LuckStat
     {
+        public const float ThreadStormDuration = 0.5f;
+        public const float ThreadStormDurationExtended = 2f;
+
         public static bool Crit = false;
+
+        public static bool IsPinwielderEnabled => CheckLuckMilestone(1) && Bonfire.Instance.Status.PinwielderEnabled;
 
         public static int LuckMilestone(int m)
         {
             switch (m)
             {
-                case 1: return 1;
-                case 2: return 2;
-                case 3: return 3;
+                case 1: return 5;
+                case 2: return 20;
+                case 3: return 30;
+                case 4: return 40;
                 default: return 99;
             }
         }
@@ -45,55 +50,39 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// Rosary (and shell shard) drop multiplier from enemies.
+        /// Rosary (and shell shard) drop count multiplier from enemies.
         /// Multiplier per level is additive 5% to current stat e.g. 1x -> 1.05x -> 1.10x -> 1.15x etc.
         /// </summary>
-        public static int IncreaseRosaries(int droppedRosaries, int totalLck)
+        public static int IncreaseRosaryCount(int droppedRosaries, int totalLck)
         {
-            if (totalLck <= 0) return droppedRosaries;
-
-            return (int)(droppedRosaries * (1f + (totalLck / 20f)));
-        }
-
-        // LevelingGUI helper
-        public static string GetRosaryIncreasePercentage(int luckStat, int luckIncrease)
-        {
-            return (5 * (luckStat + luckIncrease)).ToString() + "%";
+            return (int)Math.Round(droppedRosaries * (1f + (totalLck * 0.05f)));
         }
 
         /// <summary>
-        /// HealthManager.OnEnable (Postfix): Update enemy rosary and shell shard drop count.
+        /// Cast 'Thread Storm' silk skill when enemy is hit. Thread Storm is limited to one instance meaning if one
+        /// is active in scene, another cannot spawn until first ends.
         /// </summary>
-        public static void UpdateCurrencyDrops(HealthManager instance)
+        public static void CastThreadStormOnHit(HealthManager hm, in HitInstance hit, bool crit)
         {
-            var s = Bonfire.Instance.Status;
+            if (hm != null &&
+                hm.gameObject != null &&
+                hm.hp > 0 &&
+                hit.RepresentingTool?.Type == ToolItemType.Red &&
+                IsPinwielderEnabled)
+            {
+                string toolName = hit.RepresentingTool.name;
 
-            Bonfire.Log.LogDebug("[LuckStat] Check currency values");
-            Bonfire.Log.LogDebug("<Vanilla> rosary and shell shard values:");
-            Bonfire.Log.LogDebug($"small={GetRosaries("small", instance)}");
-            Bonfire.Log.LogDebug($"medium={GetRosaries("medium", instance)}");
-            Bonfire.Log.LogDebug($"large={GetRosaries("large", instance)}");
-            Bonfire.Log.LogDebug($"shards={GetShellShards(instance)}");
-
-            Bonfire.Log.LogDebug("<Modded> rosary and shell shard values:");
-            Bonfire.Log.LogDebug(
-                $"small={IncreaseRosaries(GetRosaries("small", instance), s.LuckStat)}");
-            Bonfire.Log.LogDebug(
-                $"medium={IncreaseRosaries(GetRosaries("medium", instance), s.LuckStat)}");
-            Bonfire.Log.LogDebug(
-                $"large={IncreaseRosaries(GetRosaries("large", instance), s.LuckStat)}");
-            Bonfire.Log.LogDebug(
-                $"shards={IncreaseRosaries(GetShellShards(instance), s.LuckStat)}");
-
-            instance.SetGeoSmall(
-                IncreaseRosaries(GetRosaries("small", instance), s.LuckStat));
-            instance.SetGeoMedium(
-                IncreaseRosaries(GetRosaries("medium", instance), s.LuckStat));
-            instance.SetGeoLarge(
-                IncreaseRosaries(GetRosaries("large", instance), s.LuckStat));
-
-            instance.SetShellShards(
-                IncreaseRosaries(GetShellShards(instance), s.LuckStat));
+                if (toolName == "Harpoon" && CheckLuckMilestone(4))
+                {
+                    ThreadStormSpawner.CastThreadStorm(hm.gameObject, ThreadStormDurationExtended);
+                }
+                else if (crit &&
+                    ((toolName == "Straight Pin" && CheckLuckMilestone(4)) ||
+                    (toolName == "Harpoon" && CheckLuckMilestone(3))))
+                {
+                    ThreadStormSpawner.CastThreadStorm(hm.gameObject, ThreadStormDuration);
+                }
+            }
         }
 
         /// <summary>
@@ -148,20 +137,13 @@ namespace BonfireSilksong
             }
         }
 
-
-        // helpers for getting current rosary and shell shard values
-        private static int GetRosaries(string size, HealthManager enemy)
+        /// <summary>
+        /// HeroController.ThrowTool (Postfix): Refund use cost of Straight Pin when Pinwielder mode in enabled.
+        /// </summary>
+        public static void CheckStraightPinRefund(ToolItem tool)
         {
-            FieldInfo fi = enemy.GetType().GetField(size + "GeoDrops", BindingFlags.NonPublic | BindingFlags.Instance);
-            object rosaries = fi.GetValue(enemy);
-            return rosaries == null ? 0 : (int)rosaries;
-        }
-
-        private static int GetShellShards(HealthManager enemy)
-        {
-            FieldInfo fi = enemy.GetType().GetField("shellShardDrops", BindingFlags.NonPublic | BindingFlags.Instance);
-            object shards = fi.GetValue(enemy);
-            return shards == null ? 0 : (int)shards;
+            if (IsPinwielderEnabled && tool.name == "Straight Pin")
+                tool.CollectFree(100);
         }
     }
 }

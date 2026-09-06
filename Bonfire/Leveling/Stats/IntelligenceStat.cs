@@ -68,7 +68,7 @@ namespace BonfireSilksong
         {
             if (totalInt <= 0) return baseDamage;
 
-            return (int)Math.Round(baseDamage * Math.Pow(1.25, Math.Log(totalInt + 1, 2.0)));
+            return (int)Math.Round(baseDamage * (1.0 + 2.0 / (1.0 + 15.0 * Math.Exp(-0.1 * totalInt))));
         }
 
         /// <summary>

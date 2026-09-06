@@ -32,7 +32,7 @@ namespace BonfireSilksong
         {
             if (totalStr <= 0) return baseDamage;
 
-            return (int)Math.Round(baseDamage * Math.Pow(1.2, Math.Log(totalStr + 1, 2.0)));
+            return (int)Math.Round(baseDamage * (1.0 + 0.008 * Math.Pow(Math.Log(totalStr + 1, 2.0), 3.1)));
         }
 
         /// <summary>
