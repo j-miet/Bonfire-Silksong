@@ -231,6 +231,74 @@ namespace BonfireSilksong
             }
         }
 
+        /// <summary>
+        /// Get detailed action data from specific state. Code should be adjusted depending what logs are needed.
+        /// 
+        /// For example: 
+        /// obj = HeroController.instance.gameObject, fsmName = 'Silk Specials', stateName='BossNeedle Cast': finds 
+        /// data for Pale Nails silk skill. Furthermore, reading actions with type 'SpawnObjectFromGlobalPool' can be 
+        /// used for spawning the prefab GameObject and thus casting the spell any time.
+        /// </summary>
+        public static void GetGameObjectData(GameObject obj, string fsmName, string stateName)
+        {
+            var hornetFsm = PlayMakerFSM.FindFsmOnGameObject(obj, fsmName);
+            if (hornetFsm == null)
+            {
+                Bonfire.Log.LogDebug($"Could not find {stateName} FSM on {obj.name} GameObject.");
+                return;
+            }
+
+            var state = hornetFsm.Fsm.GetState(stateName);
+            if (state == null)
+            {
+                Bonfire.Log.LogDebug($"Could not find '{stateName}' State on '{fsmName}' FSM.");
+                return;
+            }
+
+            foreach (var action in state.Actions)
+            {
+                string typeName = action.GetType().Name;
+
+                // can add/remove these depending on what state is being inspected.
+                if (typeName == "ActivateGameObject" ||
+                    typeName == "SpawnObjectFromGlobalPool" ||
+                    typeName == "SetBoolValue" ||
+                    typeName == "SetFloatValue")
+                {
+                    Bonfire.Log.LogDebug($"=== {typeName} ===");
+
+                    foreach (var field in action.GetType().GetFields(
+                        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                    {
+                        object raw = field.GetValue(action);
+                        string display = raw?.ToString() ?? "null";
+
+                        switch (raw)
+                        {
+                            case FsmOwnerDefault fod:
+                                display = $"OwnerOption={fod.OwnerOption}, GameObject=" +
+                                    $"{(fod.GameObject?.Value != null ? fod.GameObject.Value.name : "null")}";
+                                break;
+                            case FsmGameObject fgo:
+                                display = $"Name='{fgo.Name}', Value={(fgo.Value != null ? fgo.Value.name : "null")}";
+                                break;
+                            case FsmFloat ff:
+                                display = $"Name='{ff.Name}', Value={ff.Value}, UseVariable={ff.UseVariable}";
+                                break;
+                            case FsmBool fb:
+                                display = $"Name='{fb.Name}', Value={fb.Value}";
+                                break;
+                            case FsmVector2 fv2:
+                                display = $"Name='{fv2.Name}', Value={fv2.Value}, UseVariable={fv2.UseVariable}";
+                                break;
+                        }
+
+                        Bonfire.Log.LogDebug($"  {field.Name} ({raw?.GetType().Name}) => {display}");
+                    }
+                }
+            }
+        }
+
         public static void GetAllScenes()
         {
             Bonfire.Log.LogDebug("== All Scenes ==");
