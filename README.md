@@ -1,52 +1,49 @@
 # Leveling system in Hollow Knight: Silksong
 
-**Bonfire-Silksong** is a spiritual successor to Hollow Knight's BonfireMod. It adds a leveling system which allows 
-the player to spend rosaries to gain permanent raw stats and utility. Bench interface can be accessed when player sits 
-on a bench and it then closes automatically after player stands up. 
+---
 
-In addition to leveling menu, there are two additional interfaces for QoL settings and a built-in bench fast travel 
-system.
+**Bonfire-Silksong** is a spiritual successor to Hollow Knight's BonfireMod. It adds a leveling system which allows 
+the player to spend rosaries to gain permanent stats, utility and possibly unlock gameplay-altering mechanics.
+
+In addition to leveling menu, there are interfaces for custom settings and a built-in bench fast travel system.  
+All of mod's custom menus can only be accessed during bench visits.
 
 Just like the original Hollow Knight mod, Bonfire-Silksong will naturally 
 **break vanilla game balance by making the game generally easier**. Of course players can tune game difficulty and 
 playstyle to their liking e.g. by adding self-imposed limits.
 
-- *Hollow Knight: Silksong* is content-wise not in its final state yet, there are still DLCs on the horizon. Need to 
+*Hollow Knight: Silksong* is not in its final state yet content-wise as there are still DLCs on the horizon. Need to 
 see first what stuff gets added and how it will affect progression, especially in the later stages of the game.
-- Then based on these updates, make changes to stats and their scaling formules, add new QoL settings, add more bench 
-locations for fast travel etc.  
+- It's likely that adjustments to stats and their scaling formulas are needed. Also new QoL settings and more bench 
+locations for fast travel etc. will be added.
 - And perhaps in the distant future after all DLCs have been released: some kind of optional hardmode could be added 
-where stat leveling becomes essential,  otherwise progressing becomes a very difficult task. This idea requires a lot 
-more planning, through.
+where stat leveling becomes essential or progressing the game could become a very difficult task. This idea requires a 
+lot more planning, through.
 
-For preview images, check the [Nexusmods](#ADD-LINK-HERE) page.
+**=> This mod has an in-game info documentation which should be consulted for more details. It will be updated between 
+each update and is therefore the best source of most up-to-date information.**
 
 ---
 
-The main goals of this mod would be to make the player:
+Hopefully his mod can offer even more replayability on top of already extensive base game. For example it should make you:
 
 1. Think and choose how to spend rosaries between normal expenses and stat increases.
-2. Decide on how to allocate stats.
-
-    - Stat will only give benefits: you can safely put points into each without any penalty.
-    - However, committing into 1-3 main stats + optionally putting some on the remaining ones gives you probably the 
-    most benefits in the long run. All stats have good scaling so you will become quite strong/overpowered towards 
-    the end of the game anyway.
-3. Try different playstyles/crests.
+2. Experiment with different stat paths.
+3. Try out different playstyles/crests.
 
     - Stats give you plenty of power, utility and resources, making even generally harder/niche playstyles more 
     approachable and viable.
-    - Mod also has the option to **unlock all crests** so you can immediately juggle between all of them, and maybe 
-    even commit to a specific one for the rest of playthrough. This feature, just the like the leveling system, 
-    is accessed by sitting on any bench (thus earliest point for unlocking is just before the first boss).
+    - Mod also has the option to **unlock crests** (stuff like cursed/cloakless is not included) so you can 
+    immediately juggle between all of them, and maybe 
+    even commit to a specific one for the rest of playthrough.
 
 
 ## Table of contents
 
 - [<u>Features</u>](#features)
-  - [<u>Leveling System</u>](#leveling-system)
-  - [<u>Settings</u>](#settings)
-  - [<u>Bench Fast Travel</u>](#bench-fast-travel)
+  - [Leveling System](#leveling-system)
+  - [Settings](#settings)
+  - [Bench Fast Travel](#bench-fast-travel)
 - [<u>Installation</u>](#installation)
 - [<u>Known Issues</u>](#known-issues)
 - [<u>Compatibility with other mods</u>](#compatibility-with-other-mods)
@@ -64,9 +61,10 @@ GamePad users.
         - Right Stick to move cursor.
         - Attack/Jump to click.
         - Left/Right bumper to move scrollbars up/down.
-- Leveling system: use rosaries to gain permanent primary stats + additional secondary bonuses after reaching 
-stat-specific milestones.
-- Extra QoL settings for additional customization
+    
+    => Info and Settings windows can be closed by pressing "Spell/Tool" input.
+- Leveling system: use rosaries to level up stats and gain permanent benefits + other interesting mechanics.
+- Extra settings for additional customization, including some optional gameplay QoL.
 - Bench fast travel system whichs allows you to  teleport to any unlocked bench location.
     - Most locations are tied to bench pins: if map pin icon is darker/grayed out, it's not unlocked yet
     - The remaining non-pin locations require custom unlock steps e.g. unlocking and visiting your home in Bellhart 
@@ -81,125 +79,54 @@ The 3 core systems (leveling, settings, fast travel) are explained in more detai
 Rosaries now fill a similar role what souls have in Dark Souls games: they are used both for leveling up stats and as a 
 main currency.
 
-There are currently 7 stats in total (6 from the original HK mod + a new one for tools called *Artifice*):
+There are 2 categories:
+- global stats/unlocks require certain unlock conditions which is tied total player and/or game progression. These give
+quality of live bonuses
+- main stats which are used for raising your total level. Each stat gives additional buffs, often centered around a
+certain theme like damage source.
 
-<table>
-    <tr>
-        <th>Stat</th>
-        <th><center>Effects</th>
-    </tr>
-    <tr>
-        <td><b>Strength</td>
-        <td>
-            <ul>
-                <li>Needle base damage (therefore it also scales <i>needle strike</i> damage)</li>
-            </ul>
-        </td>
-    </tr>
-    <tr>
-        <td><b>Dexterity</td>
-        <td>
-            <ul>
-                <li>Needle swing speed (works on all crest types)</li>
-                <li>Needle crit damage multiplier</li>
-            </ul>
-        </td>
-    </tr>
-    <tr>
-        <td><b>Intelligence</td>
-        <td>
-            <ul>
-            <li>Silk Skill damage</li>
-            <li>Binding cost reduction</li>
-            </ul>
-        </td>
-    </tr>
-    <tr>
-        <td><b>Artifice</td>
-        <td>
-            <ul>
-            <li>Red and blue tool damage </li>
-            <li>Passive red tool charge replenishment cooldown
-                <ul>
-                    <li>Replenishes one charge for each equipped tool -> more red tools = more value</li>
-                    <li>Replenishment starts at stat lvl 5 to prevent players investing just a single point 
-                        for big buff
-                    </li>
-                </ul>
-            </li>
-            </ul>
-        </td>
-    </tr>
-    <tr>
-        <td><b>Resilience</td>
-        <td>
-            <ul>
-            <li>Add blue masks to hp bar after sitting on bench
-                <ul>
-                    <li>8 masks is the cap which is reached at stat lvl 40. At this point a single use of 
-                    plasmium activates the overdose regen effect.
-                    </li>
-                </ul>
-            </li>
-            <li>Chance to block enemy attack (similar to "Magnetite Dice" tool effect)</li>
-            </ul>
-        </td>
-    </tr>
-    <tr>
-        <td><b>Wisdom</td>
-        <td>
-        <b># Wisdom is the weakest early game stat, giving no benefits at all before 5 points.
-        <h4>Primary</h4>
-            <ul>
-            <li>Extra silk from needle hits
-                <ul>
-                    <li>Very strong so 
-                    increases only every 20 levels 
-                    (stat level < 20 means base value = 1 silk, 20-39 = +2, 40-59 = +3 etc.)
-                    </li>
-                </ul>
-            </li>
-            <li>Passive silk regeneration cooldown</li>
-                <ul>
-                    <li>Just like with Artifice stat, requires at least stat lvl 5 to work</li>
-                </ul>
-            </li>
-            </ul>
-        <h4>Secondary</h4>
-            <ul>
-                <li><b>20 -></b> 
-                Wispfire Lantern costs no silk + attack and spawn cooldown reduced by 50%
-                (attack: 0.3 -> 0.15, spawn: 4 seconds -> 2 seconds).
-                </li>
-                <li><b>30 -></b> 
-                Wispfire Lantern cooldowns reduces further (attack: 0.1, spawn: 1 second).
-                </li>
-            </ul>
-        <br>
-        </td>
-    </tr>
-    <tr>
-        <td><b>Luck</td>
-        <td>
-            <ul>
-            <li>Needle crit chance</li>
-            <li>Increased rosary/shell shard drops from enemies</li>
-            </ul>
-        </td>
-    </tr>
-</table>
+#### Main stats
+There are currently 7 stat paths in total (6 from the original HK mod + a new one for tools specifically).
 
-So for example you could try following playstyles + main stat allocations:
-- needle/needle strikes (strength, dexterity, luck)
-- silk skills (intelligence, wisdom)
-- tools (artifice)
-- summons: cogflies, Wispfire Lantern, other tools (artifice, wisdom)
-- tank (resilience, wisdom, also intelligence for bind cost reduction)
+Each stat path can have
+- primary modifiers: scales with points invested.
+- optional secondary modifiers: available after certain milestones.
+- milestones: larger bonuses after reaching certain stat threshold, these could alter playstyles a lot.
 
-Or just freely mix and test everything, it's your call.
+Primary stats will only give benefits, you can safely put points into each without any penalty.
+Milestones can sometimes introduce downsides, but these are always optional and can be toggle them on/off.
+    
+=> You can never get permanent debuffs from leveling alone.
 
 
-#### Additional info:
+#### Additional things you should be aware of
+
+- If any milestone mentions crit e.g. "can apply critical hits", this only applies to crits rolled through Luck stat. 
+Vanilla crits from Wanderer's Crest or Magnetite Dice don't count! Similarly, Crit Damage from Dexterity applies only 
+to Luck crits.
+- In vanilla game, needle damage buffs also scale Silk Skills. This is still the case from base game needle upgrades, 
+but to any bonus damage from Strength will not benefit Silk Skills further: you need to level Intelligence or find 
+global damage multipliers elsewhere.
+- In vanilla game, blue masks reset to 0 every time you visit a bench. This mod uses a custom system to prevent this 
+for any masks gained from leveling Resilience stat. The system will perform this update after various actions, 
+these include: 
+    - closing inventory or menu screens
+    - applying levels
+    - level respeccing
+    - after transitioning to new scene via bench fast travel
+    
+    This system is not perfect: it has been tested quite thoroughly, but sometimes the blue hp updates don't refresh 
+    properly and your health var visuals can have 1. missing blue masks and 2. gap between normal and blue masks. If 
+    these happen, know that the actual blue hp value should be still updated "but visuals did not. If this happens: the 
+    easiest fix is to sit down on a bench again, or if you're already sitting, just open then close any inventory/map 
+    screen.
+    -> One simple example of failed hp update is when you load into save file, stand up from a bench open inventory as 
+    soon as game loads in: game still renders the hp HUD, but is interrupted because "of inventory overlay. If you wait 
+    a bit then close inventory, you will get partial or missing blue mask visuals.
+
+    => Know all of this is just to override default blue mask reset behavior. When not on a bench, blue mask 
+synchronization should work under game's normal rules with no issues.
+
 - Any tier 3-5 relic returned to Relic Seeker Scrounge gives a free level-up. Free level-ups cost 0 rosaries and will 
 not increase the cost of the next level up.
 
@@ -211,92 +138,43 @@ not increase the cost of the next level up.
   meaning there are 4 + 3 + 1 = 8 free level-ups to be gained during each playthrough.
 
 - Levels can be respecced with "Silkeater" item (Hollow Knight's "Rancid Egg" equivalent). 
-    - Each respec increases this 
-cost by one, starting from 1 Silkeater. 
+    - Each respec increases this cost by one, starting from 1 Silkeater. 
     - Respeccing refunds all the rosaries player has spent on levels back to their inventory. Relic levels stay as 
     free level-ups and are immediately available for reallocation.
 
 
 ### Settings
-Pressing "Extra Settings" button opens a new window where user can access following quality of life features:
+Pressing "Extra Settings" button opens a new window where user can access features to adjust some of the mod's 
+overlay content + apply simple QoL settings. 
 
-- <u>Gamepad cursor</u> (only available if GamePad device is detected)
-    - adjust cursor speed
-    - hide mouse cursor: if you have both controller and mouse plugged in and don't need mouse cursor, this hides 
-    it in GUI menus
+=> You can close any Settings-related window
 
-- <u>Enemy hp bars</u>
+One of the most important features is support for custom Gamepad cursor:
+- appears only when Gamepad device is detected
+- adds a custom, cursor object which is entirely separate from game cursor. Should work on all GUI menus, although its 
+not 100% accurate compared to game cursor. Current texture is also very simple because its generated at runtime: 
+white disc with black center.
+- can adjust cursor speed
+- can hide mouse cursor: if you have both controller and mouse plugged in and don't need mouse cursor, this hides 
+    it in bench GUI.
 
-    Just simple rectangles hovering on enemies, no fancy visuals or numbers.
-    Can toggle between
-    - *Single color* (enemies = red, bosses = orange) 
-    - *Progressive* (green -> yellow ->  red)
-
-    These can be a bit scuffed: in some scenes there are uninteractable hovering hp bars even when no enemies
-    are present. Also some enemies update their health during combat
-    (e.g. void enemies), but hp bars keep using only the initial values.
-
-    => For this reason there's also a
-    global hotkey `LeftControl + H` to quickly toggle them on/off.
-
-- <u>Courier delivery quests</u>
-    - remove damage penalties
-    - remove timer penalty
-
-- <u>Other</u>
-    - Reduce Fleatopia minigame score requirements by 50%
-
-        Just to make minigames less grindy in case you're not in the mood. Visuals will still display the original 
-        score requirements, don't mind these.
-
-    - Shell shard regen to full at benches
-        
-        **[Note]** Leveling the "Luck" stat also 
-        increases enemy shard drop rates if you prefer a more vanilla-like approach for shard management.
-
-- <u>Unlock all crests</u> 
-
-    For players who want to immediately access all crests. Pressing 
-    this button opens a new smaller window where you can
-    - Confirm to unlock all crests **permanently** for this save file
-    - Cancel and not touch current crest progression
-    - Hide the crest unlock button entirely in case you're not planning to use this feature for this particular 
-    playthrough
-
-    => Selecting either confirm or hide then removes the crest unlock button. It won't be displayed in
-    the GUI afterwards.
-
-- <u>Reset config file data</u>
-
-    Bonfire-Silksong creates config files individually for each save file. These are stored as
-
-    `<your path>/Hollow Knight Silksong/BepInEx/config/Bonfire-Silksong_SaveN.json`
-
-    where N is the save slot number 1-4, starting from left slot.
-
-    If you want to reset data for new playthroughs, which you should generally do, you would delete the 
-    corresponding json file matching your save slot number; mod will automatically make a new one.  
-    However, this built-in solution is simpler to use: pressing the button opens a new panel where you can 
-    confirm/cancel your choice on resetting data i.e. overriding it with default values. No need for manual file 
-    editing/deletion.
 
 ### Bench Fast travel
 
 Requirements:
 1. Has defeated the ***Bell Beast* boss in Act 1** (primary unlock condition).
-2. Has bought **a map AND Bench Pins from Shakra** (to accesss map menu).
+2. Has bought **a map AND Bench Pins from Shakra** (to accesss map menu + pin locations).
 
 #### After unlocking
 
-- Player will get a unlock notification pop-up the next time they visit a bench.
-- A new button called "Fast travel" appears on the bottom of bench GUI. Clicking this opens the game map, except you 
-are locked out of normal map features to avoid any menu overlap issues.
+- A new button called "Fast travel" become available at the bottom of bench GUI. Clicking this opens the game map, 
+except you are locked out of normal map features to avoid any menu overlap issues.
     - Benches are generally categorized under map areas. Any uncategorized ones can be found in "Other" section at 
     the bottom of the list.
 - Quitting the menu is done either by 
     - Clicking the "Close bench menu" GUI button, or
-    - Pressing any of the following kb/controller binds: "Inventory", "Map", "Quick Map" or cancel (*Escape* on 
-    keyboard)
+    - Pressing any of the following kb/controller binds: "Inventory", "Map", "Quick Map", "Spell/Tool" or 
+    menu cancel (*Escape* on keyboard)
 
 <u>How to use:</u>
 - Click at any available bench location from the list on the left side of screen. 
@@ -305,10 +183,12 @@ moves as close as possible.
 - Then in the bottom-middle, you see the currently selected location name and can click the "Travel" button 
 to initiate travel sequence
 
-*Additional info*
+#### Additional info
 - You can also change bench list style, these will alter colors (basic gray or multicolored) and 
 bench names (game scenes or custom names).
+
 - Locked benches e.g. bellshrines (identified by darker map icon) have to be unlocked before you can teleport to them.
+
 - While almost all bench locations are based on map pins, there are also some special benches which don't have one 
 available.
     - These are differentiated from pin locations by a star symbol after their name e.g. **"Bellhome ★"**
@@ -324,8 +204,8 @@ available.
 
 ## Installation
 
-- **BepInEx** is used as the modding API. 
-- MelonLoader is not supported at the moment. Might be added at some point, but this requires more work due to having 
+- **BepInEx** is the main utility for patching game code with mod's custom logic. 
+- MelonLoader is not supported at the moment. Might be added at some point, but this requires more work due to
 different API.
 
 1. Install BepInEx version 5 if you don't already have it. Version 5.4.23.5 was used during mod development, but any 
@@ -358,10 +238,7 @@ different API.
 
 ## Known issues
 
-None of these really affect mod functionality, just a bit annoying and unintended behavior. But also easy to fix when
-they occur.
-
-- Floating animation bug after using bench fast travel
+- Floating animation bug after using bench fast travel.
 
     Hornet might rarely get stuck in a floating/falling animation when mod forces the destination bench as the
     new spawn location. Probably caused by race conditions between PlayMaker's internal and manually forced states. 
@@ -374,29 +251,23 @@ they occur.
     > TL;DR: very rarely after using bench fast travel, Hornet might spawn in floating/falling animation. 
     > Fix is to save & quit then reload back.
 
-- Cursor and button inputs get locked for several seconds after quitting to main menu
-
-    On rare occasions, game temporarily freezes user's cursor movement and keyboard inputs after save & exit. This lasts
-    maybe 5 seconds and then all inputs can be used normally again.
-
-    Not sure what causes this as it happens rarely.
-
-    > TL;DR: rarely after save & quit, game controls are locked for a brief moment then works normally again. 
-    > Fix is to just wait, this doesn't last long anyway.
-
 
 ## Compatibility with other mods
+
+Bonfire-Silksong has quite a bit of complex gameplay logic in it and therefore works best as a standalone main mod.
 
 If another mod targets any data used in stat values (e.g. needle/spell/tool damage), it will likely break the 
 leveling system logic. Same applies for QoL settings: if you add mods which target same functionalities, it's best 
 to keep Bonfire-Silksong's corresponding implementations disabled. 
 
-In general: if two mods modify same areas 
-of code, there's no guarantee which mod gets to apply its logic first/last.
-
 The built-in bench fast travel system should however work with other fast travel mods: its logic get applied only 
 inside the custom bench menu window. So you are free to ignore it and instead use other similar mods e.g. 
 Bonfire Teleport (to which built-in system is actually already based on; see Acknowledgements section below).
+
+**In general:** 
+- If two mods modify same areas 
+of code, there's no guarantee which mod gets to apply its logic first/last.
+- It's up to you to judge/test what works and what doesn't.
 
 
 ## Acknowledgements
@@ -410,35 +281,31 @@ While Bonfire-Silksong doesn't directly require other mod dependencies, it has u
     - my fork of Bonfire, [BonfireRelit](https://github.com/j-miet/BonfireRelit)
 
 - Bench fast travel core logic is from **Bonfire Teleport** by *kassent*.
+ 
+    Bonfire-Silksong and Bonfire Teleport can be used together. There shouldn't be any compatibility issues because 
+    both system operate separately: this mod's fast travel is initiated through custom map screen overlay whereas 
+    Bonfire Teleport just uses vanilla map as its interface.
     
-    Bonfire Teleport's pin-based teleport system is by far the simplest and most elegant solution to handle fast 
-    traveling I've seen in HK/HK: Silksong modding. It's  very smooth to use and feels more like a vanilla game 
-    feature. Unlike this Bonfire-Silksong's custom system, Bonfire Teleport
-    - Adds no external GUI elements and keeps user interface very vanilla-like: traveling is initiated 
-    from map screen by placing pin markers.
-    - Is not locked to bench teleporting only: you can choose between bench-only or just freely jump anywhere at any 
-    point (excluding some cases like being in a dream sequence). However bear in mind free teleporting can easily 
-    softlock game progression if you're not careful - this is the main reason why Bonfire-Silksong prevent it and
-    adds further limitations e.g. in Act 3 abyss sections.
-
-    Furthermore, both Bonfire-Silksong and BonfireTeleport can be used together, there shouldn't be any compatibility 
-    issues because both system operate separately. So if you prefer one over another, go for it! 
+    So if you prefer one fast travel system over another, go for it! 
     
     => [*Bonfire Teleport* Nexusmods page](https://www.nexusmods.com/hollowknightsilksong/mods/156)
 
 
 #### Modding tools for Hollow Knight
 
-These tools have been essential in developing this mod:
+These tools/sources have been essential in developing this mod:
 
-Frameworks:
+Core:
 - [BepInEx](https://github.com/BepInEx/BepInEx/releases)
 
-Third-party tools:
+Third-party tools to inspect game code:
 - [ILSpy](github.com/icsharpcode/ILSpy)
 - [dnSpy](https://github.com/dnSpyEx/dnSpy)
 - [FSMExpress](https://github.com/nesrak1/FSMExpress/tree/skong)
 
-Utility mods (requires BepInEx):
+Utility mods:
 - [UnityExplorer](https://github.com/sinai-dev/UnityExplorer)
 - [DebugMod](https://thunderstore.io/c/hollow-knight-silksong/p/hk_speedrunning/DebugMod/)
+
+Other:
+- [Hollow Knight Wiki](https://hollowknight.wiki/w/Hollow_Knight_Wiki)
