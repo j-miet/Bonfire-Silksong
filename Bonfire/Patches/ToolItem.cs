@@ -10,7 +10,7 @@ namespace BonfireSilksong
             static void Postfix(ToolItem __instance, ref bool __result)
             {
                 if (GlobalStat.CheckGlobalMilestone(GlobalMilestone.QOLTOOLS) &&
-                    GlobalStat.ToggleCompassTool(__instance))
+                    (GlobalStat.GetCompassToolEffect(__instance) || GlobalStat.GetWreathOfPurityToolEffect(__instance)))
                 {
                     __result = true;
                 }

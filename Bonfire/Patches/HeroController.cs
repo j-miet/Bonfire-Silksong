@@ -1,5 +1,5 @@
 using System;
-
+using System.Reflection;
 using GlobalEnums;
 using GlobalSettings;
 using HarmonyLib;
@@ -60,7 +60,7 @@ namespace BonfireSilksong
                 float dt = Time.deltaTime;
                 try
                 {
-                    WisdomStat.CheckSilkRegen(dt);
+                    GlobalStat.CheckSilkRegen(dt);
                     ArtificeStat.CheckToolRegen(dt);
                     WisdomStat.CheckSilkNails(dt);
                     IntelligenceStat.CheckWeaverAura(dt);
@@ -132,18 +132,6 @@ namespace BonfireSilksong
                 // safety feature to ensure that block flag is set to 'false' after TakeDamage call. 
                 // Otherwise blocking flag could get stuck on 'true', making player invulnerable.
                 ResilienceStat.BlockNextHit = false;
-            }
-        }
-
-        // public void SilkGain(HitInstance hitInstance)
-        [HarmonyPatch(typeof(HeroController), "SilkGain", new[] {
-            typeof(HitInstance)
-        })]
-        class HeroController_SilkGain
-        {
-            static void Postfix(HitInstance hitInstance)
-            {
-                WisdomStat.AddExtraSilkOnNeedleHit(hitInstance);
             }
         }
 
@@ -327,6 +315,10 @@ namespace BonfireSilksong
 
                 // can't use Thread Storm while Luck's Pinwielder is enabled
                 if (LuckStat.IsPinwielderEnabled && __state.name == "Thread Sphere")
+                    return false;
+
+                // can't use Voltvessels tool while in Intelligence's Weak Bind is enabled
+                if (IntelligenceStat.CheckWeakBindRequirement() && __state.name == "Lightning Rod")
                     return false;
 
                 // can't use Pale Nails when Wisdom's Silk Nails are enabled.

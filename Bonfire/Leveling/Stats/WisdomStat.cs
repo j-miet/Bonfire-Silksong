@@ -35,10 +35,10 @@ namespace BonfireSilksong
             switch (m)
             {
                 case 1: return 1;
-                case 2: return 20;
+                case 2: return 15;
                 case 3: return 30;
                 case 4: return 40;
-                default: return 99;
+                default: return LevelingSystem.MaxStatLevel;
             }
         }
 
@@ -50,25 +50,21 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// Extra silk gained when striking an enemy with needle (+1 silk for every 20 levels).
+        /// Get hit count limit for extra silk generation.
         /// </summary>
-        public static int ExtraSilk(int totalWsdm, int baseSilk)
+        public static int ExtraSilkThreshold(int totalWsdm)
         {
-            if (totalWsdm < ExtraSilkLevelThreshold) return baseSilk;
-
-            return (int)(baseSilk + Math.Floor(totalWsdm / (float)ExtraSilkLevelThreshold));
+            return (int)(3.0 + 13.0 * Math.Exp(-0.035 * totalWsdm));
         }
 
         /// <summary>
-        /// Amount of time it takes to passively produce a single silk.
-        /// Starts from 40 seconds timer at lvl 5 to prevents players from putting just a single point and reaping the 
-        /// benefits.
+        /// Silk spool extra silk.
         /// </summary>
-        public static int SilkRegenInterval(int totalWsdm)
+        public static int SpoolExtraSilk(int totalWsdm)
         {
-            if (totalWsdm < SilkRegenUnlockLevel) return -1;
+            if (totalWsdm < 5) return 0;
 
-            return (int)(4.0 + 36.0 * Math.Exp(-0.06 * (totalWsdm - SilkRegenUnlockLevel)));
+            return (int)Math.Floor(totalWsdm * 0.2);
         }
 
         public static int SilkNailsDamage(int totalWsdm)
@@ -108,9 +104,10 @@ namespace BonfireSilksong
             {
                 damage += (int)Math.Floor(totalWsdm * 0.2f);
             }
-            else
+
+            if (totalWsdm > m2)
             {
-                damage += 4 + (int)Math.Floor((totalWsdm - m2) * 0.5f);
+                damage += (int)Math.Floor((totalWsdm - m2) * 0.5f);
             }
 
             return damage;
@@ -161,47 +158,58 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// HeroController.SilkGain (Postfix): Add extra silk on needle hits.
+        /// Generate extra silk after enough hits have been landed.
         /// </summary>
-        public static void AddExtraSilkOnNeedleHit(HitInstance hitInstance)
+        public static void GetExtraSilkOnHit()
         {
-            if (hitInstance.SilkGeneration == HitSilkGeneration.None) return;
-            if (hitInstance.SilkGeneration == HitSilkGeneration.FirstHit && !hitInstance.IsFirstHit) return;
             if (PlayerData.instance.atBench) return;
 
-            int extraSilk = ExtraSilk(Bonfire.Instance.Status.WisdomStat, 0);
-            if (extraSilk > 0)
-                HeroController.instance.AddSilk(extraSilk, heroEffect: false);
+            int totalWisdom = Bonfire.Instance.Status.WisdomStat;
+
+            if (totalWisdom > 0)
+            {
+                _hitCounter += 1;
+            }
+            else if (_hitCounter > 0)
+            {
+                _hitCounter = 0;
+            }
+
+            int threshold = ExtraSilkThreshold(totalWisdom);
+            bool giveSilk = _hitCounter >= threshold;
+            if (giveSilk)
+            {
+                Bonfire.Log.LogInfo($"Got 1 silk after {threshold} hits.");
+                HeroController.instance.AddSilk(1, heroEffect: false);
+                _hitCounter = 0;
+            }
         }
 
         /// <summary>
-        /// HeroController.Update (Postfix): Passive silk regen.
+        /// Re-draw silk spool. Set 'reset = true' if spool should reset back to default value and thus remove any
+        /// excess silk from player.
         /// </summary>
-        public static void CheckSilkRegen(float dt)
+        public static void HandleSilkSpoolUpdate(bool reset)
         {
-            if (Bonfire.Instance.Status.WisdomStat < SilkRegenUnlockLevel) return;
+            var pd = PlayerData.instance;
 
-            if (_silkRegenTime > 0)
+            GameManager.instance.gameCams.silkSpool.DrawSpool();
+
+            if (reset)
             {
-                _silkRegenTime -= dt;
+                // remove excess silk on reset
+                if (pd.silk > pd.CurrentSilkMax)
+                    HeroController.instance.TakeSilk(pd.silk - pd.CurrentSilkMax);
             }
             else
             {
-                Bonfire.Log.LogDebug("[WisdomStat] Checking silk regen conditions");
-                int silkRegenInterval = SilkRegenInterval(Bonfire.Instance.Status.WisdomStat);
-                if (silkRegenInterval <= 0)
-                {
-                    _silkRegenTime = 1f;
-                    return;
-                }
 
-                _silkRegenTime = silkRegenInterval;
-                HeroController.instance.AddSilk(1, heroEffect: false);
-
-                Bonfire.Log.LogDebug("Regenerated 1 silk");
+                if (pd.HasSeenEvaHeal && pd.silk < pd.CurrentSilkMax)
+                    HeroController.instance.AddSilk(100, false);
             }
-        }
 
+            GameManager.instance.gameCams.silkSpool.DrawSpool();
+        }
         /// <summary>
         /// HeroController.Update (Postfix): Silk Nails custom ability spawning.
         /// </summary>
@@ -342,14 +350,12 @@ namespace BonfireSilksong
         }
 
 
-        private const int SilkRegenUnlockLevel = 5;
-        private const int ExtraSilkLevelThreshold = 20;
         private const int SilkNailsBaseDamage = 1;
         private const float SilkNailsActivationRange = 12f;
         private const int CogflyWarriorBaseDamage = 2;
 
-        private static float _silkRegenTime = 0f;
         private static float _silkNailCooldown = 0f;
+        private static int _hitCounter = 0;
 
         private static readonly FieldInfo _hpCurrentField = typeof(ClockworkHatchling)
             .GetField("hpCurrent", BindingFlags.Instance | BindingFlags.NonPublic);

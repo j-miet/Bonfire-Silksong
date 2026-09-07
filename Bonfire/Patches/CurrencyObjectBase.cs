@@ -10,7 +10,7 @@ namespace BonfireSilksong
             static void Postfix(ref bool __result)
             {
                 if (GlobalStat.CheckGlobalMilestone(GlobalMilestone.QOLTOOLS) &&
-                    GlobalStat.ToggleMagnetiteBroochTool())
+                    GlobalStat.GetMagnetiteBroochToolEffect())
                 {
                     __result = true;
                 }

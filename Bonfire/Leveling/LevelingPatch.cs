@@ -296,6 +296,8 @@ namespace BonfireSilksong
                     spellDamage = DexterityStat.ApplyCritDamage(spellDamage);
                 }
 
+                IntelligenceStat.CastVoltvesselBolaOnHit(hm, in hit);
+
                 hit.DamageDealt = spellDamage;
             }
             else if (tool != null && (tool.Type == ToolItemType.Red || tool.Type == ToolItemType.Blue))
@@ -306,16 +308,26 @@ namespace BonfireSilksong
 
                 int toolDamage = hit.DamageDealt;
 
+                // pre-bonus (applied before Artifice multiplier)
                 if (tName == "Rosary Cannon" && ArtificeStat.CheckArtificeMilestone(3))
                 {
                     toolDamage += 2;
                 }
 
+                // apply primary percentage multiplier
                 toolDamage = ArtificeStat.ApplyToolDamageBonuses(toolDamage, tool);
 
+                // post-bonus (applied after Artifice multiplier)
                 if (IntelligenceStat.CheckIntelligenceMilestone(3))
                 {
                     toolDamage = IntelligenceStat.ApplyClawMirrorDamageBonuses(toolDamage, tool);
+                }
+
+                if (IntelligenceStat.CheckWeakBindRequirement() && tName == "Lightning Rod")
+                {
+                    // custom Voltvessels tool proc in Weak Bind: uses its own flat scaling
+
+                    toolDamage = IntelligenceStat.BolaDamage(Bonfire.Instance.Status.IntelligenceStat);
                 }
 
                 if (isCrit)
@@ -448,12 +460,13 @@ namespace BonfireSilksong
                 }
             }
 
-            DamageOverlay.UpdateData(sourceName, tool?.name, vanillaDamage, hit.DamageDealt);
-
-            Bonfire.Log.LogDebug("=> Modified Damage Output: " + hit.DamageDealt);
+            WisdomStat.GetExtraSilkOnHit();
 
             DexterityStat.ApplyCritHeal(isCrit);
             LuckStat.Crit = false;
+
+            DamageOverlay.UpdateData(sourceName, tool?.name, vanillaDamage, hit.DamageDealt);
+            Bonfire.Log.LogDebug("=> Modified Damage Output: " + hit.DamageDealt);
         }
 
 

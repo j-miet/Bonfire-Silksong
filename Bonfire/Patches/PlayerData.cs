@@ -85,6 +85,18 @@ namespace BonfireSilksong
             }
         }
 
+        [HarmonyPatch(typeof(PlayerData), "CurrentSilkMaxBasic", MethodType.Getter)]
+        class PlayerData_CurrentSilMax
+        {
+            static void Postfix(ref int __result)
+            {
+                if (PlayerData.instance.IsAnyCursed || PlayerData.instance.IsSilkSpoolBroken)
+                    return;
+
+                __result += WisdomStat.SpoolExtraSilk(Bonfire.Instance.Status.WisdomStat);
+            }
+        }
+
         [HarmonyPatch(typeof(PlayerData), "SilkSkillCost", MethodType.Getter)]
         class PlayerData_SilkSkillCost
         {
@@ -98,12 +110,6 @@ namespace BonfireSilksong
 
             static void Postfix(ref int __result)
             {
-                if (IntelligenceStat.CheckWeakBindRequirement())
-                {
-                    if (__result > 0)
-                        __result -= 1;
-                }
-
                 if (IntelligenceStat.CheckIntelligenceMilestone(4))
                 {
                     if (__result > 0)
