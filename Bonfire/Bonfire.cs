@@ -13,7 +13,7 @@ namespace BonfireSilksong
     /// <summary>
     /// Main class for Bonfire-Silksong mod.
     /// </summary>
-    [BepInPlugin("hksilksong.mod.Bonfire-Silksong", "Bonfire-Silksong", "0.9.0")]
+    [BepInPlugin("hkmods.silksong.bonfire-silksong", "Bonfire-Silksong", "0.9.0")]
     public class Bonfire : BaseUnityPlugin
     {
         public static Bonfire Instance;

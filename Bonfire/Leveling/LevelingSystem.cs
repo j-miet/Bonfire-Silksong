@@ -11,6 +11,8 @@ namespace BonfireSilksong
     /// </summary>
     public class LevelingSystem : MonoBehaviour
     {
+        public const int MaxStatLevel = 99;
+
         public static int MilestoneBonus = 0;
         public static LevelingSystem Instance
         {
@@ -223,18 +225,24 @@ namespace BonfireSilksong
             HeroController.instance.CharmUpdate();
             BlueHealthUpdate.CancelBlueHPUpdate();
             BlueHealthUpdate.CallUpdateBlueHP();
+
+            WisdomStat.HandleSilkSpoolUpdate(reset: false);
         }
 
         /// <summary>
         /// Refunds all spent levels and resets stats to 1, consuming silkeaters.
         /// </summary>
-        public void Respec()
+        public void Respec(bool ignoreCost = false)
         {
             var s = Bonfire.Instance.Status;
             var silkEaters = Resources.FindObjectsOfTypeAll<CollectableItem>()
                 .FirstOrDefault(i => i.name == "Silk Grub");
 
-            if (silkEaters == null || silkEaters.CollectedAmount < s.RespecCost) return;
+            if (!(GlobalStat.CheckGlobalMilestone(GlobalMilestone.RESPECFREE) || ignoreCost))
+            {
+                if (silkEaters == null || silkEaters.CollectedAmount < s.RespecCost)
+                    return;
+            }
 
             int relicLevelsSpent = s.StrengthStat + s.DexterityStat + s.IntelligenceStat
                                 + s.ArtificeStat + s.ResilienceStat + s.WisdomStat + s.LuckStat
@@ -271,16 +279,16 @@ namespace BonfireSilksong
             s.PendingRosaryLevels = 0;
             s.PendingRelicLevels = 0;
 
-            if (!GlobalStat.CheckGlobalMilestone(GlobalMilestone.RESPECFREE))
+            if (GlobalStat.CheckGlobalMilestone(GlobalMilestone.RESPECFREE) || ignoreCost)
+            {
+                s.RespecCost = 0;
+            }
+            else
             {
                 if (s.RespecCost > 0)
                     silkEaters.Take(s.RespecCost);
 
                 s.RespecCost++;
-            }
-            else
-            {
-                s.RespecCost = 0;
             }
 
             ResetMilestoneFlags();
@@ -288,6 +296,8 @@ namespace BonfireSilksong
             HeroController.instance.CharmUpdate();
             BlueHealthUpdate.CancelBlueHPUpdate();
             BlueHealthUpdate.CallUpdateBlueHP();
+
+            WisdomStat.HandleSilkSpoolUpdate(reset: true);
         }
 
         /// <summary>
@@ -312,7 +322,7 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// Checks stat level range and prevents leveling beyond stat cap of 99.
+        /// Checks stat level range and prevents leveling beyond stat cap.
         /// </summary>
         public bool CheckStatLevels()
         {
@@ -320,56 +330,56 @@ namespace BonfireSilksong
             bool valid = true;
 
             if (s.StrengthStat < 0) s.StrengthStat = 0;
-            else if (s.StrengthStat > 99) s.StrengthStat = 99;
-            else if (s.StrengthStat + StrengthIncrease > 99)
+            else if (s.StrengthStat > MaxStatLevel) s.StrengthStat = MaxStatLevel;
+            else if (s.StrengthStat + StrengthIncrease > MaxStatLevel)
             {
                 StrengthIncrease--;
                 valid = false;
             }
 
             if (s.DexterityStat < 0) s.DexterityStat = 0;
-            else if (s.DexterityStat > 99) s.DexterityStat = 99;
-            else if (s.DexterityStat + DexterityIncrease > 99)
+            else if (s.DexterityStat > MaxStatLevel) s.DexterityStat = MaxStatLevel;
+            else if (s.DexterityStat + DexterityIncrease > MaxStatLevel)
             {
                 DexterityIncrease--;
                 valid = false;
             }
 
             if (s.IntelligenceStat < 0) s.IntelligenceStat = 0;
-            else if (s.IntelligenceStat > 99) s.IntelligenceStat = 99;
-            else if (s.IntelligenceStat + IntelligenceIncrease > 99)
+            else if (s.IntelligenceStat > MaxStatLevel) s.IntelligenceStat = MaxStatLevel;
+            else if (s.IntelligenceStat + IntelligenceIncrease > MaxStatLevel)
             {
                 IntelligenceIncrease--;
                 valid = false;
             }
 
             if (s.ArtificeStat < 0) s.ArtificeStat = 0;
-            else if (s.ArtificeStat > 99) s.ArtificeStat = 99;
-            else if (s.ArtificeStat + ArtificeIncrease > 99)
+            else if (s.ArtificeStat > MaxStatLevel) s.ArtificeStat = MaxStatLevel;
+            else if (s.ArtificeStat + ArtificeIncrease > MaxStatLevel)
             {
                 ArtificeIncrease--;
                 valid = false;
             }
 
             if (s.ResilienceStat < 0) s.ResilienceStat = 0;
-            else if (s.ResilienceStat > 99) s.ResilienceStat = 99;
-            else if (s.ResilienceStat + ResilienceIncrease > 99)
+            else if (s.ResilienceStat > MaxStatLevel) s.ResilienceStat = MaxStatLevel;
+            else if (s.ResilienceStat + ResilienceIncrease > MaxStatLevel)
             {
                 ResilienceIncrease--;
                 valid = false;
             }
 
             if (s.WisdomStat < 0) s.WisdomStat = 0;
-            else if (s.WisdomStat > 99) s.WisdomStat = 99;
-            else if (s.WisdomStat + WisdomIncrease > 99)
+            else if (s.WisdomStat > MaxStatLevel) s.WisdomStat = MaxStatLevel;
+            else if (s.WisdomStat + WisdomIncrease > MaxStatLevel)
             {
                 WisdomIncrease--;
                 valid = false;
             }
 
             if (s.LuckStat < 0) s.LuckStat = 0;
-            else if (s.LuckStat > 99) s.LuckStat = 99;
-            else if (s.LuckStat + LuckIncrease > 99)
+            else if (s.LuckStat > MaxStatLevel) s.LuckStat = MaxStatLevel;
+            else if (s.LuckStat + LuckIncrease > MaxStatLevel)
             {
                 LuckIncrease--;
                 valid = false;

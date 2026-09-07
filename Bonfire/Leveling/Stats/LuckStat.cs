@@ -18,10 +18,10 @@ namespace BonfireSilksong
             switch (m)
             {
                 case 1: return 5;
-                case 2: return 20;
-                case 3: return 30;
+                case 2: return 15;
+                case 3: return 25;
                 case 4: return 40;
-                default: return 99;
+                default: return LevelingSystem.MaxStatLevel;
             }
         }
 

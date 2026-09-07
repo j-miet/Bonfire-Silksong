@@ -14,7 +14,7 @@ namespace BonfireSilksong
                 case 1: return 5;
                 case 2: return 10;
                 case 3: return 25;
-                default: return 99;
+                default: return LevelingSystem.MaxStatLevel;
             }
         }
 
@@ -77,7 +77,9 @@ namespace BonfireSilksong
                 Bonfire.Log.LogDebug("Clawline hits: " + _clawlineHitCounter);
             }
             else if (_clawlineHitCounter > 0)
+            {
                 _clawlineHitCounter = 0;
+            }
 
             int updatedDamage = baseDamage;
 

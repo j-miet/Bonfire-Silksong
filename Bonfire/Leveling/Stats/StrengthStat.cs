@@ -14,7 +14,7 @@ namespace BonfireSilksong
                 case 1: return 5;
                 case 2: return 15;
                 case 3: return 30;
-                default: return 99;
+                default: return LevelingSystem.MaxStatLevel;
             }
         }
 

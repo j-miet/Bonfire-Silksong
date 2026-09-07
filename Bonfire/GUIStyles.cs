@@ -45,7 +45,12 @@ namespace BonfireSilksong
         public static GUIStyle LvlInfoHeaderSecondaryStyle;
         public static GUIStyle LvlInfoHeaderMilestoneStyle;
         public static GUIStyle LvlInfoButtonStyle;
+
         public static GUIStyle LvlInfoLabelStyle;
+        public static GUIStyle LvlInfoLabelMilestone1Style;
+        public static GUIStyle LvlInfoLabelMilestone2Style;
+        public static GUIStyle LvlInfoLabelMilestone3Style;
+        public static GUIStyle LvlInfoLabelMilestone4Style;
         public static GUIStyle LvlInfoLabelDisabledStyle;
 
         public static void EnsureFonts()
@@ -369,6 +374,50 @@ namespace BonfireSilksong
                     font = TrajanNormal,
                     fontStyle = FontStyle.Bold,
                     fontSize = 14,
+                };
+            }
+
+            if (LvlInfoLabelMilestone1Style == null)
+            {
+                LvlInfoLabelMilestone1Style = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 14,
+                    normal = { textColor = new Color(0.9f, 0.9f, 0.9f) }
+                };
+            }
+
+            if (LvlInfoLabelMilestone2Style == null)
+            {
+                LvlInfoLabelMilestone2Style = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 14,
+                    normal = { textColor = new Color(0.6f, 0.8f, 0.6f) }
+                };
+            }
+
+            if (LvlInfoLabelMilestone3Style == null)
+            {
+                LvlInfoLabelMilestone3Style = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 14,
+                    normal = { textColor = new Color(0.8f, 0.6f, 0.6f) }
+                };
+            }
+
+            if (LvlInfoLabelMilestone4Style == null)
+            {
+                LvlInfoLabelMilestone4Style = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanNormal,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 14,
+                    normal = { textColor = new Color(0.6f, 0.6f, 0.8f) }
                 };
             }
 

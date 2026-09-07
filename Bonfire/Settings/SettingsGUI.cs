@@ -672,6 +672,7 @@ namespace BonfireSilksong
                 PendingStatusReset = false;
                 PendingSettingsWindow = true;
 
+                LevelingSystem.Instance.Respec(ignoreCost: true);
                 ResetPlayerStatus();
 
                 Bonfire.Instance.SaveSettings();

@@ -29,8 +29,8 @@ namespace BonfireSilksong
             {
                 case 1: return 1;
                 case 2: return 20;
-                case 3: return 40;
-                default: return 99;
+                case 3: return 35;
+                default: return LevelingSystem.MaxStatLevel;
             }
         }
 
@@ -173,7 +173,7 @@ namespace BonfireSilksong
         }
 
         /// <summary>
-        /// Apply damage bonuses while in glass cannon state.
+        /// Apply global damage bonuses while in glass cannon state.
         /// </summary>
         public static int ApplyGlassCannonDamageBonus(int baseDamage)
         {

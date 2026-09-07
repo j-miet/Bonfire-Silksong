@@ -244,7 +244,7 @@ namespace BonfireSilksong
             var hornetFsm = PlayMakerFSM.FindFsmOnGameObject(obj, fsmName);
             if (hornetFsm == null)
             {
-                Bonfire.Log.LogDebug($"Could not find {stateName} FSM on {obj.name} GameObject.");
+                Bonfire.Log.LogDebug($"Could not find {fsmName} FSM on {obj.name} GameObject.");
                 return;
             }
 
