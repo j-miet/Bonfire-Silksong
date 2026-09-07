@@ -50,7 +50,7 @@ namespace BonfireSilksong
                 case 2: return 10;
                 case 3: return 25;
                 case 4: return 35;
-                default: return 99;
+                default: return LevelingSystem.MaxStatLevel;
             }
         }
 
@@ -160,6 +160,14 @@ namespace BonfireSilksong
         }
 
         /// <summary>
+        /// Custom damage scaling for Voltvessels tool's bola projectile.
+        /// </summary>
+        public static int BolaDamage(int totalInt)
+        {
+            return 1 + (int)Math.Floor(totalInt * 0.25);
+        }
+
+        /// <summary>
         /// Apply silk skill damage bonus.
         /// </summary>
         public static int ApplySpellDamageBonuses(int baseDamage, ToolItem spell)
@@ -174,7 +182,7 @@ namespace BonfireSilksong
 
             if (CheckWeakBindRequirement())
             {
-                updatedDamage = (int)Math.Round(updatedDamage * 1.5f);
+                updatedDamage = (int)Math.Round(updatedDamage * 1.25f);
             }
 
             Bonfire.Log.LogDebug($"<Modded> Silk Skill: {spell}. Damage: {updatedDamage}");
@@ -339,6 +347,15 @@ namespace BonfireSilksong
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static void CastVoltvesselBolaOnHit(HealthManager hm, in HitInstance hit)
+        {
+            if (CheckWeakBindRequirement() && hit.RepresentingTool?.Type == ToolItemType.Skill)
+                VoltvesselBolaSpawner.SpawnBola(hm.gameObject);
         }
 
         /// <summary>
