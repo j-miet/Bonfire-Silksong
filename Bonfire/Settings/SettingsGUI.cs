@@ -1,8 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
+
 using UnityEngine;
 
-namespace BonfireSilksong
+using BonfireSilksong.GUIComponents;
+using BonfireSilksong.Leveling;
+
+namespace BonfireSilksong.Settings
 {
     /// <summary>
     /// Extra settings GUI.
@@ -40,20 +44,30 @@ namespace BonfireSilksong
             GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            float w = SettingsWidth, h = SettingsHeight;
+            float w = SettingsWidth;
+            float h = SettingsHeight;
             float x = BonfireGUI.Width / 2f - w / 2f;
             float y = BonfireGUI.Height / 2f - h / 2f;
-            Rect rect = new Rect(x, y, w, h);
 
+            // main texture
             Rect borderRect = new Rect(x - 4, y - 4, w + 8, h + 8);
             GUI.color = Color.gray;
             GUI.DrawTexture(borderRect, Texture2D.whiteTexture);
 
-            GUI.color = new Color(0.3f, 0.3f, 0.3f, 3f);
+            Rect rect = new Rect(x, y, w, h);
+            GUI.color = new Color(0.2f, 0.2f, 0.2f);
             GUI.DrawTexture(rect, Texture2D.whiteTexture);
+
+            // footer texture
+            float bottomH = 60f;
+            float bottomY = y + h - bottomH;
+
+            GUI.color = new Color(0.3f, 0.3f, 0.3f);
+            Rect bottomRect = new Rect(x, bottomY, w, bottomH);
+            GUI.DrawTexture(bottomRect, Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            GUI.Box(rect, GUIContent.none);
+            // rendering (use GUI.Box(rect, GUIContent.none) instead of DrawTexture if styling is also needed)
             CustomCursor.BeginGroup(rect);
 
             CustomCursor.BeginArea(
@@ -61,14 +75,13 @@ namespace BonfireSilksong
                     SettingsOuterOffset,
                     SettingsOuterOffset,
                     rect.width - SettingsInnerOffset,
-                    rect.height - SettingsInnerOffset));
-
-            _settingsScrollPos = CustomCursor.BeginScrollView(_settingsScrollPos);
+                    rect.height - bottomH - SettingsInnerOffset));
 
             DrawExtraSettingsContent();
+            CustomCursor.EndArea();
 
-            CustomCursor.EndScrollView();
-
+            CustomCursor.BeginArea(new Rect(0, rect.height - bottomH, rect.width, bottomH));
+            DrawSettingsFooter();
             CustomCursor.EndArea();
 
             CustomCursor.EndGroup();
@@ -91,18 +104,15 @@ namespace BonfireSilksong
             GUI.color = Color.gray;
             GUI.DrawTexture(borderRect, Texture2D.whiteTexture);
 
-            GUI.color = new Color(0.5f, 0.5f, 0.5f, 1f);
+            GUI.color = new Color(0.4f, 0.4f, 0.4f);
             GUI.DrawTexture(rect, Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            GUI.Box(rect, GUIContent.none);
             CustomCursor.BeginGroup(rect);
 
             CustomCursor.BeginArea(new Rect(20, 20, rect.width - 40, rect.height - 40));
-
             GUILayout.Label("Crest Unlocking", GUIStyles.LabelStyle);
             DrawCrestUnlockConfirmContent();
-
             CustomCursor.EndArea();
 
             CustomCursor.EndGroup();
@@ -125,18 +135,15 @@ namespace BonfireSilksong
             GUI.color = Color.gray;
             GUI.DrawTexture(borderRect, Texture2D.whiteTexture);
 
-            GUI.color = new Color(0.8f, 0.1f, 0.1f);
+            GUI.color = new Color(1f, 0.8f, 0.8f);
             GUI.DrawTexture(rect, Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            GUI.Box(rect, GUIContent.none);
             CustomCursor.BeginGroup(rect);
 
             CustomCursor.BeginArea(new Rect(20, 20, rect.width - 40, rect.height - 40));
-
             GUILayout.Label("Reset mod configurations", GUIStyles.LabelStyle);
             DrawPlayerStatusResetContent();
-
             CustomCursor.EndArea();
 
             CustomCursor.EndGroup();
@@ -171,16 +178,30 @@ namespace BonfireSilksong
 
                 if (currentHp == maxHp && !isBoss) continue; // full HP = hide bars for normal enemies
 
+                Color fillColor;
+                float width;
+                float height;
+
                 float pct = Mathf.Clamp01(currentHp / maxHp);
-                float width = isBoss ? 300f : 120f;
-                float height = isBoss ? 20f : 10f;
+
+                if (s.EnemyHpDisplayNumbers)
+                {
+                    width = isBoss ? 400f : 240f;
+                    height = isBoss ? 40f : 30f;
+                }
+                else
+                {
+                    width = isBoss ? 300f : 120f;
+                    height = isBoss ? 20f : 10f;
+                }
+
                 float x = screenPos.x - width / 2f;
                 float y = BonfireGUI.Height - screenPos.y - 20f;
 
+                Rect container = new Rect(x, y, width, height);
                 GUI.color = new Color(0f, 0f, 0f, 0.7f);
-                GUI.DrawTexture(new Rect(x, y, width, height), SolidTex());
+                GUI.DrawTexture(container, SolidTex());
 
-                Color fillColor;
                 if (s.EnemyHpBarColorProgression)
                     fillColor = pct > 0.6f ? _progHigh : pct > 0.3f ? _progMedium : _progLow;
                 else
@@ -188,6 +209,18 @@ namespace BonfireSilksong
 
                 GUI.color = fillColor;
                 GUI.DrawTexture(new Rect(x, y, width * pct, height), SolidTex());
+
+                if (s.EnemyHpDisplayNumbers)
+                {
+                    GUI.color = Color.white;
+                    GUILayout.BeginArea(container);
+                    GUILayout.BeginVertical();
+                    GUILayout.FlexibleSpace();
+                    GUILayout.Label($"{currentHp} / {maxHp}", GUIStyles.HpBarStyle);
+                    GUILayout.FlexibleSpace();
+                    GUILayout.EndVertical();
+                    GUILayout.EndArea();
+                }
 
                 GUI.color = Color.white;
             }
@@ -263,6 +296,8 @@ namespace BonfireSilksong
 
         private void DrawExtraSettingsContent()
         {
+            _settingsScrollPos = CustomCursor.BeginScrollView(_settingsScrollPos);
+
             DrawToggleSettings();
             GUILayout.Space(15);
 
@@ -272,10 +307,18 @@ namespace BonfireSilksong
             DrawPlayerStatusResetButton();
             GUILayout.Space(30);
 
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
+            CustomCursor.EndScrollView();
 
             GUI.backgroundColor = Color.white;
+        }
+
+        private void DrawSettingsFooter()
+        {
+            GUILayout.BeginVertical();
+            GUILayout.FlexibleSpace();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
 
             if (CustomCursor.Button(
                     "Close window",
@@ -288,6 +331,9 @@ namespace BonfireSilksong
 
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndVertical();
         }
 
         private void DrawAdjustUI()
@@ -393,8 +439,9 @@ namespace BonfireSilksong
             GUILayout.Label("/");
             GUILayout.Label("boss", GUIStyles.BossHpStyle);
             GUILayout.Label("→");
-            GUILayout.Label("has default hotkey LeftControl + H)");
-            GUILayout.EndVertical();
+            GUILayout.Label("has default hotkey \"LeftControl + H\")");
+
+            GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal(GUILayout.Width(370));
             GUILayout.Space(15);
@@ -415,12 +462,24 @@ namespace BonfireSilksong
 
             GUILayout.EndHorizontal();
 
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(15);
+
+            GUI.enabled = s.EnemyHealthBarsEnabled;
+            s.EnemyHpDisplayNumbers = CustomCursor.Toggle(
+                s.EnemyHpDisplayNumbers,
+                "Larger bars with HP numbers displayed");
+
+            GUILayout.EndHorizontal();
+            GUILayout.Space(10);
+
             s.ShowCustomRangeIndicator = CustomCursor.Toggle(
                 s.ShowCustomRangeIndicator,
-                "Display range indicator for Weaver's Light & Reflect damage sources.");
+                "Display range indicator for Weaver's Light & Reflect damage sources");
             s.ShowDamageOverlay = CustomCursor.Toggle(
                 s.ShowDamageOverlay,
-                "Display info from latest enemy damaging instance (has default hotkey LeftControl + L).\n" +
+                "Display damage data from latest enemy hit (has default hotkey \"LeftControl + L\")\n" +
+                "\n" +
                 "The damage number displayed here is often different from final value. For example:\n" +
                 "- Each enemy has a set of damage modifiers which can increase/decrease this by certain multiplier\n" +
                 "- Some multihit sources like Rune Rage silk skill or Threefold Pin red tool deal less damage if " +
@@ -428,13 +487,16 @@ namespace BonfireSilksong
                 GUIStyles.WordWrapToggleStyle,
                 GUILayout.Width(SettingsWidth - SettingsOuterOffset - SettingsInnerOffset - 50));
 
+            // this part with adjust buttons is a bit scuffed, could rewrite it at some point
             GUI.enabled = s.ShowDamageOverlay;
             GUILayout.BeginHorizontal(GUILayout.Width(450));
+            GUILayout.Space(10);
             GUILayout.Label($"X-Position");
             GUILayout.Label($"Y-Position");
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal(GUILayout.Width(450));
+            GUILayout.Space(10);
             GUILayout.BeginHorizontal();
             if (CustomCursor.Button(
                     $"-",
@@ -534,7 +596,7 @@ namespace BonfireSilksong
 
             s.EasierSprintmasterRaces = CustomCursor.Toggle(
                 s.EasierSprintmasterRaces,
-                "Reduce Sprintmaster Swift's movement speed in races by 50%.");
+                "Reduce Sprintmaster Swift's movement speed in races by 50%");
         }
 
         private void DrawToggleSettings()
@@ -672,8 +734,10 @@ namespace BonfireSilksong
                 PendingStatusReset = false;
                 PendingSettingsWindow = true;
 
-                LevelingSystem.Instance.Respec(ignoreCost: true);
+                // order is important here: remove all stored rosary data so respec can properly reset the fields
+                // without refunding currency.
                 ResetPlayerStatus();
+                LevelingSystem.Instance.Respec(ignoreCost: true);
 
                 Bonfire.Instance.SaveSettings();
             }
@@ -795,7 +859,7 @@ namespace BonfireSilksong
                 LevelingInfoStyle = s.LevelingInfoStyle,
                 BenchMenuStyle = s.BenchMenuStyle,
 
-                ResetMusicAfterTeleport = s.ResetMusicAfterTeleport,
+                AdjustButtonStep = s.AdjustButtonStep,
 
                 CustomCursorSpeed = s.CustomCursorSpeed,
                 DisplayGameCursorWithGamepad = s.DisplayGameCursorWithGamepad,
@@ -804,10 +868,12 @@ namespace BonfireSilksong
                 ShowDamageOverlay = s.ShowDamageOverlay,
                 DamageOverlayX = s.DamageOverlayX,
                 DamageOverlayY = s.DamageOverlayY,
-                AdjustButtonStep = s.AdjustButtonStep,
+
+                ResetMusicAfterTeleport = s.ResetMusicAfterTeleport,
 
                 EnemyHealthBarsEnabled = s.EnemyHealthBarsEnabled,
                 EnemyHpBarColorProgression = s.EnemyHpBarColorProgression,
+                EnemyHpDisplayNumbers = s.EnemyHpDisplayNumbers,
                 DeliveryQuestsRemoveTimer = s.DeliveryQuestsRemoveTimer,
                 DeliveryQuestsRemoveDamage = s.DeliveryQuestsRemoveDamage,
                 ReduceFleaGamesScoreLimit = s.ReduceFleaGamesScoreLimit,
