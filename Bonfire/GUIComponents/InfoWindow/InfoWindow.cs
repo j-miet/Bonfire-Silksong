@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.GUIComponents
 {
     /// <summary>
     /// Displays info overlay.
@@ -17,34 +17,44 @@ namespace BonfireSilksong
             GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            float w = InfoWindowWidth, h = InfoWindowHeight;
+            float w = InfoWindowWidth;
+            float h = InfoWindowHeight;
             float x = BonfireGUI.Width / 2f - w / 2f;
             float y = BonfireGUI.Height / 2f - h / 2f;
-            Rect rect = new Rect(x, y, w, h);
 
+            // main texture
             Rect borderRect = new Rect(x - 4, y - 4, w + 8, h + 8);
             GUI.color = Color.gray;
             GUI.DrawTexture(borderRect, Texture2D.whiteTexture);
 
-            GUI.color = new Color(0.3f, 0.3f, 0.3f, 3f);
+            Rect rect = new Rect(x, y, w, h);
+            GUI.color = new Color(0.2f, 0.2f, 0.2f);
             GUI.DrawTexture(rect, Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            GUI.Box(rect, GUIContent.none);
+            // footer texture
+            float bottomH = 60f;
+            float bottomY = y + h - bottomH;
+
+            GUI.color = new Color(0.3f, 0.3f, 0.3f);
+            Rect bottomRect = new Rect(x, bottomY, w, bottomH);
+            GUI.DrawTexture(bottomRect, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            // rendering
             CustomCursor.BeginGroup(rect);
 
             CustomCursor.BeginArea(new Rect(
                 InfoInnerOffset,
                 InfoInnerOffset,
                 rect.width - InfoOuterOffset,
-                rect.height - InfoOuterOffset));
-
-            _infoWindowScrollPos = CustomCursor.BeginScrollView(_infoWindowScrollPos);
+                rect.height - bottomH - InfoOuterOffset));
 
             DrawInfoContent();
+            CustomCursor.EndArea();
 
-            CustomCursor.EndScrollView();
-
+            CustomCursor.BeginArea(new Rect(0, rect.height - bottomH, rect.width, bottomH));
+            DrawInfoFooter();
             CustomCursor.EndArea();
 
             CustomCursor.EndGroup();
@@ -60,6 +70,8 @@ namespace BonfireSilksong
 
         private static void DrawInfoContent()
         {
+            _infoWindowScrollPos = CustomCursor.BeginScrollView(_infoWindowScrollPos);
+
             GUILayout.BeginVertical("box");
             Color previous = GUI.color;
             GUI.color = new Color(1f, 0.7f, 0.2f);
@@ -78,10 +90,14 @@ namespace BonfireSilksong
                 "and progression possibilities in one way or another. Therefore it's very likely this mod also sees " +
                 "substantial changes over time.\n" +
                 "\n" +
-                "[To quickly close the topmost overlay window (info, settings, bench fast travel)]\n" +
-                "- Press your \"Spell/Tool\" input.\n" +
-                "- In bench fast travel menu specifically, these are also valid: \n" +
-                "\"Map\", \"QuickMap\", \"Inventory\", menu close (Escape on keyboard).");
+                "[Hotkeys]\n" +
+                "-- General --\n" +
+                "\"Spell/Tool\" = close topmost GUI overlay, these includes: this window, settings and bench fast " +
+                "travel\n" +
+                "\n" +
+                "-- Bench Fast Travel --\n" +
+                "\"Map\"/\"QuickMap\"/\"Inventory\"/menu close (Escape on keyboard) = close map overlay\n" +
+                "\"Needolin\" = travel to selected bench location");
 
             GUILayout.Space(25);
 
@@ -103,7 +119,15 @@ namespace BonfireSilksong
                 "\n" +
                 "- You can respec your stat levels. You keep all free levels and can immediately use them afterwards" +
                 "+ all your rosaries spent on level ups are also refunded. Respeccing costs Silkeaters: first one " +
-                "is free, and each one after increases the cost by 1.");
+                "is free, and each one after increases the cost by 1.\n" +
+                "\n" +
+                "- <GUI> If you scroll the stat info panel, you might see occasional small jumps to opposite " +
+                "scroll direction. These happen because GUI actually renders only the nearest info panels based on " +
+                "current scrollbar position and replaces the rest with filler content to keep total scroll length " +
+                "very close to a constant value. The process of deciding what to hide exactly at given position is " +
+                "handled manually and will therefore include some minor inconsistencies. However the performance " +
+                "increase this gives, especially on lower-end GPUs, is quite significant. Besides, I doubt most " +
+                "users would even notice this without reading this paragraph.");
 
             GUILayout.Space(10);
 
@@ -142,8 +166,8 @@ namespace BonfireSilksong
 
             GUILayout.Label("Wisdom: gain silk after N hits", GUIStyles.SettingsHeader4);
             GUILayout.Label(
-                "A shared counter tracks your hits on enemies. After Nth hit, you get 1 silk and counter resets to 0." +
-                "Importantly: this works for all damage types and gives a nice global source of silk generation.");
+                "A shared counter tracks your hits on enemies. After Nth hit, you get 1 silk and counter resets to " +
+                "0. Importantly: this works for all damage types and gives a nice global source of silk generation.");
 
             GUILayout.Label("Luck: critical hits", GUIStyles.SettingsHeader4);
             GUILayout.Label(
@@ -160,7 +184,7 @@ namespace BonfireSilksong
                 "- 1.5 * 3 -> 4.5 => 4 small rosary beads\n" +
                 "- 1.5 * 0 => 0 medium rosary beads\n" +
                 "- 1.5 * 1 -> 1.5 => 1 large rosary bead\n" +
-                "- 1.5 * 5 -> 7.5 => 7 shell shards\n");
+                "- 1.5 * 5 -> 7.5 => 7 shell shards");
 
             GUILayout.Label("Silk skill needle scaling", GUIStyles.SettingsHeader4);
             GUILayout.Label(
@@ -195,21 +219,27 @@ namespace BonfireSilksong
 
             GUILayout.Label("Milestones", GUIStyles.SettingsHeader3);
             GUILayout.Label(
-                "All stats except Luck (at least for now) give you additional bonuses on certain stat thresholds. " +
+                "All stats give you additional bonuses after certain point thresholds are reached. " +
                 "These milestone bonuses can vary from simple buffs to gameplay-altering mechanics.\n" +
                 "\n" +
-                "- Unlike global milestones: these are solely tied to certain stat level and have no other " +
+                "- Unlike global unlocks: these are solely tied to certain stat level and have no other " +
                 "gameplay/progression requirements.\n" +
                 "- Many milestones unlock optional features which can be toggled on/off using their respective " +
                 "GUI buttons. This means you can change them only during bench visits. Some of them might " +
                 "prevent normal gameplay functions like using a certain tool or even specific button inputs.\n" +
                 "\n" +
-                "- Even the earlier milestones can give you significant buffs. Some milestones are definitely " +
-                "stronger than others, although this also depends on how well you can utilize them. Also some of " +
-                "these can make the gameplay significantly more relaxing/less riskier, while others lean to more " +
-                "active, possibly high-risk/high-reward approach.");
+                "- Some milestones can definitely be stronger than others, although this also depends on how well " +
+                "you utilize them. Futhermore some of these can make the gameplay significantly more relaxing/less " +
+                "riskier, while others lean to more active, possibly high-risk/high-reward approach.\n" +
+                "- Milestones for a stat are generally tailored around a few specific playstyles/damage " +
+                "sources. Now this doesn't mean you cannot find useful utility and/or synergies under stats: even " +
+                "the first milestones which tend to have very low stat requirements can still give you significant " +
+                "benefits!");
 
-            GUILayout.Label("\nStat milestones are centered around certain playstyles/damage sources:");
+            GUILayout.Label("\nStat milestones are centered around certain playstyles/damage sources. But even if " +
+            "you're focusing on just one specific source, you can still find some useful utility and synergies im " +
+            "other stat paths. Feel free to experiment!\n" +
+            "Anyway here's the simple overview of each stat:\n");
             GUILayout.Label("Strength", GUIStyles.SettingsHeader4);
             GUILayout.Label(
                 "- Needle\n" +
@@ -228,19 +258,27 @@ namespace BonfireSilksong
                 "- Damage-inflicting blue tools also get some benefits");
             GUILayout.Label("Resilience", GUIStyles.SettingsHeader4);
             GUILayout.Label(
-                "- Reflect (modded damage source)\n" +
-                "- Has also universal damage buffs -> works with any damage type");
+                "- Normal hp replaced with blue masks: you can either play a tank build with limited offensive " +
+                "capabilities, or a high damage glass cannon where taking damage must be avoided at all cost. Each " +
+                "will therefore change the normal gameplay quite a bit. Furthermore, reaching the final milestone " +
+                "and entering Plasmified state adds even more offense at the cost of defense.\n" +
+                "- Damage types: Reflect (modded damage source) and universal damage buffs");
             GUILayout.Label("Wisdom", GUIStyles.SettingsHeader4);
             GUILayout.Label(
-                "- Summons: Silk Nails & Cogfly Warrior (modded variants of Pale Nails/Cogfly) + Wispfire Lantern.");
+                "- Very relaxed summon/minion gameplay: let them do all the damage, or engage in combat normally and " +
+                "let them provide support.\n" +
+                "- Damage sources: Silk Nails & Cogfly Warrior (modded variants of Pale Nails & Cogfly) + Wispfire " +
+                "Lantern tool.");
             GUILayout.Label("Luck", GUIStyles.SettingsHeader4);
             GUILayout.Label(
                 "- Focuses on the 3 pin tools: Straight Pin, Threefold Pin and Longpin.\n" +
-                "- Is also the only source of crit chance which is required for utilizing mod's own critical hit " +
-                "system.");
-            GUILayout.Label(
-                "\nNow even if you plan to focus on one specific damage source/stat, you can still find some " +
-                "useful utility and buffs from leveling other stats. Feel free to experiment!");
+                "- Is also the only source of custom crit chance stat which is required for mod's own critical hit " +
+                "system.\n" +
+                "=> Luck was originally meant to be a support stat with no milestones at all. But it was more " +
+                "interesting to introduce at least something, and the idea of a ranged-only build fit into this " +
+                "nicely. So current milestones were quickly hacked together: while not as polished as milestones of " +
+                "other stat paths, it should at least give more agency to these 3 pin tools in the later stages of " +
+                "the game");
 
             GUILayout.EndVertical();
 
@@ -365,10 +403,17 @@ namespace BonfireSilksong
 
             GUILayout.EndVertical();
 
-            GUILayout.Space(15);
+            CustomCursor.EndScrollView();
+        }
+
+        private static void DrawInfoFooter()
+        {
+            GUILayout.BeginVertical();
+            GUILayout.FlexibleSpace();
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
+
             if (CustomCursor.Button(
                     "Close window",
                     GUIStyles.CrestUnlockButtonStyle,
@@ -377,8 +422,12 @@ namespace BonfireSilksong
             {
                 PendingInfoWindow = false;
             }
+
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndVertical();
         }
     }
 }
