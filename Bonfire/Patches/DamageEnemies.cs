@@ -4,7 +4,9 @@ using System.Reflection.Emit;
 using HarmonyLib;
 using UnityEngine;
 
-namespace BonfireSilksong
+using BonfireSilksong.Leveling;
+
+namespace BonfireSilksong.Patches
 {
     internal class DamageEnemies_Patch
     {

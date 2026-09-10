@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.GUIComponents
 {
     /// <summary>
     /// Custom cursor for gamepad devices.
@@ -289,9 +289,7 @@ namespace BonfireSilksong
 
             var inputs = GameManager.instance.inputHandler.inputActions;
 
-            return rect.Contains(Position) &&
-                   (inputs.Jump.WasPressed ||
-                    inputs.Attack.WasPressed);
+            return rect.Contains(Position) && (inputs.Jump.WasPressed || inputs.Attack.WasPressed);
         }
     }
 }

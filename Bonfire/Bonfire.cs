@@ -8,12 +8,14 @@ using HarmonyLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+using BonfireSilksong.Leveling;
+
 namespace BonfireSilksong
 {
     /// <summary>
     /// Main class for Bonfire-Silksong mod.
     /// </summary>
-    [BepInPlugin("hkmods.silksong.bonfire-silksong", "Bonfire-Silksong", "0.9.0")]
+    [BepInPlugin("hkmods.silksong.bonfire-silksong", "Bonfire-Silksong", "0.10.0")]
     public class Bonfire : BaseUnityPlugin
     {
         public static Bonfire Instance;

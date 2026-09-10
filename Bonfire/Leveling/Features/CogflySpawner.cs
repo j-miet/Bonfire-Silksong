@@ -3,7 +3,7 @@ using System.Reflection;
 
 using UnityEngine;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.Leveling
 {
     /// <summary>
     /// Cogfly tool custom spawner.

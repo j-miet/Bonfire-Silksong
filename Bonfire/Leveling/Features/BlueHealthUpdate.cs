@@ -3,7 +3,7 @@ using System.Collections;
 using GlobalEnums;
 using UnityEngine;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.Leveling
 {
     /// <summary>
     /// Custom blue health logic e.g. to update lifeblood masks during bench visits. Usage:

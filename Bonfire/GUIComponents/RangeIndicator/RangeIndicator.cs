@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.GUIComponents
 {
     /// <summary>
     /// Draws a disc visual i.e. circle edge + inner disc fill. Currently used for Challenge Taunt skill to display its 

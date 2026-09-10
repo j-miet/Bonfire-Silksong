@@ -4,7 +4,9 @@ using System.Collections;
 using GlobalEnums;
 using UnityEngine;
 
-namespace BonfireSilksong
+using BonfireSilksong.GUIComponents;
+
+namespace BonfireSilksong.Leveling
 {
     public enum BlueState
     {

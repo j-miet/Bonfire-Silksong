@@ -1,7 +1,9 @@
 using HarmonyLib;
 using UnityEngine;
 
-namespace BonfireSilksong
+using BonfireSilksong.Leveling;
+
+namespace BonfireSilksong.Patches
 {
     internal class ObjectPool_Patch
     {

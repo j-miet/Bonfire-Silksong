@@ -2,7 +2,7 @@ using System.Collections;
 
 using UnityEngine;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.Leveling
 {
     public static class ThreadStormSpawner
     {

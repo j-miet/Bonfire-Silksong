@@ -1,7 +1,10 @@
 using HarmonyLib;
 using HutongGames.PlayMaker.Actions;
 
-namespace BonfireSilksong
+using BonfireSilksong.GUIComponents;
+using BonfireSilksong.Leveling;
+
+namespace BonfireSilksong.Patches
 {
     /// <summary>
     /// Patches for input listener classes, starting with ListenFor prefix e.g. ListenForAttack.

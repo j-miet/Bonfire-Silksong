@@ -1,7 +1,7 @@
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.Leveling
 {
     /// <summary>
     /// Rune Rage silk skill custom spawner.

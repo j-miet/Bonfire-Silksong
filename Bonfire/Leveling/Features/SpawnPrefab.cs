@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.Leveling
 {
     /// <summary>
     /// For spawning game's own prefab effects via GameObjects. Common ones can be found in 

@@ -2,7 +2,7 @@ using System.Reflection;
 
 using UnityEngine;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.Leveling
 {
     public static class VoltvesselBolaSpawner
     {
@@ -17,7 +17,9 @@ namespace BonfireSilksong
                 return;
             }
 
-            object onState = _onStateField.GetValue(t); // offState = spear, onState = bola
+            // offState = spear, onState = bola. Each is wrapped into a private class 'State' which then finally gives
+            // the UsageOptions.ThrowPrefab, the GameObject itself.
+            object onState = _onStateField.GetValue(t);
             ToolItem.UsageOptions usageOptions = (ToolItem.UsageOptions)_usageField.GetValue(onState);
             GameObject bolaPrefab = usageOptions.ThrowPrefab;
 

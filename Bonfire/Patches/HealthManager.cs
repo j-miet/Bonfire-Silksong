@@ -3,7 +3,9 @@ using System.Reflection.Emit;
 
 using HarmonyLib;
 
-namespace BonfireSilksong
+using BonfireSilksong.Leveling;
+
+namespace BonfireSilksong.Patches
 {
     internal class HealthManager_Patch
     {

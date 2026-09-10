@@ -6,7 +6,10 @@ using System.Reflection;
 
 using UnityEngine;
 
-namespace BonfireSilksong
+using BonfireSilksong.GUIComponents;
+using BonfireSilksong.Leveling;
+
+namespace BonfireSilksong.Teleport
 {
     /// <summary>
     /// Bench teleport GUI.
@@ -57,6 +60,36 @@ namespace BonfireSilksong
             GUI.backgroundColor = Color.white;
 
             GUILayout.EndVertical();
+        }
+
+        public IEnumerator DoTeleport()
+        {
+            if (_selectedPin != null)
+            {
+                CustomCursor.ResetCursorPosition();
+
+                DeliveryQuestItem.TakeHit(100); // destroy all courier quest items
+
+                BenchTeleport.PrepareTeleportLocation(_selectedPin);
+
+                Bonfire.Instance.StartCoroutine(StartTeleport());
+
+                yield return new WaitForSecondsRealtime(1f);
+            }
+            else if (_selectedScene != null)
+            {
+                CustomCursor.ResetCursorPosition();
+
+                DeliveryQuestItem.TakeHit(100);
+
+                FillTeleportData(_selectedScene);
+
+                Bonfire.Instance.StartCoroutine(StartTeleport());
+
+                yield return new WaitForSecondsRealtime(1f);
+            }
+
+            yield break;
         }
 
         public void DrawBenchFastTravelUI()
@@ -130,48 +163,6 @@ namespace BonfireSilksong
                 CustomCursor.EndArea();
             }
         }
-
-        /*
-        public void FastTravelUnlockNotification()
-        {
-            if (Bonfire.Instance.Status.UnlockedFastTravel) return;
-
-            if (PlayerData.instance.defeatedBellBeast)
-            {
-                PendingFastTravelUnlockWindow = true;
-
-                GUI.color = new Color(0, 0, 0, 0.8f);
-                GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
-
-                float w = 600f, h = 380f;
-
-                float x = BonfireGUI.Width / 2f - w / 2f;
-                float y = BonfireGUI.Height / 2f - h / 2f;
-
-                Rect borderRect = new Rect(x - 4, y - 4, w + 8, h + 8);
-                GUI.color = Color.gray;
-                GUI.DrawTexture(borderRect, Texture2D.whiteTexture);
-
-                Rect rect = new Rect(x, y, w, h);
-                GUI.color = new Color(0.8f, 0.6f, 0);
-                GUI.DrawTexture(rect, Texture2D.whiteTexture);
-                GUI.color = Color.white;
-
-
-                GUI.Box(rect, GUIContent.none);
-                CustomCursor.BeginGroup(rect);
-
-                CustomCursor.BeginArea(new Rect(20, 20, rect.width - 40, rect.height - 40));
-
-                GUILayout.Label("Bench fast travel unlocked!", GUIStyles.LabelStyle);
-                DrawFastTravelUnlockModalPopup();
-
-                CustomCursor.EndArea();
-
-                CustomCursor.EndGroup();
-            }
-        }
-        */
 
 
         // MapPin -> (location scene, location bench marker) tuple
@@ -662,13 +653,7 @@ namespace BonfireSilksong
             GUI.contentColor = Color.white;
             if (CustomCursor.Button("Travel", GUIStyles.ButtonStyle, GUILayout.Width(200f), GUILayout.Height(30f)))
             {
-                CustomCursor.ResetCursorPosition();
-
-                DeliveryQuestItem.TakeHit(100); // destroy all courier quest items
-
-                BenchTeleport.PrepareTeleportLocation(_selectedPin);
-
-                Bonfire.Instance.StartCoroutine(StartTeleport());
+                Bonfire.Instance.StartCoroutine(DoTeleport());
             }
 
             GUI.backgroundColor = Color.white;
@@ -741,13 +726,7 @@ namespace BonfireSilksong
             GUI.contentColor = Color.white;
             if (CustomCursor.Button("Travel", GUIStyles.ButtonStyle, GUILayout.Width(200f), GUILayout.Height(30f)))
             {
-                CustomCursor.ResetCursorPosition();
-
-                DeliveryQuestItem.TakeHit(100);
-
-                FillTeleportData(_selectedScene);
-
-                Bonfire.Instance.StartCoroutine(StartTeleport());
+                Bonfire.Instance.StartCoroutine(DoTeleport());
             }
 
             GUI.backgroundColor = Color.white;
@@ -756,7 +735,48 @@ namespace BonfireSilksong
             GUILayout.EndHorizontal();
         }
 
-        /*
+        /* -- UNUSED, fast travel pop-up for old system
+
+        public void FastTravelUnlockNotification()
+        {
+            if (Bonfire.Instance.Status.UnlockedFastTravel) return;
+
+            if (PlayerData.instance.defeatedBellBeast)
+            {
+                PendingFastTravelUnlockWindow = true;
+
+                GUI.color = new Color(0, 0, 0, 0.8f);
+                GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
+
+                float w = 600f, h = 380f;
+
+                float x = BonfireGUI.Width / 2f - w / 2f;
+                float y = BonfireGUI.Height / 2f - h / 2f;
+
+                Rect borderRect = new Rect(x - 4, y - 4, w + 8, h + 8);
+                GUI.color = Color.gray;
+                GUI.DrawTexture(borderRect, Texture2D.whiteTexture);
+
+                Rect rect = new Rect(x, y, w, h);
+                GUI.color = new Color(0.8f, 0.6f, 0);
+                GUI.DrawTexture(rect, Texture2D.whiteTexture);
+                GUI.color = Color.white;
+
+
+                GUI.Box(rect, GUIContent.none);
+                CustomCursor.BeginGroup(rect);
+
+                CustomCursor.BeginArea(new Rect(20, 20, rect.width - 40, rect.height - 40));
+
+                GUILayout.Label("Bench fast travel unlocked!", GUIStyles.LabelStyle);
+                DrawFastTravelUnlockModalPopup();
+
+                CustomCursor.EndArea();
+
+                CustomCursor.EndGroup();
+            }
+        }
+
         private void DrawFastTravelUnlockModalPopup()
         {
             GUILayout.Space(10);

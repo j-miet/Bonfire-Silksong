@@ -1,4 +1,4 @@
-namespace BonfireSilksong
+namespace BonfireSilksong.GUIComponents
 {
     public static class CursorPatchLogic
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using GlobalEnums;
 using UnityEngine;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.Leveling
 {
     /// <summary>
     /// High-level leveling system logic. Knows only the numerical values of each stat, but not their underlying logic.
@@ -14,6 +14,8 @@ namespace BonfireSilksong
         public const int MaxStatLevel = 99;
 
         public static int MilestoneBonus = 0;
+
+        public int CachedRelicsObtained => _cachedRelicsDeposited;
         public static LevelingSystem Instance
         {
             get => _instance;
@@ -179,6 +181,7 @@ namespace BonfireSilksong
 
             int fromRespecPool = Math.Min(s.PendingRelicLevels, s.RespecRelicLevels);
             int fromNewDeposits = s.PendingRelicLevels - fromRespecPool;
+            if (fromRespecPool == 0 && fromNewDeposits == 0) return;
 
             s.RespecRelicLevels -= fromRespecPool;
             s.ConsumedRelicLevels += fromNewDeposits;
@@ -235,6 +238,13 @@ namespace BonfireSilksong
         public void Respec(bool ignoreCost = false)
         {
             var s = Bonfire.Instance.Status;
+
+            int relicLevelsSpent = s.StrengthStat + s.DexterityStat + s.IntelligenceStat
+                                + s.ArtificeStat + s.ResilienceStat + s.WisdomStat + s.LuckStat
+                                - (s.TotalRosaryLevels - 1);
+
+            if (s.TotalRosaryLevels == 1 && relicLevelsSpent == 0) return;
+
             var silkEaters = Resources.FindObjectsOfTypeAll<CollectableItem>()
                 .FirstOrDefault(i => i.name == "Silk Grub");
 
@@ -243,12 +253,6 @@ namespace BonfireSilksong
                 if (silkEaters == null || silkEaters.CollectedAmount < s.RespecCost)
                     return;
             }
-
-            int relicLevelsSpent = s.StrengthStat + s.DexterityStat + s.IntelligenceStat
-                                + s.ArtificeStat + s.ResilienceStat + s.WisdomStat + s.LuckStat
-                                - (s.TotalRosaryLevels - 1);
-
-            if (s.TotalRosaryLevels == 1 && relicLevelsSpent == 0) return;
 
             RefreshRelicsDeposited();
             if (CachedRelicsObtained < 0) return;
@@ -401,7 +405,6 @@ namespace BonfireSilksong
         {
             _cachedRelicsDeposited = RelicsDeposited();
         }
-        public int CachedRelicsObtained => _cachedRelicsDeposited;
 
 
         private static LevelingSystem _instance;

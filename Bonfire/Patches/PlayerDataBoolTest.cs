@@ -1,7 +1,9 @@
 using HarmonyLib;
 using HutongGames.PlayMaker.Actions;
 
-namespace BonfireSilksong
+using BonfireSilksong.Settings;
+
+namespace BonfireSilksong.Patches
 {
     internal class PlayerDataBoolTest_Patch
     {

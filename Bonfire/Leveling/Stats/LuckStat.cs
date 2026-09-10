@@ -2,7 +2,7 @@ using System;
 
 using UnityEngine;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.Leveling
 {
     public static class LuckStat
     {

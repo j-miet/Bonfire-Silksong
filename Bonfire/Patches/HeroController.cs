@@ -1,11 +1,15 @@
 using System;
-using System.Reflection;
+
 using GlobalEnums;
 using GlobalSettings;
 using HarmonyLib;
 using UnityEngine;
 
-namespace BonfireSilksong
+using BonfireSilksong.Leveling;
+using BonfireSilksong.Settings;
+using BonfireSilksong.Teleport;
+
+namespace BonfireSilksong.Patches
 {
     internal class HeroController_Patch
     {

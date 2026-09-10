@@ -1,6 +1,8 @@
 using HarmonyLib;
 
-namespace BonfireSilksong
+using BonfireSilksong.Leveling;
+
+namespace BonfireSilksong.Patches
 {
     internal class HeroNailImbuement_Patch
     {

@@ -1,11 +1,13 @@
 using HarmonyLib;
 
-namespace BonfireSilksong
+using BonfireSilksong.Leveling;
+
+namespace BonfireSilksong.Patches
 {
     internal class SilkSpool_Patch
     {
         [HarmonyPatch(typeof(SilkSpool), "BindCost", MethodType.Getter)]
-        class SilkSpool_BindCost_Getter
+        class SilkSpool_BindCost
         {
             static void Postfix(ref float __result)
             {

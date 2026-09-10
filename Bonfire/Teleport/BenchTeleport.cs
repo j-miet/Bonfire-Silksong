@@ -5,7 +5,9 @@ using System.Reflection;
 using GlobalEnums;
 using UnityEngine;
 
-namespace BonfireSilksong
+using BonfireSilksong.Leveling;
+
+namespace BonfireSilksong.Teleport
 {
     /// <summary>
     /// Bench fast travel API. Setup: add HandleArrival and CheckMarkerValidity methods from TeleportPatchHelpers

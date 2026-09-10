@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.GUIComponents
 {
     public class DamageOverlay
     {

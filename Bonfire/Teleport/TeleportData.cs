@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.Teleport
 {
     /// <summary>
     /// Static data for TeleportGUI class.

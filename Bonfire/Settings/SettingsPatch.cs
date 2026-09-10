@@ -1,7 +1,7 @@
 using GlobalSettings;
 using HutongGames.PlayMaker.Actions;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.Settings
 {
     /// <summary>
     /// Settings logic which needs to be injected into game code.

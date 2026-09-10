@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.Leveling
 {
     public static class DexterityStat
     {

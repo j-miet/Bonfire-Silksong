@@ -4,7 +4,7 @@ using System.Reflection;
 using TeamCherry.SharedUtils;
 using UnityEngine;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.Leveling
 {
     public static class WisdomStat
     {
@@ -54,6 +54,8 @@ namespace BonfireSilksong
         /// </summary>
         public static int ExtraSilkThreshold(int totalWsdm)
         {
+            if (totalWsdm <= 0) return -1;
+
             return (int)(3.0 + 13.0 * Math.Exp(-0.035 * totalWsdm));
         }
 
@@ -92,11 +94,11 @@ namespace BonfireSilksong
             return (float)(0.75 + 4.25 * Math.Exp(-0.09 * totalWsdm));
         }
 
-        public static int CogflyWarriorDamage(int totalWsdm)
+        public static int CogflyWarriorDamage(int totalWsdm, bool isGUI = false)
         {
             int damage = CogflyWarriorBaseDamage;
 
-            if (totalWsdm <= 1 || !CheckWisdomMilestone(2)) return damage;
+            if (totalWsdm <= 1 || (!CheckWisdomMilestone(2) && !isGUI)) return damage;
 
             int m2 = WisdomMilestone(2);
 
@@ -104,10 +106,9 @@ namespace BonfireSilksong
             {
                 damage += (int)Math.Floor(totalWsdm * 0.2f);
             }
-
-            if (totalWsdm > m2)
+            else if (totalWsdm > m2)
             {
-                damage += (int)Math.Floor((totalWsdm - m2) * 0.5f);
+                damage += (int)Math.Floor(m2 * 0.2f) + (int)Math.Floor((totalWsdm - m2) * 0.5f);
             }
 
             return damage;
@@ -170,12 +171,15 @@ namespace BonfireSilksong
             {
                 _hitCounter += 1;
             }
-            else if (_hitCounter > 0)
+            else
             {
                 _hitCounter = 0;
+                return;
             }
 
             int threshold = ExtraSilkThreshold(totalWisdom);
+            if (threshold < 0) return;
+
             bool giveSilk = _hitCounter >= threshold;
             if (giveSilk)
             {
@@ -192,8 +196,6 @@ namespace BonfireSilksong
         public static void HandleSilkSpoolUpdate(bool reset)
         {
             var pd = PlayerData.instance;
-
-            GameManager.instance.gameCams.silkSpool.DrawSpool();
 
             if (reset)
             {

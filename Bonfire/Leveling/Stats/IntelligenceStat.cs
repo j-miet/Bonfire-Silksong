@@ -3,7 +3,9 @@ using System;
 using HutongGames.PlayMaker;
 using UnityEngine;
 
-namespace BonfireSilksong
+using BonfireSilksong.GUIComponents;
+
+namespace BonfireSilksong.Leveling
 {
     public enum WeaverAura
     {
@@ -179,11 +181,6 @@ namespace BonfireSilksong
 
             if (!ResilienceStat.IsInBlueState(BlueState.GLASSCANNON))
                 updatedDamage = SpellDamage(baseDamage, Bonfire.Instance.Status.IntelligenceStat);
-
-            if (CheckWeakBindRequirement())
-            {
-                updatedDamage = (int)Math.Round(updatedDamage * 1.25f);
-            }
 
             Bonfire.Log.LogDebug($"<Modded> Silk Skill: {spell}. Damage: {updatedDamage}");
 

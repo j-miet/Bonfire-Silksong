@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace BonfireSilksong
+using BonfireSilksong.Leveling;
+
+namespace BonfireSilksong.Teleport
 {
     /// <summary>
     /// Bench teleport logic which needs to be injected into game code.

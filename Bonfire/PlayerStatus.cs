@@ -32,7 +32,7 @@ namespace BonfireSilksong
         public int LevelingInfoStyle = 0;
         public int BenchMenuStyle = 1;
 
-        // stat milestones
+        // stat milestones (always ensure Leveling.UI.GameData -> CacheUpdated checks all of these)
         public bool AutoReleaseNeedleStrike = false;
         public int WeaverAuraMode = 0;
         public bool WeakBindEnabled = false;
@@ -58,6 +58,7 @@ namespace BonfireSilksong
         // - gameplay
         public bool EnemyHealthBarsEnabled = false;
         public bool EnemyHpBarColorProgression = false;
+        public bool EnemyHpDisplayNumbers = false;
 
         public bool DeliveryQuestsRemoveTimer = false;
         public bool DeliveryQuestsRemoveDamage = false;

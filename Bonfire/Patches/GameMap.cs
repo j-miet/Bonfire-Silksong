@@ -1,6 +1,8 @@
 using HarmonyLib;
 
-namespace BonfireSilksong
+using BonfireSilksong.Teleport;
+
+namespace BonfireSilksong.Patches
 {
     internal class GameMap_Patch
     {

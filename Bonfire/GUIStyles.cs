@@ -26,6 +26,7 @@ namespace BonfireSilksong
         public static GUIStyle HpHighStyle;
         public static GUIStyle HpMediumStyle;
         public static GUIStyle HpLowStyle;
+        public static GUIStyle HpBarStyle;
 
         public static GUIStyle CrestUnlockLabelStyle;
         public static GUIStyle CrestUnlockButtonStyle;
@@ -180,7 +181,7 @@ namespace BonfireSilksong
             {
                 HpHighStyle = new GUIStyle(GUI.skin.label)
                 {
-                    normal = { textColor = Color.green }
+                    normal = { textColor = new Color(0.2f, 0.8f, 0.2f) }
                 };
             }
 
@@ -188,7 +189,7 @@ namespace BonfireSilksong
             {
                 HpMediumStyle = new GUIStyle(GUI.skin.label)
                 {
-                    normal = { textColor = Color.yellow }
+                    normal = { textColor = new Color(0.7f, 0.7f, 0) }
                 };
             }
 
@@ -197,6 +198,17 @@ namespace BonfireSilksong
                 HpLowStyle = new GUIStyle(GUI.skin.label)
                 {
                     normal = { textColor = Color.red }
+                };
+            }
+
+            if (HpBarStyle == null)
+            {
+                HpBarStyle = new GUIStyle(GUI.skin.label)
+                {
+                    font = TrajanBold,
+                    fontStyle = FontStyle.Bold,
+                    fontSize = 19,
+                    alignment = TextAnchor.MiddleCenter,
                 };
             }
 

@@ -1,6 +1,8 @@
 using HarmonyLib;
 
-namespace BonfireSilksong
+using BonfireSilksong.Settings;
+
+namespace BonfireSilksong.Patches
 {
     internal class SprintRaceController_Patch
     {

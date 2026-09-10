@@ -2,6 +2,12 @@ using GlobalEnums;
 using HutongGames.PlayMaker;
 using UnityEngine;
 
+using BonfireSilksong.GUIComponents;
+using BonfireSilksong.Leveling;
+using BonfireSilksong.Leveling.UI;
+using BonfireSilksong.Settings;
+using BonfireSilksong.Teleport;
+
 namespace BonfireSilksong
 {
     /// <summary>
@@ -176,6 +182,11 @@ namespace BonfireSilksong
                     inputActions.QuickCast.WasPressed)
                 {
                     Teleport.CloseFastTravelMenu();
+                }
+                else if (inputActions.DreamNail.WasPressed)
+                {
+                    // teleport to selected location with "Needolin" hotkey
+                    Bonfire.Instance.StartCoroutine(Teleport.DoTeleport());
                 }
             }
 

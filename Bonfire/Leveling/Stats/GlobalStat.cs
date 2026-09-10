@@ -2,7 +2,7 @@ using System;
 
 using GlobalSettings;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.Leveling
 {
     public enum GlobalMilestone
     {
@@ -44,7 +44,7 @@ namespace BonfireSilksong
                     return $"★ Reach level {CurrencyBuffLevelRequirement} & Obtain Threefold Melody ★";
 
                 case GlobalMilestone.MAGGOTREPEL:
-                    return "★ Defeat \"Raging Conchfly\" boss & Visit Pale Lake < OR > -- " +
+                    return "★ Defeat \"Raging Conchfly\" boss & Visit Pale Lake ‹- OR -› " +
                         "Defeat \"Groal the Great\" boss ★";
 
                 case GlobalMilestone.SILKREGEN:
@@ -81,7 +81,7 @@ namespace BonfireSilksong
                         pd.HasMelodyArchitect && pd.HasMelodyConductor && pd.HasMelodyLibrarian;
 
                 case GlobalMilestone.MAGGOTREPEL:
-                    return pd.defeatedCoralDrillerSolo && pd.SeenFleatopiaEmpty;
+                    return (pd.defeatedCoralDrillerSolo && pd.SeenFleatopiaEmpty) || pd.DefeatedSwampShaman;
 
                 case GlobalMilestone.SILKREGEN:
                     return pd.blackThreadWorld && pd.completedAbyssAscent;

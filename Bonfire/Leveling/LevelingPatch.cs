@@ -4,7 +4,9 @@ using System.Reflection;
 using GlobalSettings;
 using HarmonyLib;
 
-namespace BonfireSilksong
+using BonfireSilksong.GUIComponents;
+
+namespace BonfireSilksong.Leveling
 {
     /// <summary>
     /// General leveling system logic which needs to be injected into game code e.g. those not tied to any specific 
@@ -91,7 +93,7 @@ namespace BonfireSilksong
                 // in any blue state, but not plasmified -> use blue masks instead
                 // otherwise use the default normal mask tracking
                 if ((ResilienceStat.IsInAnyBlueStateAndPlasmified() && pd.health == pd.CurrentMaxHealth) ||
-                    (ResilienceStat.IsInAnyBlueState() && pd.healthBlue == maxBlueHp) ||
+                    (ResilienceStat.IsInAnyBlueState() && pd.healthBlue >= maxBlueHp) ||
                     (!ResilienceStat.IsInAnyBlueState() && pd.health == pd.CurrentMaxHealth))
                 {
                     return 3;

@@ -5,7 +5,7 @@ using System.Reflection;
 using GlobalSettings;
 using UnityEngine;
 
-namespace BonfireSilksong
+namespace BonfireSilksong.Leveling
 {
     public static class ArtificeStat
     {
