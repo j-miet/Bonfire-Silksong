@@ -18,44 +18,14 @@ namespace BonfireSilksong.Leveling
 
     public static class GlobalStat
     {
+        public const int QoLToolsLevelRequirement = 5;
+        public const int ShardRefillLevelRequirement = 20;
+        public const int CurrencyBuffLevelRequirement = 30;
         public const int ExtraRosaryThreshold = 5;
         public const int CurrencyMultiplier = 2;
         public const int SilkRegenInterval = 10;
 
         public static bool CheckFastTravelCondition => CheckGlobalMilestone(GlobalMilestone.BENCHTELEPORT);
-
-        public static string GetGlobalMilestoneString(GlobalMilestone m)
-        {
-            switch (m)
-            {
-                case GlobalMilestone.CURRENCYBASE:
-                    return "★ Defeat \"Moss Mother\" boss ★";
-
-                case GlobalMilestone.BENCHTELEPORT:
-                    return "★ Defeat \"Bell Beast\" boss & Obtain a Map + Bench Pins from Shakra ★";
-
-                case GlobalMilestone.QOLTOOLS:
-                    return $"★ Reach level {QoLToolsLevelRequirement} ★";
-
-                case GlobalMilestone.SHARDREFILL:
-                    return $"★ Reach level {ShellShardRefillLevelRequirement} & Defeat \"Cogwork Dancers\" boss ★";
-
-                case GlobalMilestone.CURRENCYMULTIPLIER:
-                    return $"★ Reach level {CurrencyBuffLevelRequirement} & Obtain Threefold Melody ★";
-
-                case GlobalMilestone.MAGGOTREPEL:
-                    return "★ Defeat \"Raging Conchfly\" boss & Visit Pale Lake ‹- OR -› " +
-                        "Defeat \"Groal the Great\" boss ★";
-
-                case GlobalMilestone.SILKREGEN:
-                    return "★ Ascend from the Abyss ★";
-
-                case GlobalMilestone.RESPECFREE:
-                    return "★ Obtain any of the old hearts in Act 3 ★";
-
-                default: return "";
-            }
-        }
 
         public static bool CheckGlobalMilestone(GlobalMilestone m)
         {
@@ -74,14 +44,14 @@ namespace BonfireSilksong.Leveling
                     return currentLvl >= QoLToolsLevelRequirement;
 
                 case GlobalMilestone.SHARDREFILL:
-                    return currentLvl >= ShellShardRefillLevelRequirement && pd.defeatedCogworkDancers;
+                    return currentLvl >= ShardRefillLevelRequirement && pd.defeatedCogworkDancers;
 
                 case GlobalMilestone.CURRENCYMULTIPLIER:
                     return currentLvl >= CurrencyBuffLevelRequirement &&
                         pd.HasMelodyArchitect && pd.HasMelodyConductor && pd.HasMelodyLibrarian;
 
                 case GlobalMilestone.MAGGOTREPEL:
-                    return (pd.defeatedCoralDrillerSolo && pd.SeenFleatopiaEmpty) || pd.DefeatedSwampShaman;
+                    return pd.DefeatedSwampShaman || pd.MapCount >= 25;
 
                 case GlobalMilestone.SILKREGEN:
                     return pd.blackThreadWorld && pd.completedAbyssAscent;
@@ -200,15 +170,6 @@ namespace BonfireSilksong.Leveling
         }
 
 
-        private const int QoLToolsLevelRequirement = 5;
-        private const int ShellShardRefillLevelRequirement = 15;
-        private const int CurrencyBuffLevelRequirement = 25;
-
         private static float _silkRegenTime = 0f;
-
-        // private static int SilkRegenInterval(int totalLvl)
-        // {
-        //     return (int)(4.0 + 36.0 * Math.Exp(-0.06 * totalLvl));
-        // }
     }
 }

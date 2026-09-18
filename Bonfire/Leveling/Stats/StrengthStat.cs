@@ -7,6 +7,8 @@ namespace BonfireSilksong.Leveling
 {
     public static class StrengthStat
     {
+        public static bool NeedleStrikeAutoReleaseUnlocked => CheckStrengthMilestone(1);
+
         public static int StrengthMilestone(int m)
         {
             switch (m)
@@ -68,7 +70,7 @@ namespace BonfireSilksong.Leveling
 
             int updatedDamage = NeedleDamage(baseDamage, Bonfire.Instance.Status.StrengthStat);
 
-            Bonfire.Log.LogDebug($"[PlayerData.nailDamage] <Modded> needle base damage: {updatedDamage}");
+            Bonfire.Log.LogDebug($"<Modded> needle base damage: {updatedDamage}");
             return updatedDamage;
         }
 

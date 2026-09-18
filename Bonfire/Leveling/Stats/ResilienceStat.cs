@@ -21,8 +21,9 @@ namespace BonfireSilksong.Leveling
 
         public static bool BlockNextHit = false;
 
+        public static bool BlueMaskStateUnlocked => CheckResilienceMilestone(1);
         public static bool GlassCannonButNotPlasmified =>
-            Bonfire.Instance.Status.BlueMaskMode == (int)BlueState.GLASSCANNON &&
+            Bonfire.Instance.Status.BlueMaskState == (int)BlueState.GLASSCANNON &&
             !IsInBlueStateAndPlasmified(BlueState.GLASSCANNON);
 
         public static int ResilienceMilestone(int m)
@@ -253,7 +254,7 @@ namespace BonfireSilksong.Leveling
 
         public static bool IsInBlueState(BlueState state)
         {
-            return CheckResilienceMilestone(1) && Bonfire.Instance.Status.BlueMaskMode == (int)state;
+            return CheckResilienceMilestone(1) && Bonfire.Instance.Status.BlueMaskState == (int)state;
         }
 
         public static bool IsInAnyBlueState()
@@ -265,7 +266,7 @@ namespace BonfireSilksong.Leveling
         {
             return HeroController.instance.IsInLifebloodState &&
                 CheckResilienceMilestone(3) &&
-                Bonfire.Instance.Status.BlueMaskMode == (int)state;
+                Bonfire.Instance.Status.BlueMaskState == (int)state;
         }
 
         public static bool IsInAnyBlueStateAndPlasmified()

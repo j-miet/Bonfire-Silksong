@@ -12,8 +12,8 @@ namespace BonfireSilksong.Patches
         {
             static bool Prefix(PlayerDataBoolTest __instance)
             {
-                // negate return value to ignore running the actual OnEnter when door should stay open
-                return !SettingsPatch.KeepBeastChapelDoorStateOpen(__instance);
+                // prevent OnEnter from running if the door should stay open.
+                return !SettingsPatch.CheckIfCrestChapelDoorOpen(__instance);
             }
         }
     }

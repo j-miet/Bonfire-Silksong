@@ -53,7 +53,7 @@ namespace BonfireSilksong.Leveling
             if (!ResilienceStat.IsInBlueState(BlueState.GLASSCANNON))
                 damage = StrengthStat.UpdateNeedleBaseDamage(damage);
 
-            Bonfire.Log.LogDebug($"[PatchHelpers] getter (DamageEnemies) updated needle damage={damage}");
+            Bonfire.Log.LogDebug($"[LevelingPatch] getter (DamageEnemies) updated needle damage = {damage}");
 
             return damage;
         }
@@ -73,7 +73,7 @@ namespace BonfireSilksong.Leveling
             if (!ResilienceStat.IsInBlueState(BlueState.GLASSCANNON))
                 damage = StrengthStat.UpdateNeedleBaseDamage(damage);
 
-            Bonfire.Log.LogDebug($"[PatchHelpers] getter (HitInstance) updated needle damage={damage}");
+            Bonfire.Log.LogDebug($"[LevelingPatch] getter (HitInstance) updated needle damage = {damage}");
 
             return damage;
         }
@@ -119,7 +119,7 @@ namespace BonfireSilksong.Leveling
             {
                 if (IntelligenceStat.AuraOrBurstEnabled)
                 {
-                    Bonfire.Log.LogDebug("[PatchHelpers] Refunded Taunt Cost for Aura/Burst");
+                    Bonfire.Log.LogDebug("[LevelingPatch] Refunded Taunt Cost for Aura/Burst");
                     refunded = true;
                 }
             }
@@ -140,55 +140,49 @@ namespace BonfireSilksong.Leveling
             int medium = GetRosaries("medium", instance);
             int large = GetRosaries("large", instance);
             int shards = GetShellShards(instance);
+            int newSmall = small;
+            int newMedium = medium;
+            int newShards = shards;
+            int newLarge = large;
 
-            Bonfire.Log.LogDebug("[LuckStat] Check currency values");
-            Bonfire.Log.LogDebug("<Vanilla> rosary and shell shard values:");
-            Bonfire.Log.LogDebug($"small={small}");
-            Bonfire.Log.LogDebug($"medium={medium}");
-            Bonfire.Log.LogDebug($"large={large}");
-            Bonfire.Log.LogDebug($"shards={shards}");
-
-            int baseRosaryBonus = GlobalStat.IncreaseCurrencyBaseDrops(s.LuckStat);
+            int baseRosaryBonus = GlobalStat.IncreaseCurrencyBaseDrops(LevelingSystem.GetCurrentLevel());
 
             if (baseRosaryBonus > 0)
             {
                 int modulo = baseRosaryBonus % GlobalStat.ExtraRosaryThreshold;
                 if (modulo == 0)
                 {
-                    medium += baseRosaryBonus / GlobalStat.ExtraRosaryThreshold;
+                    newMedium += baseRosaryBonus / GlobalStat.ExtraRosaryThreshold;
                 }
                 else
                 {
-                    medium += baseRosaryBonus / GlobalStat.ExtraRosaryThreshold;
-                    small += modulo;
+                    newMedium += baseRosaryBonus / GlobalStat.ExtraRosaryThreshold;
+                    newSmall += modulo;
                 }
 
-                shards += baseRosaryBonus;
+                newShards += baseRosaryBonus;
             }
 
             int luck = s.LuckStat;
             if (luck > 0)
             {
-                small = LuckStat.IncreaseRosaryCount(small, luck);
-                medium = LuckStat.IncreaseRosaryCount(medium, luck);
-                large = LuckStat.IncreaseRosaryCount(large, luck);
-                shards = LuckStat.IncreaseRosaryCount(shards, luck);
+                newSmall = LuckStat.IncreaseRosaryCount(newSmall, luck);
+                newMedium = LuckStat.IncreaseRosaryCount(newMedium, luck);
+                newLarge = LuckStat.IncreaseRosaryCount(newLarge, luck);
+                newShards = LuckStat.IncreaseRosaryCount(newShards, luck);
             }
 
             if (GlobalStat.CheckGlobalMilestone(GlobalMilestone.CURRENCYMULTIPLIER))
             {
-                small = GlobalStat.ApplyCurrencyMultiplier(small);
-                medium = GlobalStat.ApplyCurrencyMultiplier(medium);
-                large = GlobalStat.ApplyCurrencyMultiplier(large);
-                shards = GlobalStat.ApplyCurrencyMultiplier(shards);
+                newSmall = GlobalStat.ApplyCurrencyMultiplier(newSmall);
+                newMedium = GlobalStat.ApplyCurrencyMultiplier(newMedium);
+                newLarge = GlobalStat.ApplyCurrencyMultiplier(newLarge);
+                newShards = GlobalStat.ApplyCurrencyMultiplier(newShards);
             }
 
-            Bonfire.Log.LogDebug("<Modded> rosary and shell shard values:");
-            Bonfire.Log.LogDebug($"Base value bonus: {baseRosaryBonus}");
-            Bonfire.Log.LogDebug($"small={small}");
-            Bonfire.Log.LogDebug($"medium={medium}");
-            Bonfire.Log.LogDebug($"large={large}");
-            Bonfire.Log.LogDebug($"shards={shards}");
+            Bonfire.Log.LogDebug($"[LuckStat] Check currency values for {instance.name}\n" +
+            $"<Vanilla> small={small}, medium={medium}, large={large}, shards={shards}\n" +
+            $"<Modded> base bonus: {baseRosaryBonus}, small={small}, medium={medium}, large={large}, shards={shards}");
 
             // SetGeo: these determine how many rosary beads of each type are dropped, not the value of that type. 
             // Their actual currency values are: small/shell shard = 1, medium = 5, large = 15.
@@ -225,9 +219,8 @@ namespace BonfireSilksong.Leveling
                     sourceName = "Bonfire-CogflyWarrior";
             }
 
-            Bonfire.Log.LogDebug("[PatchHelpers] Recorded a hit => Hit source: " + sourceName);
-            Bonfire.Log.LogDebug("- Damage Dealt: " + vanillaDamage);
-            Bonfire.Log.LogDebug("- Tool instance: " + tool?.name ?? "null");
+            Bonfire.Log.LogDebug($"[LevelingPatch] Recorded a hit => Hit source: {sourceName}, " +
+                $"Damage: {vanillaDamage}, Tool Instance: {tool?.name ?? "null"}");
 
             LuckStat.CheckIfCrit(hit);
             bool isCrit = LuckStat.Crit;
@@ -446,8 +439,7 @@ namespace BonfireSilksong.Leveling
             if (LuckStat.IsPinwielderEnabled && tool?.name == "Straight Pin")
             {
                 hit.DamageDealt = (int)Math.Max(Math.Round(hit.DamageDealt * 0.25), 1);
-                Bonfire.Log.LogDebug(
-                    $"Pinwielder state enabled, Straight Pin damage reduced to {hit.DamageDealt}");
+                Bonfire.Log.LogDebug($"Pinwielder state enabled, Straight Pin damage reduced to {hit.DamageDealt}");
             }
 
             // while in reflect state, all non-reflect damage is reduced by 99% but is always at least 1.

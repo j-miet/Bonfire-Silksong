@@ -181,13 +181,12 @@ namespace BonfireSilksong.Leveling
 
             int fromRespecPool = Math.Min(s.PendingRelicLevels, s.RespecRelicLevels);
             int fromNewDeposits = s.PendingRelicLevels - fromRespecPool;
-            if (fromRespecPool == 0 && fromNewDeposits == 0) return;
+            if (s.PendingRosaries == 0 && fromRespecPool == 0 && fromNewDeposits == 0) return;
 
             s.RespecRelicLevels -= fromRespecPool;
             s.ConsumedRelicLevels += fromNewDeposits;
             s.PendingRelicLevels = 0;
 
-            PlayerData.instance.TakeGeo(s.PendingRosaries);
             HeroController.instance.TakeGeo(s.PendingRosaries);
             s.TotalSpentRosaries += s.PendingRosaries;
             s.PendingRosaries = 0;
@@ -258,7 +257,6 @@ namespace BonfireSilksong.Leveling
             if (CachedRelicsObtained < 0) return;
             s.RespecRelicLevels = s.ConsumedRelicLevels = CachedRelicsObtained;
 
-            PlayerData.instance.AddGeo(s.TotalSpentRosaries);
             HeroController.instance.AddGeo(s.TotalSpentRosaries);
             s.TotalSpentRosaries = 0;
             s.TotalRosaryLevels = 1;
@@ -424,7 +422,10 @@ namespace BonfireSilksong.Leveling
                 .FirstOrDefault(r => r.name == "R Ancient Egg");
 
             if (relicChoralCommandments == null || relicRuneHarps == null || relicArcaneEggs == null)
+            {
+                Bonfire.Log.LogDebug("One or more null relic field");
                 return -1;
+            }
 
             int total = 0;
             foreach (var relic in relicChoralCommandments.Relics
@@ -445,7 +446,7 @@ namespace BonfireSilksong.Leveling
             s.AutoReleaseNeedleStrike = false;
             s.WeaverAuraMode = (int)WeaverAura.DISABLED;
             s.WeakBindEnabled = false;
-            s.BlueMaskMode = (int)BlueState.DISABLED;
+            s.BlueMaskState = (int)BlueState.DISABLED;
             s.SilkNailsEnabled = false;
             s.CogflyWarriorEnabled = false;
             s.PinwielderEnabled = false;

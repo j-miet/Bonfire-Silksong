@@ -74,7 +74,6 @@ namespace BonfireSilksong.Leveling
             if (CheckDexterityMilestone(1))
             {
                 _clawlineHitCounter += 1;
-                Bonfire.Log.LogDebug("Clawline hits: " + _clawlineHitCounter);
             }
             else if (_clawlineHitCounter > 0)
             {
@@ -85,7 +84,7 @@ namespace BonfireSilksong.Leveling
 
             if (Bonfire.Instance.Status.DexterityStat < 1) return baseDamage;
 
-            Bonfire.Log.LogDebug($"[DexterityStat] Apply Clawline damage bonuses");
+            Bonfire.Log.LogDebug($"[DexterityStat] Apply Clawline damage bonuses (hits: {_clawlineHitCounter})");
 
             if (CheckDexterityMilestone(3))
             {

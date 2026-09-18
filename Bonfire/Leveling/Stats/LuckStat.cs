@@ -11,6 +11,7 @@ namespace BonfireSilksong.Leveling
 
         public static bool Crit = false;
 
+        public static bool PinWielderUnlocked => CheckLuckMilestone(1);
         public static bool IsPinwielderEnabled => CheckLuckMilestone(1) && Bonfire.Instance.Status.PinwielderEnabled;
 
         public static int LuckMilestone(int m)

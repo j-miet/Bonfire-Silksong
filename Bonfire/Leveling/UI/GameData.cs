@@ -8,6 +8,7 @@ namespace BonfireSilksong.Leveling.UI
         public int AvailableRelicLevels { get; private set; }
         public bool GotFreeLevel { get; private set; }
         public string ApplyText { get; private set; }
+        public string RespecText { get; private set; }
 
         public string TotalStr { get; private set; }
         public string TotalDex { get; private set; }
@@ -51,6 +52,14 @@ namespace BonfireSilksong.Leveling.UI
 
         public string CritChance { get; private set; }
         public string RosaryCountIncrease { get; private set; }
+
+        public string NeedleAutoChargeStatus { get; private set; }
+        public string WeaverAuraStatus { get; private set; }
+        public string WeakBindStatus { get; private set; }
+        public string BlueStateStatus { get; private set; }
+        public string SilkNailsStatus { get; private set; }
+        public string CogflyWarriorStatus { get; private set; }
+        public string PinWielderStatus { get; private set; }
 
         public void UpdateGUIFields()
         {
@@ -188,14 +197,11 @@ namespace BonfireSilksong.Leveling.UI
             int pRosaries = s.PendingRosaries;
             if (pRelics > 0 && pRosaries > 0)
             {
-                ApplyText =
-                    $"Apply \n({pRosaries} rosaries + {pRelics} " +
-                    $"{(pRelics > 1 ? "relics" : "relic")})";
+                ApplyText = $"Apply \n({pRosaries} rosaries + {pRelics} {(pRelics > 1 ? "relics" : "relic")})";
             }
             else if (pRelics > 0)
             {
-                ApplyText =
-                    $"Apply ({pRelics} relic {(pRelics > 1 ? "levels" : "level")})";
+                ApplyText = $"Apply ({pRelics} relic {(pRelics > 1 ? "levels" : "level")})";
             }
             else if (GotFreeLevel)
             {
@@ -205,10 +211,40 @@ namespace BonfireSilksong.Leveling.UI
             {
                 ApplyText = $"Apply ({pRosaries} rosaries)";
             }
+
+            // "Respec" button label
+            int rCost = s.RespecCost;
+            RespecText = $"Respec" + $"{(rCost <= 0 ? "" : $" ({rCost} {(rCost > 1 ? $"Silkeaters" : "Silkeater")})")}";
+
+            // stat milestone status
+            NeedleAutoChargeStatus = "Needle strike auto-release: " +
+                $"{(Bonfire.Instance.Status.AutoReleaseNeedleStrike ? "ENABLED" : "DISABLED")}";
+
+            var mode = (WeaverAura)Bonfire.Instance.Status.WeaverAuraMode;
+            WeaverAuraStatus = "Cast Weaver's Light when taunting: " + GetWeaverAuraString(mode);
+
+            WeakBindStatus = "Toggle Weak Bind: " +
+                $"{(Bonfire.Instance.Status.WeakBindEnabled ? "ENABLED" : "DISABLED")}";
+
+            var blueState = (BlueState)Bonfire.Instance.Status.BlueMaskState;
+            BlueStateStatus = "Current blue mask state: " + GetBlueStateString(blueState);
+
+            SilkNailsStatus = "Silk Nails: " +
+                $"{(Bonfire.Instance.Status.SilkNailsEnabled ? "ENABLED" : "DISABLED")}";
+
+            CogflyWarriorStatus = "Cogfly Warrior: " +
+                $"{(Bonfire.Instance.Status.CogflyWarriorEnabled ? "ENABLED" : "DISABLED")}";
+
+            PinWielderStatus = "Pinwielder: " +
+                $"{(Bonfire.Instance.Status.PinwielderEnabled ? "ENABLED" : "DISABLED")}";
         }
 
 
         private int _cachedLvl = 0;
+        private int _cachedPendingRelics = 0;
+        private int _cachedConsumedRelics = 0;
+        private int _cachedRespecRelics = 0;
+        private int _cachedRespecCost = 0;
         private bool _cacheAutoRelease = false;
         private int _cacheWeaverAuraMode = 0;
         private bool _cacheWeakBindEnabled = false;
@@ -232,6 +268,30 @@ namespace BonfireSilksong.Leveling.UI
                 updated = true;
             }
 
+            if (_cachedPendingRelics != s.PendingRelicLevels)
+            {
+                _cachedPendingRelics = s.PendingRelicLevels;
+                updated = true;
+            }
+
+            if (_cachedConsumedRelics != s.ConsumedRelicLevels)
+            {
+                _cachedConsumedRelics = s.ConsumedRelicLevels;
+                updated = true;
+            }
+
+            if (_cachedRespecRelics != s.RespecRelicLevels)
+            {
+                _cachedRespecRelics = s.RespecRelicLevels;
+                updated = true;
+            }
+
+            if (_cachedRespecCost != s.RespecCost)
+            {
+                _cachedRespecCost = s.RespecCost;
+                updated = true;
+            }
+
             if (_cacheAutoRelease != s.AutoReleaseNeedleStrike)
             {
                 _cacheAutoRelease = s.AutoReleaseNeedleStrike;
@@ -250,9 +310,9 @@ namespace BonfireSilksong.Leveling.UI
                 updated = true;
             }
 
-            if (_cacheBlueMaskMode != s.BlueMaskMode)
+            if (_cacheBlueMaskMode != s.BlueMaskState)
             {
-                _cacheBlueMaskMode = s.BlueMaskMode;
+                _cacheBlueMaskMode = s.BlueMaskState;
                 updated = true;
             }
 
@@ -275,6 +335,26 @@ namespace BonfireSilksong.Leveling.UI
             }
 
             return updated;
+        }
+
+        private static string GetWeaverAuraString(WeaverAura state)
+        {
+            switch (state)
+            {
+                case WeaverAura.AURA: return "ENABLED";
+                case WeaverAura.BURST: return "VOID BURST";
+                default: return "DISABLED";
+            }
+        }
+
+        private static string GetBlueStateString(BlueState state)
+        {
+            switch (state)
+            {
+                case BlueState.REFLECT: return "VENGEFUL";
+                case BlueState.GLASSCANNON: return "HOLLOW";
+                default: return "DISABLED";
+            }
         }
     }
 }

@@ -32,6 +32,13 @@ namespace BonfireSilksong.Patches
             static void Postfix(HeroController __instance)
             {
                 TeleportPatch.HandleArrival(__instance);
+
+                if (BenchTeleport.IsBenchTeleporting)
+                {
+                    // teleporting will update blue hp too early so call update again after a short delay to 
+                    // refresh state
+                    Bonfire.Instance.StartCoroutine(BlueHealthUpdate.CallDelayedUpdateBlueHP());
+                }
             }
         }
 
@@ -54,12 +61,24 @@ namespace BonfireSilksong.Patches
 
             static void Postfix()
             {
-                Bonfire.Log.LogDebug("[HeroController.Update] Update hp data, roll crit, check sil + tool regen");
+                var gm = GameManager.instance;
+                var pd = PlayerData.instance;
+                var hc = HeroController.instance;
+                if (gm == null || pd == null) return;
 
-                EnemyHealth.FlushEnemyHPData();
+                EnemyHealth.RemoveUnused();
 
-                if (HeroController.instance == null || PlayerData.instance == null)
+                // these should prevent checks during non-gameplay events like dialogue
+                if (gm.GameState != GameState.PLAYING ||
+                    gm.IsNonGameplayScene() ||
+                    pd.disablePause)
+                {
+                    // Bonfire.Log.LogInfo("[HeroController.Update] Gameplay state:\n" +
+                    //     $"Gamestate: {gm.GameState}\n" +
+                    //     $"isNonGamePlayScene: {gm.IsNonGameplayScene()}\n" +
+                    //     $"disablePause: {PlayerData.instance.disablePause}");
                     return;
+                }
 
                 float dt = Time.deltaTime;
                 try
@@ -71,7 +90,16 @@ namespace BonfireSilksong.Patches
                 }
                 catch { }
 
-                WisdomStat.CheckCogflyWarriorState();
+                // acceptingInput is very versatile to check when inputs can be accepted, but it's also weirdly
+                // restrictive e.g. sprinting already sets it to false. It's good for cogfly respawning: fast travel
+                // despawn them, but also has these weird transition states where most other blocking states are
+                // temporarily switched off. But acceptingInput stays 'false' for the entire duration. Then simply
+                // exluding it during bench visits allows cogflies to properly appear when 
+                // - game is loaded
+                // - bench fast travel is used (which must also manually despawn cogflies to prevent inactive cogflies
+                // from appearing in target scene)
+                if (hc.acceptingInput || pd.atBench)
+                    WisdomStat.CheckCogflyWarriorState();
             }
         }
 
@@ -211,8 +239,8 @@ namespace BonfireSilksong.Patches
 
         // game seems to call this method only if taunt successfully consumed 1 silk. Currently weaver aura on/off 
         // toggle use this functionality. This shouldn't cost silk nor give the global 50% damage buff for next attack.
-        // SilkTauntEffectConsume removes the damage buff immediately, PatchHelpers.Taunted is called upon button 
-        // press in ListenFor patches which is then later consumed by PatchHelpers.CheckTauntCostRefund.
+        // SilkTauntEffectConsume removes the damage buff immediately, LevelingPatch.Taunted is called upon button 
+        // press in ListenFor patches which is then later consumed by LevelingPatch.CheckTauntCostRefund.
         // However the initial check for silk cost of 1 remains, this could be removed quite easily but with Silk 
         // Hearts upgrades its very easy to always have that 1 silk available anyway.
         [HarmonyPatch(typeof(HeroController), "SilkTaunted")]
@@ -390,6 +418,40 @@ namespace BonfireSilksong.Patches
                     // value seems to get incremented by 1 and ending up to 9 health. This forces is back.
                     PlayerData.instance.healthBlue = 8;
                 }
+            }
+        }
+
+        [HarmonyPatch(typeof(HeroController), "LeaveScene")]
+        class HeroController_LeaveScene
+        {
+            static void Prefix()
+            {
+                EnemyHealth.ResetEnemyHpData();
+            }
+        }
+
+        // public void AddToMaggotCharmTimer(float delta)
+        [HarmonyPatch(typeof(HeroController), "AddToMaggotCharmTimer")]
+        class HeroController_AddToMaggotCharmTimer
+        {
+            static bool Prefix()
+            {
+                if (GlobalStat.CheckGlobalMilestone(GlobalMilestone.MAGGOTREPEL))
+                    return false;
+
+                return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(HeroController), "DidMaggotCharmHit")]
+        class HeroController_DidMaggotCharmHit
+        {
+            static bool Prefix()
+            {
+                if (GlobalStat.CheckGlobalMilestone(GlobalMilestone.MAGGOTREPEL))
+                    return false;
+
+                return true;
             }
         }
     }

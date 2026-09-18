@@ -10,7 +10,8 @@ namespace BonfireSilksong.Leveling
     {
         public static bool BlockSummons { get; private set; } = false;
         public static bool CanBlockSummons => CheckWisdomMilestone(1) && PlayerData.instance.hasNeedolin;
-        public static string GetBlockSummonsString => $"{WisdomMilestone(1)} point & unlock 'Needolin'";
+
+        public static bool SilkNailsUnlocked => CheckWisdomMilestone(1) && !BlockSummons;
         public static bool IsSilkNailsEnabled
         {
             get
@@ -20,6 +21,8 @@ namespace BonfireSilksong.Leveling
                 return Bonfire.Instance.Status.SilkNailsEnabled && CheckWisdomMilestone(1);
             }
         }
+
+        public static bool CogflyWarriorUnlocked => CheckWisdomMilestone(2) && !BlockSummons;
         public static bool IsCogflyWarriorEnabled
         {
             get
@@ -75,14 +78,7 @@ namespace BonfireSilksong.Leveling
 
             if (totalWsdm <= 1) return damage;
 
-            if (totalWsdm <= 30)
-            {
-                damage += (int)Math.Floor(totalWsdm * 0.5f);
-            }
-            else
-            {
-                damage += 10 + totalWsdm - 30;
-            }
+            damage += (int)Math.Floor(totalWsdm * 0.5f);
 
             return damage;
         }
@@ -91,7 +87,7 @@ namespace BonfireSilksong.Leveling
         {
             if (totalWsdm <= 1) return 5f;
 
-            return (float)(0.75 + 4.25 * Math.Exp(-0.09 * totalWsdm));
+            return (float)(0.75 + 4.25 * Math.Exp(-0.05 * totalWsdm));
         }
 
         public static int CogflyWarriorDamage(int totalWsdm, bool isGUI = false)
@@ -183,7 +179,7 @@ namespace BonfireSilksong.Leveling
             bool giveSilk = _hitCounter >= threshold;
             if (giveSilk)
             {
-                Bonfire.Log.LogInfo($"Got 1 silk after {threshold} hits.");
+                Bonfire.Log.LogDebug($"Got 1 silk after {threshold} hits.");
                 HeroController.instance.AddSilk(1, heroEffect: false);
                 _hitCounter = 0;
             }
@@ -212,6 +208,7 @@ namespace BonfireSilksong.Leveling
 
             GameManager.instance.gameCams.silkSpool.DrawSpool();
         }
+
         /// <summary>
         /// HeroController.Update (Postfix): Silk Nails custom ability spawning.
         /// </summary>
@@ -302,11 +299,9 @@ namespace BonfireSilksong.Leveling
             MinMaxFloat mmfDelay = (MinMaxFloat)_wispSpawnStartDelay?.GetValue(instance);
             MinMaxFloat mmfSpawnCd = (MinMaxFloat)_wispSpawnCooldown?.GetValue(instance);
 
-            Bonfire.Log.LogDebug("[WisdomStat] Wispfire Lantern stats:");
-            Bonfire.Log.LogDebug("- Delay start: " + mmfDelay.Start);
-            Bonfire.Log.LogDebug("- Delay End " + mmfDelay.End);
-            Bonfire.Log.LogDebug("- Cd start: " + mmfSpawnCd.Start);
-            Bonfire.Log.LogDebug("- Cd End: " + mmfSpawnCd.End);
+            Bonfire.Log.LogDebug("[WisdomStat] Wispfire Lantern stats: " +
+                $"Delay start: {mmfDelay.Start}, Delay End {mmfDelay.End}, " +
+                $"Cd start: {mmfSpawnCd.Start}, Cd End: {mmfSpawnCd.End}");
 
             var (delay, cd) = WispLanternSpeed();
 
@@ -376,6 +371,8 @@ namespace BonfireSilksong.Leveling
             {
                 if (e == null)
                     continue;
+
+                if (!EnemyHealth.IsEnabled(e)) continue;
 
                 float dist = Vector2.Distance(hc.transform.position, e.transform.position);
                 if (dist > SilkNailsActivationRange)

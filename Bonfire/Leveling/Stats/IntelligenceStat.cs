@@ -24,6 +24,7 @@ namespace BonfireSilksong.Leveling
         public static bool WeaverAuraTaunt = false;
         public static bool WeaverAuraRingTaunt = false;
 
+        public static bool WeaverAuraUnlocked => CheckIntelligenceMilestone(1);
         public static bool IsWeaverAuraEnabled
         {
             get
@@ -32,7 +33,6 @@ namespace BonfireSilksong.Leveling
                     CheckIntelligenceMilestone(1);
             }
         }
-
         public static bool IsVoidBurstEnabled
         {
             get
@@ -43,6 +43,7 @@ namespace BonfireSilksong.Leveling
         }
 
         public static bool AuraOrBurstEnabled => IsWeaverAuraEnabled || IsVoidBurstEnabled;
+        public static bool WeakBindUnlocked => CheckIntelligenceMilestone(2);
 
         public static int IntelligenceMilestone(int m)
         {
@@ -174,15 +175,14 @@ namespace BonfireSilksong.Leveling
         /// </summary>
         public static int ApplySpellDamageBonuses(int baseDamage, ToolItem spell)
         {
-            Bonfire.Log.LogDebug($"[IntelligenceStat]");
-            Bonfire.Log.LogDebug($"<Vanilla> Silk Skill: {spell}. Damage: {baseDamage}");
-
             int updatedDamage = baseDamage;
 
             if (!ResilienceStat.IsInBlueState(BlueState.GLASSCANNON))
                 updatedDamage = SpellDamage(baseDamage, Bonfire.Instance.Status.IntelligenceStat);
 
-            Bonfire.Log.LogDebug($"<Modded> Silk Skill: {spell}. Damage: {updatedDamage}");
+            Bonfire.Log.LogDebug($"[IntelligenceStat] Silk skill damage bonus\n" +
+                $"<Vanilla> Skill: {spell}, Damage: {baseDamage}\n" +
+                $"<Modded> Skill: {spell}, Damage: {updatedDamage}");
 
             return updatedDamage;
         }
@@ -193,9 +193,6 @@ namespace BonfireSilksong.Leveling
         public static int ApplyClawMirrorDamageBonuses(int baseDamage, ToolItem tool)
         {
             if (tool.name != "Dazzle Bind" && tool.name != "Dazzle Bind Upgraded") return baseDamage;
-
-            Bonfire.Log.LogDebug($"[IntelligenceStat]");
-            Bonfire.Log.LogDebug($"<Vanilla> Claw Mirror damage: {baseDamage}");
 
             int updatedDamage = baseDamage;
 
@@ -211,7 +208,9 @@ namespace BonfireSilksong.Leveling
                 Bonfire.Log.LogDebug("Applied weak binding bonus");
             }
 
-            Bonfire.Log.LogDebug($"<Modded> Claw Mirror damage: {updatedDamage}");
+            Bonfire.Log.LogDebug($"[IntelligenceStat] Claw mirror damage bonus\n" +
+                $"<Vanilla> Damage: {baseDamage}\n" +
+                $"<Modded> Damage: {updatedDamage}");
 
             return updatedDamage;
         }
@@ -315,7 +314,7 @@ namespace BonfireSilksong.Leveling
                         RangeIndicator.Display(
                             WeaverAuraRange(Bonfire.Instance.Status.IntelligenceStat),
                             null,
-                            null);
+                            new Color(0.75f, 0.45f, 0.25f));
                     }
 
                     _weaverAuraCooldown = 1f;
@@ -437,9 +436,7 @@ namespace BonfireSilksong.Leveling
                     }
                 }
 
-                Bonfire.Log.LogDebug("Applied cost reduction:");
-                Bonfire.Log.LogDebug($"- Normal: {silkCost}");
-                Bonfire.Log.LogDebug($"- Witch:{silkCostWitch}");
+                Bonfire.Log.LogDebug($"Applied cost reduction: Normal = {silkCost}, Witch = {silkCostWitch}");
 
                 // amount of binds in succession (e.g. default 1, Multibinder sets this to 2)
                 bindAmount = fsm.FsmVariables.GetFsmInt("Bind Amount");
@@ -457,8 +454,8 @@ namespace BonfireSilksong.Leveling
                     }
                 }
 
-                // - OBSOLETE, better to directly patch HeroController.AddHealth as this doesn't work Multibinder tool's
-                // heal amount.
+                // - OBSOLETE, better to directly patch HeroController.AddHealth as this doesn't work with Multibinder 
+                // tool's heal amount.
                 /*
                 healAmount = fsm.FsmVariables.GetFsmInt("Heal Amount");
                 if (healAmount != null)
@@ -477,6 +474,8 @@ namespace BonfireSilksong.Leveling
 
                 if (bindTime != null)
                 {
+                    float baseValue = bindTime.Value;
+
                     if (CheckIntelligenceMilestone(3) &&
                     (ToolItemManager.IsToolEquipped("Dazzle Bind") ||
                     ToolItemManager.IsToolEquipped("Dazzle Bind Upgraded")))
@@ -489,7 +488,7 @@ namespace BonfireSilksong.Leveling
                         bindTime.Value *= 0.67f;
                     }
 
-                    Bonfire.Log.LogDebug($"Applied duration reduction, duration={bindTime.Value}");
+                    Bonfire.Log.LogDebug($"Applied duration reduction ({baseValue} -> {bindTime.Value})");
                 }
             }
         }
@@ -566,7 +565,7 @@ namespace BonfireSilksong.Leveling
             WeaverAuraTaunt = false;
             WeaverAuraRingTaunt = false;
 
-            Bonfire.Log.LogDebug("[IntelligenceStat] Pale Burst used");
+            Bonfire.Log.LogDebug("[IntelligenceStat] Pale Burst cast");
 
             return true;
         }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using BonfireSilksong.GUIComponents;
-using BonfireSilksong.Settings;
 
 namespace BonfireSilksong.Leveling.UI
 {
@@ -184,9 +183,8 @@ namespace BonfireSilksong.Leveling.UI
             GUILayout.FlexibleSpace();
 
             GUI.backgroundColor = Color.red;
-            int r = s.RespecCost;
             if (CustomCursor.Button(
-                    $"Respec" + $"{(r <= 0 ? "" : $" ({r} {(r > 1 ? $"Silkeaters" : "Silkeater")})")}",
+                    _data.RespecText,
                     GUIStyles.ButtonStyle,
                     GUILayout.Width(Constants.LevelingAreaDefaultRectWidth),
                     GUILayout.Height(Constants.LevelingAreaButtonHeight))
@@ -315,9 +313,8 @@ namespace BonfireSilksong.Leveling.UI
             GUILayout.FlexibleSpace();
 
             GUI.backgroundColor = Color.red;
-            int r = s.RespecCost;
             if (CustomCursor.Button(
-                    $"Respec" + $"{(r <= 0 ? "" : $" ({r} {(r > 1 ? $"Silkeaters" : "Silkeater")})")}",
+                    _data.RespecText,
                     GUIStyles.ButtonStyle,
                     GUILayout.Width(Constants.LevelingAreaDefaultRectWidth),
                     GUILayout.Height(Constants.LevelingAreaButtonHeight))

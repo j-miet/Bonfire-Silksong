@@ -21,7 +21,7 @@ namespace BonfireSilksong.Leveling.UI
         public const float InfoButtonHeight = 40f;
 
         // LevelInfo measures
-        public const float GlobalBoxHeight = 150f;
+        public const float GlobalBoxHeight = 270f;
         public const float GlobalMilestoneHeight = 440f;
         public const float GlobalTotalHeight = GlobalBoxHeight + GlobalMilestoneHeight;
 

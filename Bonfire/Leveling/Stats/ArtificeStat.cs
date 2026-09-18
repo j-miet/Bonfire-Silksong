@@ -57,15 +57,14 @@ namespace BonfireSilksong.Leveling
         /// </summary>
         public static int ApplyToolDamageBonuses(int baseDamage, ToolItem tool)
         {
-            Bonfire.Log.LogDebug($"[ArtificeStat]");
-            Bonfire.Log.LogDebug($"<Vanilla> Tool: {tool}. Damage: {baseDamage}");
-
             int updatedDamage = baseDamage;
 
             if (!ResilienceStat.IsInBlueState(BlueState.GLASSCANNON))
                 updatedDamage = ToolDamage(baseDamage, Bonfire.Instance.Status.ArtificeStat);
 
-            Bonfire.Log.LogDebug($"<Modded> Tool: {tool}. Damage: {updatedDamage}");
+            Bonfire.Log.LogDebug($"[ArtificeStat] Tool damage bonus\n" +
+                $"<Vanilla> Tool: {tool}. Damage: {baseDamage}\n" +
+                $"<Modded> Tool: {tool}. Damage: {updatedDamage}");
 
             return updatedDamage;
         }

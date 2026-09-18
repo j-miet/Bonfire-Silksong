@@ -13,7 +13,7 @@ namespace BonfireSilksong.Leveling
         /// </summary>
         public static void CastPaleNails()
         {
-            Bonfire.Log.LogDebug("[NeedleSpellSpawner] Cast Silk Nails.");
+            Bonfire.Log.LogDebug("[NeedleSpellSpawner] Cast Pale Nails.");
 
             GameObject hornet = HeroController.instance.gameObject;
 
