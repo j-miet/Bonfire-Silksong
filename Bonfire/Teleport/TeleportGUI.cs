@@ -16,9 +16,16 @@ namespace BonfireSilksong.Teleport
     /// </summary>
     public class TeleportGUI
     {
-        public static bool PendingFastTravelUnlockWindow = false;
+        public const float StyleButtonHeight = 30f;
+        public const float CloseButtonHeight = 40f;
+        public const float ListSpacer = 15f;
 
-        public bool FastTravelDisplay { get; private set; } = false;
+        public static float ListW => 350f;
+        public static float ListH => BonfireGUI.Height * 0.7f;
+        public static float ListX => 20f;
+        public static float ListY => BonfireGUI.Height / 2f - ListH / 2;
+
+        public static bool FastTravelDisplay { get; private set; } = false;
 
         public void CloseFastTravelMenu() => Bonfire.Instance.StartCoroutine(CloseFastTravelMenuRoutine());
 
@@ -50,8 +57,7 @@ namespace BonfireSilksong.Teleport
                     return;
                 }
 
-                SendOpenMapFSM();
-                FastTravelDisplay = true;
+                Bonfire.Instance.StartCoroutine(SendOpenMapFSM());
 
                 BlockInventoryInputs();
             }
@@ -96,14 +102,13 @@ namespace BonfireSilksong.Teleport
         {
             if (!FastTravelDisplay) return;
 
-            // add color filter on top of map
-            GUI.color = new Color(0, 0, 0, 0.2f);
-            GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
-            GUI.color = Color.white;
+            // color filter on top of map to make map screen slightly darker
+            //GUI.color = new Color(0, 0, 0, 0.2f);
+            //GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
+            //GUI.color = Color.white;
 
             // bench list + dark, filled background to hide map elements underneath
-            float listW = 350f, listH = BonfireGUI.Height * 0.7f;
-            Rect listRect = new Rect(20f, BonfireGUI.Height / 2f - listH / 2f, listW, listH);
+            Rect listRect = new Rect(ListX, ListY, ListW, ListH);
 
             Color old = GUI.color;
             GUI.color = new Color(0f, 0f, 0f, 1f);
@@ -200,10 +205,12 @@ namespace BonfireSilksong.Teleport
             actions.OpenInventoryJournal.Enabled = false;
             actions.OpenInventoryTools.Enabled = false;
             actions.OpenInventoryQuests.Enabled = false;
-            actions.Up.Enabled = false;
-            actions.Down.Enabled = false;
-            actions.Left.Enabled = false;
-            actions.Right.Enabled = false;
+
+            // RS = Right Stick for gamepads.
+            actions.RsUp.Enabled = false;
+            actions.RsDown.Enabled = false;
+            actions.RsLeft.Enabled = false;
+            actions.RsRight.Enabled = false;
 
             // allow these through: patched InventoryPaneInput.Update will prevent any inputs from doing their
             // normal behavior while map is open. However it still allows them to register which allows BonfireGUI
@@ -223,10 +230,11 @@ namespace BonfireSilksong.Teleport
             actions.OpenInventoryJournal.Enabled = true;
             actions.OpenInventoryTools.Enabled = true;
             actions.OpenInventoryQuests.Enabled = true;
-            actions.Up.Enabled = true;
-            actions.Down.Enabled = true;
-            actions.Left.Enabled = true;
-            actions.Right.Enabled = true;
+
+            actions.RsUp.Enabled = true;
+            actions.RsDown.Enabled = true;
+            actions.RsLeft.Enabled = true;
+            actions.RsRight.Enabled = true;
 
             //actions.OpenInventory.Enabled = true;
             //actions.OpenInventoryMap.Enabled = true;
@@ -236,7 +244,7 @@ namespace BonfireSilksong.Teleport
         // bench location data parser, updated data is inserted into BenchActiveLocationData.
         private void UpdateActiveLocationData()
         {
-            Bonfire.Log.LogDebug("[TeleportGUI] Bench location data for active benches");
+            Bonfire.Log.LogDebug("[TeleportGUI] Update bench location data for active benches");
 
             string customName;
             string areaName;
@@ -251,7 +259,7 @@ namespace BonfireSilksong.Teleport
 
                     var p = bench.Key;
 
-                    Bonfire.Log.LogDebug($"Scene: {s}, Marker: {bench.Value.marker}");
+                    // Bonfire.Log.LogDebug($"Scene: {s}, Marker: {bench.Value.marker}");
 
                     // get map area name:
 
@@ -284,7 +292,7 @@ namespace BonfireSilksong.Teleport
                         && bench.Value.marker == "RestBench"
                         && _benchActiveLocationData.ContainsKey(areaName))
                     {
-                        Bonfire.Log.LogDebug($"Scene '{s}' duplicate check =>");
+                        Bonfire.Log.LogDebug($"# Scene '{s}' duplicate check =>");
                         bool alreadyFound = false;
 
                         foreach (var (scene, _) in _benchActiveLocationData[areaName])
@@ -297,6 +305,8 @@ namespace BonfireSilksong.Teleport
                                 alreadyFound = true;
                                 break;
                             }
+
+                            Bonfire.Log.LogDebug("  - No duplicates found.");
                         }
 
                         if (alreadyFound) continue;
@@ -327,8 +337,8 @@ namespace BonfireSilksong.Teleport
 
             Bonfire.Log.LogDebug(
                 "[TeleportGUI] Updating Bench FSM" +
-                "\nStart scene name: " + PlayerData.instance.respawnScene +
-                "\nStart marker name: " + PlayerData.instance.respawnMarkerName);
+                " Start scene name: " + PlayerData.instance.respawnScene +
+                " Start marker name: " + PlayerData.instance.respawnMarkerName);
 
             if (markers == null) return false;
 
@@ -366,8 +376,9 @@ namespace BonfireSilksong.Teleport
                 // don't include locked benches (these have darker map pin color)
                 if (sr.sharedMaterial != null)
                 {
-                    Bonfire.Log.LogDebug($"Material: {sr.sharedMaterial.name}");
-                    Bonfire.Log.LogDebug($"Shader:   {sr.sharedMaterial.shader?.name}");
+                    Bonfire.Log.LogDebug("[TeleportGUI] Bench pin sprite -> " +
+                        $"Material: {sr.sharedMaterial.name}, " +
+                        "Shader: {sr.sharedMaterial.shader?.name}");
                     if (sr.sharedMaterial.name.StartsWith("Inactive")) continue;
                 }
 
@@ -382,32 +393,45 @@ namespace BonfireSilksong.Teleport
             _benchActiveLocationData.Clear();
             UpdateActiveLocationData(); // must only call this after filling _benchPinScenes!
 
-            Bonfire.Log.LogDebug($"Found {_benchPinScenes.Count} bench pins");
-            Bonfire.Log.LogDebug("All bench pin respawn scenes:");
-            foreach (var p in _benchPinScenes)
-                Bonfire.Log.LogDebug(p.Value);
+            Bonfire.Log.LogDebug($"=> Found {_benchPinScenes.Count} bench pins in total. Scene names:");
+
+            foreach (var l in _benchActiveLocationData.Values)
+            {
+                foreach (var e in l)
+                {
+                    var scene = e.scene;
+                    var pin = e.mapPin;
+                    var origScene = _benchPinScenes[pin].scene;
+                    Bonfire.Log.LogDebug($" - Original: {origScene} - Custom: {scene}");
+                }
+            }
         }
 
         // send FSM to open in-game map menu
-        private void SendOpenMapFSM()
+        private IEnumerator SendOpenMapFSM()
         {
             _currentBenchFSM.SetState("Inv Map Open");
-            _currentBenchFSM.SendEventSafe("FINISHED");
+
+            // add a pause (even yield return null seemed to be sufficient based on testing), otherwise GUI overlay
+            // seems to interfere with rendering of compass icon.
+            yield return new WaitForSecondsRealtime(0.01f);
+
+            FastTravelDisplay = true;
         }
 
         // close map screen via FSM event calls
         private IEnumerator CloseInventoryMap()
         {
             InventoryPaneList inventoryPaneList = null;
-            InventoryPaneInput panelInput = null;
+            InventoryPaneInput paneInput = null;
 
             try
             {
                 inventoryPaneList = (InventoryPaneList)InventoryPaneListInstanceField.GetValue(null);
                 if (inventoryPaneList == null) yield break;
 
-                panelInput = inventoryPaneList.GetComponentInChildren<InventoryPaneInput>();
-                if (panelInput == null) yield break;
+                paneInput = inventoryPaneList.GetComponentInChildren<InventoryPaneInput>();
+                if (paneInput == null) yield break;
             }
             catch (Exception e)
             {
@@ -416,7 +440,7 @@ namespace BonfireSilksong.Teleport
             }
 
             // "UI CANCEL" steps once backwards to open the zoomed out map with only area names
-            FSMUtility.SendEventToGameObject(panelInput.gameObject, "UI CANCEL");
+            FSMUtility.SendEventToGameObject(paneInput.gameObject, "UI CANCEL");
             yield return new WaitForSecondsRealtime(0.25f);
 
             inventoryPaneList.CloseBlocked = false;
@@ -468,6 +492,7 @@ namespace BonfireSilksong.Teleport
         // still remains on target scene.
         private static void StopAllSceneMusic()
         {
+            Bonfire.Log.LogDebug("[TeleportGUI] Stop scene music");
             var gm = GameManager.instance;
 
             gm.AudioManager.StopAndClearMusic();
@@ -506,10 +531,8 @@ namespace BonfireSilksong.Teleport
             Bonfire.Instance.Status.BenchMenuStyle = s;
         }
 
-
         private void DrawBenchListPanel()
         {
-            Bonfire.Log.LogDebug("[TeleportGUI] Drawing bench list");
             int menuStyleIndex = Bonfire.Instance.Status.BenchMenuStyle;
             string styleText = TeleportData.BenchMenuStyle[menuStyleIndex];
 
@@ -520,7 +543,7 @@ namespace BonfireSilksong.Teleport
             GUI.backgroundColor = Color.white;
 
             GUILayout.BeginHorizontal("box");
-            if (CustomCursor.Button($"Style: {styleText}", GUIStyles.ButtonStyle, GUILayout.Height(30f)))
+            if (CustomCursor.Button($"Style: {styleText}", GUIStyles.ButtonStyle, GUILayout.Height(StyleButtonHeight)))
             {
                 ChangeBenchMenuStyle();
 
@@ -529,10 +552,10 @@ namespace BonfireSilksong.Teleport
                 UpdateBenchPins();
             }
             GUILayout.EndHorizontal();
-            GUILayout.Space(15);
+            GUILayout.Space(ListSpacer);
 
-            GUILayout.Label("Bench locations", GUIStyles.LabelStyle);
-            GUILayout.Space(10);
+            GUILayout.Label("Bench locations", GUIStyles.LabelStyle, GUILayout.Height(StyleButtonHeight));
+            GUILayout.Space(ListSpacer);
 
             if (_benchPinScenes.Count == 0)
             {
@@ -581,7 +604,6 @@ namespace BonfireSilksong.Teleport
 
                     if (hasPinLocations)
                     {
-                        Bonfire.Log.LogDebug("Draw active bench locations");
                         foreach (var (customName, mapPin) in _benchActiveLocationData[mapArea])
                         {
                             bool isSelected = _selectedPin == mapPin;
@@ -628,11 +650,11 @@ namespace BonfireSilksong.Teleport
                 GUI.backgroundColor = Color.white;
             }
 
-            GUILayout.Space(15);
+            GUILayout.Space(ListSpacer);
 
             GUI.backgroundColor = Color.red;
             GUILayout.BeginHorizontal("box");
-            if (CustomCursor.Button("Close teleport menu", GUIStyles.ButtonStyle, GUILayout.Height(40f)))
+            if (CustomCursor.Button("Close teleport menu", GUIStyles.ButtonStyle, GUILayout.Height(CloseButtonHeight)))
             {
                 CloseFastTravelMenu();
             }
@@ -666,7 +688,6 @@ namespace BonfireSilksong.Teleport
 
         private void DrawSpecialLocationsForArea(string areaName, Color background, Color text)
         {
-            Bonfire.Log.LogDebug("Draw static bench locations");
             foreach (var loc in TeleportData.SpecialLocations)
             {
                 if (loc.AreaName != areaName || !loc.IsUnlocked()) continue;
@@ -734,92 +755,5 @@ namespace BonfireSilksong.Teleport
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
         }
-
-        /* -- UNUSED, fast travel pop-up for old system
-
-        public void FastTravelUnlockNotification()
-        {
-            if (Bonfire.Instance.Status.UnlockedFastTravel) return;
-
-            if (PlayerData.instance.defeatedBellBeast)
-            {
-                PendingFastTravelUnlockWindow = true;
-
-                GUI.color = new Color(0, 0, 0, 0.8f);
-                GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
-
-                float w = 600f, h = 380f;
-
-                float x = BonfireGUI.Width / 2f - w / 2f;
-                float y = BonfireGUI.Height / 2f - h / 2f;
-
-                Rect borderRect = new Rect(x - 4, y - 4, w + 8, h + 8);
-                GUI.color = Color.gray;
-                GUI.DrawTexture(borderRect, Texture2D.whiteTexture);
-
-                Rect rect = new Rect(x, y, w, h);
-                GUI.color = new Color(0.8f, 0.6f, 0);
-                GUI.DrawTexture(rect, Texture2D.whiteTexture);
-                GUI.color = Color.white;
-
-
-                GUI.Box(rect, GUIContent.none);
-                CustomCursor.BeginGroup(rect);
-
-                CustomCursor.BeginArea(new Rect(20, 20, rect.width - 40, rect.height - 40));
-
-                GUILayout.Label("Bench fast travel unlocked!", GUIStyles.LabelStyle);
-                DrawFastTravelUnlockModalPopup();
-
-                CustomCursor.EndArea();
-
-                CustomCursor.EndGroup();
-            }
-        }
-
-        private void DrawFastTravelUnlockModalPopup()
-        {
-            GUILayout.Space(10);
-            GUILayout.Label(
-                "You have freed the Bell Beast and " +
-                "unlocked the bench fast travel system!",
-                GUIStyles.CrestUnlockLabelStyle
-            );
-
-            GUILayout.Space(5);
-            GUILayout.Label(
-                "To access travel menu: you need to have obtained\n" +
-                "- A map\n" +
-                "- Bench Pins\n\n" +
-                "To fast travel:\n" +
-                "\n" +
-                "- Sit down on any bench and click the new \"Fast Travel\" button.\n" +
-                "- Select any bench from the list\n" +
-                "- Then click the \"Travel\" button bottom-middle to teleport.\n",
-                GUIStyles.FastTravelUnlockLabelStyle
-            );
-
-            GUILayout.Space(10);
-            GUILayout.BeginHorizontal();
-
-            GUILayout.FlexibleSpace();
-            if (CustomCursor.Button(
-                    "Close",
-                    GUIStyles.CrestUnlockButtonStyle,
-                    GUILayout.Width(100f),
-                    GUILayout.Height(40f)))
-            {
-                CustomCursor.ResetCursorPosition();
-
-                Bonfire.Instance.Status.UnlockedFastTravel = true;
-                Bonfire.Instance.SaveSettings();
-
-                PendingFastTravelUnlockWindow = false;
-            }
-
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-        }
-        */
     }
 }

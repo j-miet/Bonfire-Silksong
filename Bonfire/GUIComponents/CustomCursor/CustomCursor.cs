@@ -2,6 +2,8 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
+using BonfireSilksong.Teleport;
+
 namespace BonfireSilksong.GUIComponents
 {
     /// <summary>
@@ -15,7 +17,7 @@ namespace BonfireSilksong.GUIComponents
         public const int CursorSize = 20;
 
         public static Vector2 Position = new Vector2(BonfireGUI.Width / 2f, BonfireGUI.Height / 2f);
-        public static int CursorSpeed = 400;
+        public static int CursorSpeed = 500;
 
         public static void DrawCustomCursor()
         {
@@ -32,8 +34,6 @@ namespace BonfireSilksong.GUIComponents
 
         public static void ResetCursorStack()
         {
-            Bonfire.Log.LogDebug("[CustomCursor] Resetting stack");
-
             _currentOffset = Vector2.zero;
             _offsetStack.Clear();
         }
@@ -58,8 +58,6 @@ namespace BonfireSilksong.GUIComponents
 
             if (!GameManager.instance.inputHandler.gameController.IsAttached) return;
 
-            Bonfire.Log.LogDebug("[CustomCursor] Cursor update started");
-
             var device = GameManager.instance.inputHandler.inputActions.ActiveDevice;
 
             float x = device.RightStickX.Value;
@@ -74,8 +72,6 @@ namespace BonfireSilksong.GUIComponents
 
             Position.x = Mathf.Clamp(Position.x, 0, BonfireGUI.Width);
             Position.y = Mathf.Clamp(Position.y, 0, BonfireGUI.Height);
-
-            Bonfire.Log.LogDebug("Cursor update finished");
         }
 
         // custom components to match GUILayout's matching component behavior.
@@ -155,11 +151,13 @@ namespace BonfireSilksong.GUIComponents
         public static Vector2 BeginScrollViewTeleportMenu(Vector2 scrollPos, params GUILayoutOption[] options)
         {
             // scrollbar width and length offset:
-            // Width: scrollbar width + some buffer
-            // Height: in bench menu, scrollbar covers a bit over 3 button heights, buttons have h = 30f -> 90f + buffer
-            // Following values have been found by testing click areas.
-            float scrollX = 28f;
-            float scrollY = 99f;
+            // Width: no offset required
+            // Height: in bench menu, before drawing the list, there are following elements:
+            // style button and title label + 2 spaces. There are calculated in TeleportGUI specifically, but as those
+            // elements have some additional offset, this 'magic number' is simply adding the heights + some offset
+            // based on manual testing. So if the elements before calling this custom BeginScrollView variant change
+            // their total height, this Y-value has to be adjusted as well.
+            float scrollY = 104f;
 
             var device = GameManager.instance.inputHandler.inputActions.ActiveDevice;
 
@@ -171,7 +169,7 @@ namespace BonfireSilksong.GUIComponents
 
             Vector2 newScrollPos = GUILayout.BeginScrollView(scrollPos, options);
 
-            Vector2 offSet = new Vector2(scrollX - scrollPos.x, scrollY - scrollPos.y);
+            Vector2 offSet = new Vector2(scrollPos.x, scrollY - scrollPos.y);
 
             _offsetStack.Push(_currentOffset);
             _currentOffset += offSet;
@@ -286,6 +284,19 @@ namespace BonfireSilksong.GUIComponents
         {
             Rect rect = GUILayoutUtility.GetLastRect();
             rect.position += _currentOffset;
+
+            if (TeleportGUI.FastTravelDisplay)
+            {
+                Rect listRect = new Rect(
+                    TeleportGUI.ListX,
+                    TeleportGUI.ListY,
+                    TeleportGUI.ListW,
+                    TeleportGUI.ListH
+                );
+
+                if (!listRect.Contains(Position))
+                    return false;
+            }
 
             var inputs = GameManager.instance.inputHandler.inputActions;
 

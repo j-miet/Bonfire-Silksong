@@ -10,7 +10,7 @@ using BonfireSilksong.Leveling;
 namespace BonfireSilksong.Teleport
 {
     /// <summary>
-    /// Bench fast travel API. Setup: add HandleArrival and CheckMarkerValidity methods from TeleportPatchHelpers
+    /// Bench fast travel API. Setup: add HandleArrival and CheckMarkerValidity methods from TeleportPatch
     /// under their respective Harmony patchers.
     ///
     /// Simple usage without extra checks: call PrepareTeleportLocation for target pin, then TeleportToBench.
@@ -29,7 +29,7 @@ namespace BonfireSilksong.Teleport
         /// </summary>
         public static bool PrepareTeleportLocation(MapPin closestPin)
         {
-            Bonfire.Log.LogDebug($"[BenchTeleport]");
+            Bonfire.Log.LogDebug($"[BenchTeleport] Prepare teleport location");
 
             if (closestPin == null || !CanTeleport())
                 return false;
@@ -53,7 +53,7 @@ namespace BonfireSilksong.Teleport
             // In this case targetScene is very useful as it will always be the most unique descriptor available.
             string targetScene = parentScene.Name;
 
-            Bonfire.Log.LogDebug($"Teleport target scene: {targetScene}");
+            Bonfire.Log.LogDebug($" - Teleport target scene: {targetScene}");
 
             Dictionary<string, SceneTeleportMap.SceneInfo> teleportMap = SceneTeleportMap.GetTeleportMap();
             if (teleportMap == null)
@@ -155,7 +155,7 @@ namespace BonfireSilksong.Teleport
                 return false;
             }
 
-            Bonfire.Log.LogDebug($"Respawn > Scene: {respawnScene}, Marker: {respawnMarker}, Type: {respawnType}");
+            Bonfire.Log.LogDebug($" - Respawn > Scene: {respawnScene}, Marker: {respawnMarker}, Type: {respawnType}");
 
             // these define the fast travel outcome: 
             // - bench scene, 
@@ -189,7 +189,7 @@ namespace BonfireSilksong.Teleport
         }
 
         /// <summary>
-        /// Force game into respawn state and simulate fast travel. Requires PrepareTeleportLocation
+        /// Force game into respawn state and simulate fast travel. Requires PrepareTeleportLocation or manual setup
         /// to initialize PlayerData respawn fields.
         /// </summary>
         public static void TeleportToBench()
@@ -249,13 +249,15 @@ namespace BonfireSilksong.Teleport
 
         private static bool CanTeleport()
         {
-            if (Bonfire.Instance == null || !GlobalStat.CheckFastTravelCondition)
+            var b = Bonfire.Instance;
+
+            if (b == null || (!GlobalStat.CheckFastTravelCondition && !b.Status.DebugMode))
                 return false;
 
             if (GameManager.instance == null || GameManager.instance.IsMemoryScene())
                 return false;
 
-            return PlayerData.instance.atBench;
+            return PlayerData.instance.atBench || b.Status.DebugMode;
         }
     }
 }

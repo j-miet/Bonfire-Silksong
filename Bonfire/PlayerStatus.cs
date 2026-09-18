@@ -36,16 +36,17 @@ namespace BonfireSilksong
         public bool AutoReleaseNeedleStrike = false;
         public int WeaverAuraMode = 0;
         public bool WeakBindEnabled = false;
-        public int BlueMaskMode = 0;
+        public int BlueMaskState = 0;
         public bool SilkNailsEnabled = false;
         public bool CogflyWarriorEnabled = false;
         public bool PinwielderEnabled = false;
 
         // settings
+        public bool DebugMode = false;
         public int AdjustButtonStep = 5;
 
         // - custom cursor
-        public int CustomCursorSpeed = 400;
+        public int CustomCursorSpeed = 500;
         public bool DisplayGameCursorWithGamepad = false;
 
         // - other
@@ -66,7 +67,10 @@ namespace BonfireSilksong
         public bool ReduceFleaGamesScoreLimit = false;
         public bool EasierSprintmasterRaces = false;
 
-        // bench fast travel
-        public bool VisitedAbyssSecondTime = false;
+        // gamestates
+        public bool VisitedWandererChapel = false;
+        public bool VisitedReaperChapel = false;
+        public bool VisitedArchitectChapel = false;
+        public bool VisitedAbyssSecondTime = false; // second abyss visit
     }
 }

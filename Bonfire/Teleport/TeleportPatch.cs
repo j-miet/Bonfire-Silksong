@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using BonfireSilksong.Leveling;
-
 namespace BonfireSilksong.Teleport
 {
     /// <summary>
@@ -39,9 +37,6 @@ namespace BonfireSilksong.Teleport
 
             instance.proxyFSM.SendEventSafe("HeroCtrl-EnteringScene");
 
-            // teleporting will update blue hp too early so call update again after a short delay to refresh state
-            Bonfire.Instance.StartCoroutine(BlueHealthUpdate.CallDelayedUpdateBlueHP());
-
             GameManager.instance.SaveGame(null);
         }
 
@@ -52,10 +47,7 @@ namespace BonfireSilksong.Teleport
         /// </summary>
         public static void CheckMarkerValidity(GameManager instance)
         {
-            if (!BenchTeleport.IsBenchTeleporting)
-                return;
-
-            if (!instance.RespawningHero)
+            if (!BenchTeleport.IsBenchTeleporting || !instance.RespawningHero)
                 return;
 
             string scene = instance.playerData.tempRespawnScene;
@@ -96,11 +88,10 @@ namespace BonfireSilksong.Teleport
 
         /// <summary>
         /// InventoryPaneInput.Update (Prefix): block ESC/inventory pane navigation when fast travel menu is open.
-        /// GameMap.Update (Prefix): block map panning when fast travel menu is open.
         /// </summary>
         public static bool InFastTravelDisplayScreen()
         {
-            if (BonfireGUI.Teleport != null && BonfireGUI.Teleport.FastTravelDisplay)
+            if (TeleportGUI.FastTravelDisplay)
                 return true;
 
             return false;

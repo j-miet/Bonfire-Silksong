@@ -4,7 +4,6 @@ using System.Reflection;
 
 using BepInEx.Logging;
 using HutongGames.PlayMaker;
-using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace BonfireSilksong
@@ -15,46 +14,6 @@ namespace BonfireSilksong
     /// </summary>
     public static class Debug
     {
-        /// <summary>
-        /// Log "Chapel of the Beast" entry gate state.
-        /// </summary>
-        public static void BeastChapelDoorState()
-        {
-            Log.LogDebug("[Debug] Beast chapel door state");
-            var obj = GameObject.Find("Chapel Door Control");
-
-            Log.LogDebug(obj == null ? "Door not found" : $"Found {obj.name}");
-
-            var fsm = obj?.GetComponent<PlayMakerFSM>();
-
-            Log.LogDebug(fsm == null ? "No FSM" : $"FSM: {fsm.FsmName}");
-            Log.LogDebug($"FSM: {fsm.FsmName}");
-
-            foreach (var state in fsm.FsmStates)
-            {
-                Log.LogDebug($"State: {state.Name}");
-
-                foreach (var action in state.Actions)
-                {
-                    Log.LogDebug($" - Action: {action.GetType().FullName}");
-                    if (action is PlayerDataBoolTest test)
-                    {
-                        Log.LogDebug($"boolName {test.boolName.Value}");
-                        Log.LogDebug($"True -> {test.isTrue?.Name}");
-                        Log.LogDebug($"False -> {test.isFalse?.Name}");
-                    }
-                }
-
-                foreach (var transition in state.Transitions)
-                {
-                    Log.LogDebug($"  - Event: {transition.EventName} => {transition.ToState}");
-                }
-            }
-
-            Log.LogDebug("Beast chapel beastfly defeated: " + PlayerData.instance.defeatedBoneFlyerGiant);
-            Log.LogDebug("Beast chapel door closed: " + PlayerData.instance.chapelClosed_beast);
-        }
-
         /// <summary>
         /// Log all "Bench Control" states.
         /// Must patch HeroController.Respawn(Transform spawnPoint) and use its Transform arg here.

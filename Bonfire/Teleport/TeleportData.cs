@@ -109,6 +109,7 @@ namespace BonfireSilksong.Teleport
                 {"Room_Huntress", ("Huntress", "Putrified Ducts")},
 
                 {"Belltown", ("Town", "Bellhart")},
+                {"Belltown_Shrine", ("Widow", "Bellhart")},
 
                 {"Bellshrine_03", ("Bellshrine", "Shellwood")},
                 {"Shellwood_01b", ("Room Center", "Shellwood")},
@@ -137,7 +138,7 @@ namespace BonfireSilksong.Teleport
                 {"Song_18", ("Room Center", "The Citadel")},
                 {"Hang_01", ("Room West", "The Citadel")},
                 {"Under_07b", ("Entrance Underworks", "The Citadel")},
-                {"Bellway_City", ("Bellway", "The Citadel")},
+                {"Bellway_City", ("Grand Bellway", "The Citadel")},
                 {"Song_Enclave", ("Songclave", "The Citadel")},
                 {"Bellshrine_Enclave", ("First Shrine", "The Citadel")},
                 {"Library_08", ("Vaultkeeper", "The Citadel")},
@@ -176,18 +177,6 @@ namespace BonfireSilksong.Teleport
                 CustomName = "Bellhome",
                 IsUnlocked = () => PlayerData.instance.BelltownHouseUnlocked
                                 && PlayerData.instance.BelltownHouseVisited
-            },
-            // Widow arena bellshrine
-            new SpecialLocation
-            {
-                Scene = "Belltown_Shrine",
-                Marker = "RestBench",
-                RespawnType = 1,
-                AreaName = "Bellhart",
-                DefaultName = "Belltown_Shrine",
-                CustomName = "Widow",
-                IsUnlocked = () => !PlayerData.instance.blackThreadWorld // disabled in Act 3
-                                && PlayerData.instance.hasNeedolin
             },
             // Surface climb
             new SpecialLocation

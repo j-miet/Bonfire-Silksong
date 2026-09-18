@@ -70,7 +70,7 @@ namespace BonfireSilksong.GUIComponents
         private static void CreateRangeDisc(float radius)
         {
             // first create the outer edge i.e. the circle
-            GameObject circleObj = new GameObject("TauntRangeCircle");
+            GameObject circleObj = new GameObject("RangeCircle");
             circleObj.transform.SetParent(HeroController.instance.transform, false);
 
             _rangeCircle = circleObj.AddComponent<LineRenderer>();
@@ -89,7 +89,7 @@ namespace BonfireSilksong.GUIComponents
             };
 
             // after outer circle, create the inner disc
-            GameObject discObj = new GameObject("TauntRangeDisc");
+            GameObject discObj = new GameObject("RangeDisc");
             discObj.transform.SetParent(circleObj.transform, false);
 
             _rangeDiscMesh = discObj.AddComponent<MeshFilter>();

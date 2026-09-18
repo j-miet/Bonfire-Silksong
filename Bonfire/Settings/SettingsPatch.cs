@@ -1,4 +1,5 @@
 using GlobalSettings;
+
 using HutongGames.PlayMaker.Actions;
 
 namespace BonfireSilksong.Settings
@@ -8,6 +9,29 @@ namespace BonfireSilksong.Settings
     /// </summary>
     public static class SettingsPatch
     {
+        /// <summary>
+        /// Helper for registering crest chapel scene visits.
+        /// </summary>
+        public static void RegisterCrestChapelScenes(string scene)
+        {
+            var s = Bonfire.Instance.Status;
+
+            Bonfire.Log.LogDebug($"[SettingsPatch] Check if scene '{scene}' is crest chapel scene.");
+
+            switch (scene)
+            {
+                case "Chapel_Wanderer":
+                    s.VisitedWandererChapel = true;
+                    return;
+                case "Greymoor_20c":
+                    s.VisitedReaperChapel = true;
+                    return;
+                case "Under_20":
+                    s.VisitedArchitectChapel = true;
+                    return;
+            }
+        }
+
         /// <summary>
         /// SprintRaceController.GetRaceInfo (Postfix): reduce SprintMaster Swift's run speed by 50%.
         /// </summary>
@@ -20,26 +44,61 @@ namespace BonfireSilksong.Settings
         }
 
         /// <summary>
-        /// PlayerDataBoolTest.OnEnter (Prefix): Check if Chapel of the Beast door should be open.
+        /// PlayerDataBoolTest.OnEnter (Prefix): Check if Chapel doors for crests should be open. Used with following
+        /// crests: Wanderer, Beast, Reaper. Architect uses its own CheckIfArchitectCrestDoorOpen method, other crests 
+        /// don't require this at all.
         /// </summary>
-        public static bool KeepBeastChapelDoorStateOpen(PlayerDataBoolTest instance)
+        public static bool CheckIfCrestChapelDoorOpen(PlayerDataBoolTest instance)
         {
-            // if player uses the crest unlock feature on beast crest, the unlock prevents fighting Savage Beastfly 
-            // boss, thus preventing getting the second encounter and its mask shard reward.
-            // This fix intercepts the check when player enters the chapel of the beast gate: normally it would
-            // check if player already has the crest (in this case always true) and set door open/closed. Luckily 
-            // there's a helper flag for boss kill called 'defeatedBoneFlyerGiant' which can be then used for tracking 
-            // this state.
-            // -> thus if player leaves the chapel after killing the boss, the door closes permanently but otherwise
-            // stays open. Closing is of course no longer an issue because there's no crest to collect anyway if it was 
-            // already unlocked and at this point boss has also been killed, allowing the second encounter wish to 
-            // appear later.
-            // [Note] there's also PlayerData.instance.chapelClosed_beast, but game will override its value before door 
-            // state logic, making it useless for this particular issue
+            // each crest uses simple check: if player has unlocked the corresponding crest using manual unlock feature,
+            // the crest door would normally become closed. However the custom status "Visited*Chapel" check allows
+            // them to visit location one time. After entering the chapel scene, visited flag is set as true and leaving
+            // the chapel will immediately follow the normal checks, closing the door.
+            // Beast crest uses slightly different logic: it will actually check if player has killed Savage Beastfly
+            // instead of using the one-time flag. Reason is that Savage Beastfly must be defeated in order to get the
+            // second encounter and its mask shard reward. So one-time check would permanently prevent 100% completion
+            // on current save file. Other chapels don't have anything that affects game completion percentage, only
+            // stuff like rosaries. So for those its not as critical if player accidentally enters then immediately
+            // leaves.
+            if (instance?.boolName == null)
+                return false;
 
-            if (instance.boolName.Value == "chapelClosed_beast"
-                && Gameplay.WarriorCrest.IsUnlocked
-                && !PlayerData.instance.defeatedBoneFlyerGiant)
+            var b = instance.boolName.Value;
+            if (!b.StartsWith("chapel"))
+                return false;
+
+            Bonfire.Log.LogDebug($"[SettingsPatch] Crest Chapel Door check for bool {b}");
+
+            var s = Bonfire.Instance.Status;
+            bool keepOpen = false;
+            string currentScene = GameManager.instance.GetSceneNameString();
+
+            Bonfire.Log.LogDebug($"Scene: {currentScene}");
+
+            if (!s.VisitedWandererChapel &&
+                b == "chapelClosed_wanderer" &&
+                Gameplay.WandererCrest.IsUnlocked &&
+                currentScene == "Bonegrave")
+            {
+                keepOpen = true;
+            }
+
+            if (b == "chapelClosed_beast" &&
+                Gameplay.WarriorCrest.IsUnlocked &&
+                !PlayerData.instance.defeatedBoneFlyerGiant)
+            {
+                keepOpen = true;
+            }
+
+            if (!s.VisitedReaperChapel &&
+                b == "chapelClosed_reaper" &&
+                Gameplay.ReaperCrest.IsUnlocked &&
+                currentScene == "Greymoor_20b")
+            {
+                keepOpen = true;
+            }
+
+            if (keepOpen)
             {
                 // FSM event to keep the chapel gate open. It has other values: "CLOSE" which means its closed
                 // when scene loads and "DO CLOSE" which triggers the door closing animation
@@ -47,6 +106,42 @@ namespace BonfireSilksong.Settings
                 instance.Finish();
 
                 return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// GetIsCrestUnlocked.IsTrue (Postfix): Check if door for Chapel of the Architect should remain open.
+        /// </summary>
+        public static bool CheckIfArchitectChapelDoorOpen(GetIsCrestUnlocked instance)
+        {
+            if (instance.Crest == null)
+                return false;
+
+            var c = instance.Crest.Value as ToolCrest;
+            if (c == null)
+                return false;
+
+            Bonfire.Log.LogDebug("[SettingsPatch] Crest Name: " + c.name);
+
+            if (!Bonfire.Instance.Status.VisitedArchitectChapel &&
+                Gameplay.ToolmasterCrest.IsUnlocked &&
+                c.name == "Toolmaster")
+            {
+                string currentScene = GameManager.instance.GetSceneNameString();
+
+                if (currentScene == "Under_17")
+                {
+                    // FSM event to check if crest in unlocked which is then used for door state. Uses boolean value: 
+                    // "TRUE" if crest is unlocked & door closed, and "FALSE" for opposite.
+                    instance.Fsm.Event("FALSE");
+                    return true;
+                }
+                else if (currentScene == "Under_20")
+                {
+                    Bonfire.Instance.Status.VisitedArchitectChapel = true;
+                }
             }
 
             return false;
