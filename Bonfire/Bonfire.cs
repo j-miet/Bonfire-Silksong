@@ -8,7 +8,10 @@ using HarmonyLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+using BonfireSilksong.GUIComponents;
 using BonfireSilksong.Leveling;
+using BonfireSilksong.Settings;
+using BonfireSilksong.Teleport;
 
 namespace BonfireSilksong
 {
@@ -33,7 +36,6 @@ namespace BonfireSilksong
                 GameManager.instance.GameState == GameState.MAIN_MENU ||
                 !GameManager.instance.IsGameplayScene())
             {
-                Log.LogDebug("[Bonfire] GameManager instance null or in gameplay scene, or GameState is main menu");
                 return true;
             }
 
@@ -132,6 +134,11 @@ namespace BonfireSilksong
         private ConfigEntry<KeyboardShortcut> _damageOverlayHotkey;
         private bool _damageOverlayEnabled;
 
+        private readonly KeyboardShortcut _debugTeleport = new KeyboardShortcut(KeyCode.F2, KeyCode.LeftControl);
+        private readonly KeyboardShortcut _debugShowLogs = new KeyboardShortcut(KeyCode.F3, KeyCode.LeftControl);
+        private readonly KeyboardShortcut _debugShowExtendedLogs = new KeyboardShortcut(
+            KeyCode.F4, KeyCode.LeftControl);
+
         private bool _invClosedCheck = false;
         private bool _satDown = false;
 
@@ -162,6 +169,8 @@ namespace BonfireSilksong
             Harmony.CreateAndPatchAll(typeof(Bonfire).Assembly);
 
             SceneManager.sceneLoaded += OnSceneLoaded;
+            SceneManager.sceneLoaded += PaleNailsSpawner.OnSceneLoaded;
+            SceneManager.sceneLoaded += RangeIndicator.OnSceneLoaded;
 
             Log.LogInfo("Bonfire-Silksong initialized");
         }
@@ -169,6 +178,8 @@ namespace BonfireSilksong
         private void OnDestroy()
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
+            SceneManager.sceneLoaded -= PaleNailsSpawner.OnSceneLoaded;
+            SceneManager.sceneLoaded -= RangeIndicator.OnSceneLoaded;
         }
 
         private void Update()
@@ -181,25 +192,8 @@ namespace BonfireSilksong
 
             AtBenchCheck();
 
-            // hotkeys
-            if (!_hotkeysInitialized)
-            {
-                _enemyHPBarsEnabled = Instance.Status.EnemyHealthBarsEnabled;
-                _damageOverlayEnabled = Instance.Status.ShowDamageOverlay;
-                _hotkeysInitialized = true;
-            }
-
-            if (_enemyHpBarHotkey.Value.IsDown())
-            {
-                _enemyHPBarsEnabled = !_enemyHPBarsEnabled;
-                Instance.Status.EnemyHealthBarsEnabled = _enemyHPBarsEnabled;
-            }
-
-            if (_damageOverlayHotkey.Value.IsDown())
-            {
-                _damageOverlayEnabled = !_damageOverlayEnabled;
-                Instance.Status.ShowDamageOverlay = _damageOverlayEnabled;
-            }
+            CheckConfigHotkeys();
+            CheckDebugHotkeys();
         }
 
         private void LateUpdate()
@@ -254,11 +248,11 @@ namespace BonfireSilksong
             SaveSettings();
             Init();
 
+            SettingsPatch.RegisterCrestChapelScenes(GameManager.instance.GetSceneNameString());
+
             LevelingSystem.Instance.RefreshRelicsDeposited();
             LevelingSystem.MilestoneBonus = ResilienceStat.GetGlassCannonMilestoneBonus(Status.ResilienceStat);
             WisdomStat.UpdateCogflyWarriorSpawnLimit();
-
-            //Log.LogDebug("[Bonfire] Current scene: " + GameManager.instance.GetSceneNameString());
         }
 
         // -- other --
@@ -279,16 +273,16 @@ namespace BonfireSilksong
                 // Debug.GetAllBenchScenes();
                 // Log.LogDebug("----------------------");
                 // Debug.GetHornetAllFsmStateAction();
-                // Log.LogDebug("----------------------");
+                // Log.LogInfo("-----------------------");
+                // Debug.HornetFSMVariables();
+                // Log.LogInfo("-----------------------");
 
                 _satDown = true;
                 BlueHealthUpdate.SatDownAtBench = true;
 
                 SaveSettings();
 
-                IntelligenceStat.WeaverAuraTaunt = false;
-                IntelligenceStat.WeaverAuraRingTaunt = false;
-                IntelligenceStat.ResetWeaverAuraTimer();
+                IntelligenceStat.DisableWeaverAura();
                 LevelingPatch.Taunted = false;
 
                 // this causes BlueHpCheckInvOrMenu check to be ignored on first blue hp update call which happens
@@ -302,6 +296,77 @@ namespace BonfireSilksong
             {
                 _satDown = false;
                 BlueHealthUpdate.SatDownAtBench = false;
+            }
+        }
+
+        private void CheckConfigHotkeys()
+        {
+            if (!_hotkeysInitialized)
+            {
+                _enemyHPBarsEnabled = Instance.Status.EnemyHealthBarsEnabled;
+                _damageOverlayEnabled = Instance.Status.ShowDamageOverlay;
+                _hotkeysInitialized = true;
+            }
+
+            if (_enemyHpBarHotkey.Value.IsDown())
+            {
+                _enemyHPBarsEnabled = !_enemyHPBarsEnabled;
+                Instance.Status.EnemyHealthBarsEnabled = _enemyHPBarsEnabled;
+            }
+
+            if (_damageOverlayHotkey.Value.IsDown())
+            {
+                _damageOverlayEnabled = !_damageOverlayEnabled;
+                Instance.Status.ShowDamageOverlay = _damageOverlayEnabled;
+            }
+        }
+
+        private void CheckDebugHotkeys()
+        {
+            var gl = BonfireGUI.GUILogger;
+            if (gl == null) return;
+
+            if (Status.DebugMode)
+            {
+                if (_debugTeleport.IsDown())
+                {
+                    var pd = PlayerData.instance;
+                    pd.tempRespawnScene = "Tut_03";
+                    pd.tempRespawnMarker = "RestBench";
+                    pd.tempRespawnType = 1;
+                    BenchTeleport.TeleportToBench();
+                }
+                else if (_debugShowLogs.IsDown())
+                {
+                    if (gl.DisplayLogs)
+                    {
+                        gl.DisableLogsDisplay();
+                    }
+                    else
+                    {
+                        gl.SetLogsDisplay();
+                    }
+
+                }
+                else if (_debugShowExtendedLogs.IsDown())
+                {
+                    if (gl.DisplayExtendedLogs)
+                    {
+                        gl.DisableLogsDisplay();
+                    }
+                    else
+                    {
+                        gl.SetExtendedLogsDisplay();
+                    }
+                }
+            }
+            else
+            {
+                if (gl.DisplayLogs || gl.DisplayExtendedLogs)
+                {
+                    gl.Dispose();
+                    gl.DisableLogsDisplay();
+                }
             }
         }
     }

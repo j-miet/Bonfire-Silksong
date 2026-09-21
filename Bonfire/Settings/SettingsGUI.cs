@@ -155,6 +155,10 @@ namespace BonfireSilksong.Settings
 
             if (!s.EnemyHealthBarsEnabled) return;
 
+            _maxHpUpdates.Clear();
+
+            if (Camera.main == null) return;
+
             foreach (var kvp in EnemyHealth.EnemyMaxHp)
             {
                 HealthManager hm = kvp.Key;
@@ -169,7 +173,7 @@ namespace BonfireSilksong.Settings
                 // (e.g. Act3 void enemies)
                 if (hm.hp > maxHp)
                 {
-                    EnemyHealth.EnemyMaxHp[hm] = hm.hp;
+                    _maxHpUpdates.Add((hm, hm.hp));
                     maxHp = hm.hp;
                 }
 
@@ -178,9 +182,13 @@ namespace BonfireSilksong.Settings
 
                 if (currentHp == maxHp && !isBoss) continue; // full HP = hide bars for normal enemies
 
+                // screenPos above is raw value which isn't scaled with GUI.Matrix -> manual conversion is needed.
+                float screenX = screenPos.x * BonfireGUI.ScaleX;
+                float screenY = screenPos.y * BonfireGUI.ScaleY;
+
                 Color fillColor;
-                float width;
-                float height;
+                float width, height;
+                float x, y;
 
                 float pct = Mathf.Clamp01(currentHp / maxHp);
 
@@ -192,11 +200,11 @@ namespace BonfireSilksong.Settings
                 else
                 {
                     width = isBoss ? 300f : 120f;
-                    height = isBoss ? 20f : 10f;
+                    height = isBoss ? 20f : 15f;
                 }
 
-                float x = screenPos.x - width / 2f;
-                float y = BonfireGUI.Height - screenPos.y - 20f;
+                x = screenX - width / 2f;
+                y = BonfireGUI.Height - screenY - 100f;
 
                 Rect container = new Rect(x, y, width, height);
                 GUI.color = new Color(0f, 0f, 0f, 0.7f);
@@ -224,6 +232,10 @@ namespace BonfireSilksong.Settings
 
                 GUI.color = Color.white;
             }
+
+            // perform write operation to main dictionary only after updates
+            foreach (var (hm, hp) in _maxHpUpdates)
+                EnemyHealth.EnemyMaxHp[hm] = hp;
         }
 
         /// <summary>
@@ -266,11 +278,12 @@ namespace BonfireSilksong.Settings
         private const float StatusResetHeight = 530f;
 
         private const float CrestUnlockWidth = 420f;
-        private const float CrestUnlockHeight = 650f;
+        private const float CrestUnlockHeight = 700f;
 
         private readonly string[] _crestNames = {
             "Hunter_v3", "Wanderer", "Reaper", "Warrior", "Witch", "Toolmaster", "Spell" };
         private readonly Dictionary<string, ToolCrest> _crestDict = new Dictionary<string, ToolCrest>();
+        private readonly List<(HealthManager hm, float hp)> _maxHpUpdates = new List<(HealthManager hm, float hp)>();
         private bool _allCrestsUnlocked = false;
 
         private static bool _hpBarColorsInitialized;
@@ -336,7 +349,7 @@ namespace BonfireSilksong.Settings
             GUILayout.EndVertical();
         }
 
-        private void DrawAdjustUI()
+        private void DrawGeneralUI()
         {
             var s = Bonfire.Instance.Status;
 
@@ -369,6 +382,26 @@ namespace BonfireSilksong.Settings
             }
 
             GUILayout.EndHorizontal();
+
+            GUILayout.Space(10);
+
+            s.DebugMode = CustomCursor.Toggle(
+                s.DebugMode,
+                "Enable debug mode.\n" +
+                "\n" +
+                "[ LeftControl + F2 ]\n" +
+                "Force a respawn at bench in scene \"Tut_03\" - this location corresponds to Ruined Chapel bench.\n" +
+                "[ LeftControl + F3 ]\n" +
+                $"Display compact log overlay top-right with message limit of {LoggingOverlay.MaxMessages}. Displays " +
+                "newline characters properly, but this can lead to uneven rows where a part of the text is only " +
+                "partially visible. Can cause performance issues if logs are updated repeatedly.\n" +
+                "[ LeftControl + F4 ]\n" +
+                $"Display extended log overlay top-right with message limit of {LoggingOverlay.MaxMessagesExtended} " +
+                "and makes logs scrollable. Performance-wise much better than compact log, but cannot display " +
+                "newline characters and instead replaces them with empty spaces. Doesn't include a search feature " +
+                "so combine this with the actual BepInEx/LogOutput.txt file for best experience.",
+                GUIStyles.WordWrapToggleStyle,
+                GUILayout.Width(SettingsWidth - SettingsOuterOffset - SettingsInnerOffset - 50));
         }
 
         private void DrawCursorSettings()
@@ -481,13 +514,13 @@ namespace BonfireSilksong.Settings
                 "Display damage data from latest enemy hit (has default hotkey \"LeftControl + L\")\n" +
                 "\n" +
                 "The damage number displayed here is often different from final value. For example:\n" +
-                "- Each enemy has a set of damage modifiers which can increase/decrease this by certain multiplier\n" +
+                "- Each enemy has a set of damage modifiers which can increase/decrease this by certain multiplier.\n" +
                 "- Some multihit sources like Rune Rage silk skill or Threefold Pin red tool deal less damage if " +
                 "additional projectiles hit same target.",
                 GUIStyles.WordWrapToggleStyle,
                 GUILayout.Width(SettingsWidth - SettingsOuterOffset - SettingsInnerOffset - 50));
 
-            // this part with adjust buttons is a bit scuffed, could rewrite it at some point
+            // this part with adjust buttons is a bit scuffed, could rewrite it at later
             GUI.enabled = s.ShowDamageOverlay;
             GUILayout.BeginHorizontal(GUILayout.Width(450));
             GUILayout.Space(10);
@@ -603,7 +636,7 @@ namespace BonfireSilksong.Settings
         {
             GUILayout.BeginVertical("box");
             GUILayout.Label("General", GUIStyles.SettingsHeader);
-            DrawAdjustUI();
+            DrawGeneralUI();
             GUILayout.EndVertical();
 
             GUILayout.Space(20);
@@ -650,7 +683,6 @@ namespace BonfireSilksong.Settings
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-
             GUILayout.Space(10);
             CrestUnlockButton("Hunter - 2. Evolution", "Hunter_v3");
             CrestUnlockButton("Wanderer", "Wanderer");
@@ -660,9 +692,30 @@ namespace BonfireSilksong.Settings
             CrestUnlockButton("Architect", "Toolmaster");
             CrestUnlockButton("Shaman", "Spell");
 
-            GUILayout.Space(30);
-            CrestUnlockButton("Unlock All Crests", "All");
-            GUILayout.Space(30);
+            // GUILayout.Space(30);
+            // CrestUnlockButton("Unlock All Crests", "All");
+            GUILayout.Space(40);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+
+            string currentCrest = PlayerData.instance.CurrentCrestID;
+            GUI.enabled = _crestNames.Contains(currentCrest);
+
+            if (CustomCursor.Button(
+                $"Unlock all tool slots for\n currently equipped crest",
+                GUIStyles.CrestUnlockButtonStyle,
+                GUILayout.Width(300f),
+                GUILayout.Height(50f)))
+            {
+                UnlockAllCrestSlots(currentCrest);
+            }
+
+            GUI.enabled = true;
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(40);
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
@@ -676,6 +729,7 @@ namespace BonfireSilksong.Settings
                 GUILayout.Width(150f),
                 GUILayout.Height(50f)))
             {
+                Bonfire.Instance.SaveSettings();
                 PendingSettingsWindow = true;
                 PendingCrestUnlock = false;
             }
@@ -849,6 +903,28 @@ namespace BonfireSilksong.Settings
             }
 
             Bonfire.Instance.SaveSettings();
+            GameManager.instance.SaveGame(null);
+        }
+
+        private void UnlockAllCrestSlots(string name)
+        {
+            if (!_crestDict.Keys.Contains(name)) return;
+
+            var crest = _crestDict[name];
+            if (!crest.IsUnlocked) return;
+
+            ToolCrest.SlotInfo[] s = crest.Slots;
+
+            for (int i = 0; i < s.Length; i++)
+            {
+                if (s[i].IsLocked)
+                {
+                    s[i].IsLocked = false;
+                    Bonfire.Log.LogDebug("Unlocked slot number " + i);
+                }
+            }
+
+            Bonfire.Log.LogDebug($"Crest {name}: Unlocked all {s.Length} slots.");
         }
 
         private void ResetPlayerStatus()

@@ -19,6 +19,7 @@ namespace BonfireSilksong
         public static LevelingGUI Leveling;
         public static SettingsGUI Settings;
         public static TeleportGUI Teleport;
+        public static LoggingOverlay GUILogger;
 
         // all GUI resolution logic should use these instead of Screen.width/Screen.height EXCEPT the scaling itself
         // inside OnGUI callback. This way GUI.Matrix can properly apply its scaling and keep user interfaces 
@@ -27,6 +28,10 @@ namespace BonfireSilksong
         // under this assumption and changing it now would a lot of code rewriting.
         public static float Width => 1920f;
         public static float Height => 1080f;
+        // these can be used for manual scaling e.g. if GUI elements pull transform data from the game, it won't get
+        // scaled by GUI.Matrix and has to be multiplier by these.
+        public static float ScaleX => Width / Screen.width;
+        public static float ScaleY => Height / Screen.height;
 
         /// <summary>
         /// Verifies no top-level windows are open/requesting to be opened.
@@ -38,7 +43,6 @@ namespace BonfireSilksong
                 return !(SettingsGUI.PendingSettingsWindow ||
                     SettingsGUI.PendingCrestUnlock ||
                     SettingsGUI.PendingStatusReset ||
-                    TeleportGUI.PendingFastTravelUnlockWindow ||
                     InfoWindow.PendingInfoWindow);
             }
         }
@@ -65,10 +69,23 @@ namespace BonfireSilksong
             Settings = new SettingsGUI();
             Teleport = new TeleportGUI();
             Leveling = new LevelingGUI();
+
+            GUILogger = new LoggingOverlay();
+            BepInEx.Logging.Logger.Listeners.Add(GUILogger);
+
+            InitializeRangeIndicators();
+        }
+
+        private void OnDestroy()
+        {
+            BepInEx.Logging.Logger.Listeners.Remove(GUILogger);
+            GUILogger.Dispose();
         }
 
         private void OnGUI()
         {
+            var s = Bonfire.Instance.Status;
+
             Matrix4x4 oldMatrix = GUI.matrix;
             if (Bonfire.IsNotGamePlayState()) return;
 
@@ -85,7 +102,7 @@ namespace BonfireSilksong
 
             GUI.enabled = true;
 
-            if (Teleport.FastTravelDisplay)
+            if (TeleportGUI.FastTravelDisplay)
             {
                 Bonfire.Instance.ShowCursor();
 
@@ -145,6 +162,21 @@ namespace BonfireSilksong
                 _benchCheck = false;
             }
 
+            RangeIndicator.UpdateFading();
+
+            Settings.DrawEnemyHealthBars();
+
+            if (s.DebugMode && (GUILogger.DisplayLogs || GUILogger.DisplayExtendedLogs))
+            {
+                GUILogger.Update();
+                GUILogger.Display();
+            }
+
+            if (s.ShowDamageOverlay)
+            {
+                DamageOverlay.Display(s.DamageOverlayX, s.DamageOverlayY);
+            }
+
             // cursor visual when controller is plugged in
             if (GameManager.instance.inputHandler.gameController.IsAttached &&
                 !HeroController.instance.IsPaused() &&
@@ -153,13 +185,6 @@ namespace BonfireSilksong
                 CustomCursor.DrawCustomCursor();
             }
 
-            Settings.DrawEnemyHealthBars();
-
-            if (Bonfire.Instance.Status.ShowDamageOverlay)
-                DamageOverlay.Display(Bonfire.Instance.Status.DamageOverlayX, Bonfire.Instance.Status.DamageOverlayY);
-
-            RangeIndicator.UpdateFading();
-
             GUI.matrix = oldMatrix;
         }
 
@@ -167,11 +192,18 @@ namespace BonfireSilksong
         {
             if (Bonfire.IsNotGamePlayState()) return;
 
+            // -- GUI hotkeys --
+
             var inputActions = GameManager.instance?.inputHandler?.inputActions;
 
             // bench teleport -> close fast travel menu if user presses one the following inputs:
-            // "Inventory", "Quick Map", "Map", "QuickCast" ('Spell/Tool' in-game) or menu cancel (Escape on keyboard)
-            if (Teleport.FastTravelDisplay)
+            // "Inventory", 
+            // "Quick Map", 
+            // "Map", 
+            // "QuickCast" ('Spell/Tool' in-game)
+            // "Cast" ('Bind' in-game) 
+            // menu cancel (Escape on keyboard)
+            if (TeleportGUI.FastTravelDisplay)
             {
                 if (inputActions == null) return;
 
@@ -179,7 +211,8 @@ namespace BonfireSilksong
                     inputActions.QuickMap.WasPressed ||
                     inputActions.OpenInventory.WasPressed ||
                     inputActions.MenuCancel.WasPressed ||
-                    inputActions.QuickCast.WasPressed)
+                    inputActions.QuickCast.WasPressed ||
+                    inputActions.Cast.WasPressed)
                 {
                     Teleport.CloseFastTravelMenu();
                 }
@@ -190,8 +223,8 @@ namespace BonfireSilksong
                 }
             }
 
-            // close the uppermost pending window using "QuickCast" input.
-            if (inputActions.QuickCast.WasPressed && PlayerData.instance.atBench)
+            // close the uppermost pending window using "QuickCast" or "Cast" input.
+            if ((inputActions.QuickCast.WasPressed || inputActions.Cast.WasPressed) && PlayerData.instance.atBench)
             {
                 if (SettingsGUI.PendingCrestUnlock || SettingsGUI.PendingStatusReset)
                 {
@@ -199,7 +232,11 @@ namespace BonfireSilksong
                     SettingsGUI.PendingStatusReset = false;
                     SettingsGUI.PendingSettingsWindow = true;
                 }
-                else if (SettingsGUI.PendingSettingsWindow) SettingsGUI.PendingSettingsWindow = false;
+                else if (SettingsGUI.PendingSettingsWindow)
+                {
+                    Bonfire.Instance.SaveSettings();
+                    SettingsGUI.PendingSettingsWindow = false;
+                }
                 else if (InfoWindow.PendingInfoWindow) InfoWindow.PendingInfoWindow = false;
             }
         }
@@ -219,6 +256,14 @@ namespace BonfireSilksong
 
             GUILayout.Space(5);
             CustomCursor.EndArea(); // close DrawOtherUIBeginArea component
+        }
+
+        private void InitializeRangeIndicators()
+        {
+            // register all different indicators here
+            RangeIndicator.Add(new RangeIndicator("reflect"));
+            RangeIndicator.Add(new RangeIndicator("reflectSecondary"));
+            RangeIndicator.Add(new RangeIndicator("weaverAuraRing"));
         }
     }
 }
