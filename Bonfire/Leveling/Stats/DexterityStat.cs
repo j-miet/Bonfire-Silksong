@@ -149,7 +149,7 @@ namespace BonfireSilksong.Leveling
 
             if (Bonfire.Instance.Status.DexterityStat < 1) return;
 
-            float attackSpeed = 0.5f;//AttackSpeed(Bonfire.Instance.Status.DexterityStat);
+            float attackSpeed = AttackSpeed(Bonfire.Instance.Status.DexterityStat);
 
             _attackCooldownField?.SetValue(
                 instance,
@@ -166,7 +166,7 @@ namespace BonfireSilksong.Leveling
 
             if (Bonfire.Instance.Status.DexterityStat < 1) return;
 
-            float attackSpeed = 1f;//AttackSpeed(Bonfire.Instance.Status.DexterityStat);
+            float attackSpeed = AttackSpeed(Bonfire.Instance.Status.DexterityStat);
 
             _attackDurationField?.SetValue(
                 instance,
@@ -186,12 +186,13 @@ namespace BonfireSilksong.Leveling
         /// </summary>
         public static bool CheckHarpoonCostRefund(int cost)
         {
-            bool refunded = _usedHarpoon && cost == 1 && CheckDexterityMilestone(2);
+            bool refunded = _usedHarpoon && cost == 1 && CheckDexterityMilestone(3);
 
             _usedHarpoon = false;
 
             return refunded;
         }
+
 
         private static int _clawlineHitCounter = 0;
         private static bool _usedHarpoon = false;

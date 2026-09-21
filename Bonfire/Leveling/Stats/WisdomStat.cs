@@ -8,7 +8,7 @@ namespace BonfireSilksong.Leveling
 {
     public static class WisdomStat
     {
-        public static bool BlockSummons { get; private set; } = false;
+        public static bool BlockSummons { get; set; } = false;
         public static bool CanBlockSummons => CheckWisdomMilestone(1) && PlayerData.instance.hasNeedolin;
 
         public static bool SilkNailsUnlocked => CheckWisdomMilestone(1) && !BlockSummons;
@@ -287,7 +287,7 @@ namespace BonfireSilksong.Leveling
         {
             var hc = HeroController.instance;
 
-            if (CheckWisdomMilestone(1) && hc.playerData.silk <= 0)
+            if (CheckWisdomMilestone(3) && hc.playerData.silk <= 0)
                 hc.AddSilk(1, heroEffect: false);
         }
 
@@ -296,6 +296,8 @@ namespace BonfireSilksong.Leveling
         /// </summary>
         public static void ApplyWispLanternSpeedBuff(HeroWispLantern instance)
         {
+            if (instance == null) return;
+
             MinMaxFloat mmfDelay = (MinMaxFloat)_wispSpawnStartDelay?.GetValue(instance);
             MinMaxFloat mmfSpawnCd = (MinMaxFloat)_wispSpawnCooldown?.GetValue(instance);
 
@@ -317,7 +319,7 @@ namespace BonfireSilksong.Leveling
         /// </summary>
         public static bool CheckWispLanternCostRefund(SilkSpool.SilkTakeSource source)
         {
-            if (source == SilkSpool.SilkTakeSource.Wisp && CheckWisdomMilestone(1))
+            if (source == SilkSpool.SilkTakeSource.Wisp && CheckWisdomMilestone(3))
                 return true;
 
             return false;
@@ -333,12 +335,12 @@ namespace BonfireSilksong.Leveling
             if (BlockSummons)
             {
                 BlockSummons = false;
-                Bonfire.Log.LogDebug("[WisdomStat] Summons are blocked.");
+                Bonfire.Log.LogDebug("[WisdomStat] Summons are active.");
             }
             else
             {
                 BlockSummons = true;
-                Bonfire.Log.LogDebug("[WisdomStat] Summons are active.");
+                Bonfire.Log.LogDebug("[WisdomStat] Summons are blocked.");
             }
 
             HeroController.instance.GetComponent<SpriteFlash>().flashFocusHeal();

@@ -202,16 +202,9 @@ namespace BonfireSilksong.Leveling
             s.WisdomStat += WisdomIncrease;
             s.LuckStat += LuckIncrease;
 
-            Bonfire.Log.LogDebug(
-                "[LevelingSystem] Level up applied: "
-                + StrengthIncrease + " Strength, "
-                + DexterityIncrease + " Dexterity, "
-                + IntelligenceIncrease + " Intelligence, "
-                + ArtificeIncrease + " Artifice, "
-                + ResilienceIncrease + " Resilience, "
-                + WisdomIncrease + " Wisdom and "
-                + LuckIncrease + " Luck."
-            );
+            Bonfire.Log.LogDebug("[LevelingSystem] Level up applied, stats increased: " +
+                $"Str: {StrengthIncrease}, Dex: {DexterityIncrease}, Int: {IntelligenceIncrease}, " +
+                $"Art: {ArtificeIncrease}, Res: {ResilienceIncrease}, Wsdm: {WisdomIncrease}, Luck: {LuckIncrease}");
 
             StrengthIncrease = 0;
             DexterityIncrease = 0;
@@ -435,6 +428,8 @@ namespace BonfireSilksong.Leveling
                 var data = relic.SavedData;
                 if (data.IsDeposited) total++;
             }
+
+            Bonfire.Log.LogDebug("Update relic cache");
 
             return total;
         }

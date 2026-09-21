@@ -66,7 +66,9 @@ namespace BonfireSilksong.Patches
                 var hc = HeroController.instance;
                 if (gm == null || pd == null) return;
 
-                EnemyHealth.RemoveUnused();
+                float dt = Time.deltaTime;
+
+                EnemyHealth.RemoveUnused(dt);
 
                 // these should prevent checks during non-gameplay events like dialogue
                 if (gm.GameState != GameState.PLAYING ||
@@ -80,17 +82,14 @@ namespace BonfireSilksong.Patches
                     return;
                 }
 
-                float dt = Time.deltaTime;
-                try
-                {
-                    GlobalStat.CheckSilkRegen(dt);
-                    ArtificeStat.CheckToolRegen(dt);
-                    WisdomStat.CheckSilkNails(dt);
-                    IntelligenceStat.CheckWeaverAura(dt);
-                }
-                catch { }
+                LevelingPatch.CheckNeedolinState(dt);
+                GlobalStat.CheckSilkRegen(dt);
+                ArtificeStat.CheckToolRegen(dt);
+                WisdomStat.CheckSilkNails(dt);
+                IntelligenceStat.CheckWeaverAura(dt);
 
-                // acceptingInput is very versatile to check when inputs can be accepted, but it's also weirdly
+
+                // acceptingInput is very versatile for checking when inputs can be accepted, but it's also weirdly
                 // restrictive e.g. sprinting already sets it to false. It's good for cogfly respawning: fast travel
                 // despawn them, but also has these weird transition states where most other blocking states are
                 // temporarily switched off. But acceptingInput stays 'false' for the entire duration. Then simply
@@ -98,8 +97,14 @@ namespace BonfireSilksong.Patches
                 // - game is loaded
                 // - bench fast travel is used (which must also manually despawn cogflies to prevent inactive cogflies
                 // from appearing in target scene)
-                if (hc.acceptingInput || pd.atBench)
+                if (hc.acceptingInput || LevelingPatch.PlayingdNeedolin || pd.atBench)
+                {
                     WisdomStat.CheckCogflyWarriorState();
+                }
+
+                // needolin also blocks inputs: if inputs are again available & needolin playing state is true, reset it
+                if (LevelingPatch.PlayingdNeedolin && hc.acceptingInput)
+                    LevelingPatch.PlayingdNeedolin = false;
             }
         }
 
@@ -157,6 +162,8 @@ namespace BonfireSilksong.Patches
             static void Prefix(HeroController __instance, HazardType hazardType)
             {
                 ResilienceStat.HandleBlockCheck(__instance, hazardType);
+
+                ResilienceStat.HandleReflectDamageHitLogic(hazardType);
             }
 
             static void Postfix()
@@ -176,10 +183,20 @@ namespace BonfireSilksong.Patches
         {
             static bool Prefix(int amount, SilkSpool.SilkTakeSource source)
             {
-                if (LevelingPatch.CheckTauntCostRefund(amount))
-                    return false;
+                //Bonfire.Log.LogDebug($"[HeroController] SilkTakeSource {source}");
+
+                if (IntelligenceStat.WeaverAuraTakeSilk)
+                    return true;
 
                 if (WisdomStat.CheckWispLanternCostRefund(source))
+                    return false;
+
+                // this should be enough to identify Needolin silk cost: only Needolin & Silkspeed Anklets seem to use 
+                // 'ActiveUse' as a source.
+                if (LevelingPatch.PlayingdNeedolin && source == SilkSpool.SilkTakeSource.ActiveUse)
+                    return false;
+
+                if (LevelingPatch.CheckTauntCostRefund(amount))
                     return false;
 
                 if (DexterityStat.CheckHarpoonCostRefund(amount))
@@ -304,13 +321,14 @@ namespace BonfireSilksong.Patches
         }
 
         [HarmonyPatch(typeof(HeroController), "CanPlayNeedolin")]
-        class HeroController_CanFPlayNeedolin
+        class HeroController_CanPlayNeedolin
         {
             static void Postfix(ref bool __result)
             {
                 if (__result)
                 {
                     WisdomStat.ToggleSummonsActivity();
+                    LevelingPatch.PlayingdNeedolin = true;
                 }
             }
         }

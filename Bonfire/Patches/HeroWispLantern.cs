@@ -1,6 +1,7 @@
 using HarmonyLib;
 
 using BonfireSilksong.Leveling;
+using System.Collections;
 
 namespace BonfireSilksong.Patches
 {
@@ -29,10 +30,13 @@ namespace BonfireSilksong.Patches
         [HarmonyPatch(typeof(HeroWispLantern), "SpawnWispsRoutine")]
         class HeroWispLantern_ToggleWispLantern
         {
-            static bool Prefix()
+            static bool Prefix(ref IEnumerator __result)
             {
                 if (WisdomStat.BlockSummons)
+                {
+                    __result = LevelingPatch.EmptyRoutine();
                     return false;
+                }
 
                 return true;
             }

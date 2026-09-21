@@ -51,23 +51,14 @@ namespace BonfireSilksong
         /// <summary>
         /// HeroController.Update (Postfix): Flush used enemy hp data.
         /// </summary>
-        public static void RemoveUnused()
+        public static void RemoveUnused(float dt)
         {
             toRemove.Clear();
 
             foreach (var e in EnemyMaxHp.Keys)
             {
-                if (e == null || e.hp <= 0 || e.isDead || !e.isActiveAndEnabled || !e.enabled)
-                {
-                    if (e != null)
-                    {
-                        Bonfire.Log.LogDebug($"[EnemyHealth]: Removed enemy {e.name}\n" +
-                            $"hp: {e.hp},  id={e.GetInstanceID()} enabled: {e.enabled}, " +
-                            $"isActive: {e.isActiveAndEnabled}, isDead: {e.isDead}");
-                    }
-
+                if (ShouldRemove(e, true))
                     toRemove.Add(e);
-                }
             }
 
             foreach (var e in toRemove)
@@ -76,6 +67,15 @@ namespace BonfireSilksong
                 EnemyIsBoss.Remove(e);
                 EnemyColliders.Remove(e);
                 EnemyRenderers.Remove(e);
+            }
+
+            // if enemies respawn, they are probably recycled from object pool. Therefore OnEnable and consequently
+            // AddEnemyHpData are never called. This check performs rescan to add repooled entities. 
+            _checkTimer -= dt;
+            if (_checkTimer <= 0)
+            {
+                _checkTimer = 1f;
+                RescanForMissing();
             }
         }
 
@@ -94,5 +94,29 @@ namespace BonfireSilksong
 
 
         private static readonly List<HealthManager> toRemove = new List<HealthManager>();
+        private static float _checkTimer = 1f;
+
+        private static void RescanForMissing()
+        {
+            var all = Object.FindObjectsByType<HealthManager>(FindObjectsSortMode.None);
+            foreach (var hm in all)
+            {
+                if (!ShouldRemove(hm, false))
+                    AddEnemyHpData(hm);
+            }
+        }
+
+        private static bool ShouldRemove(HealthManager hm, bool printLogs)
+        {
+            bool removed = hm == null || hm.hp <= 0 || hm.isDead || !hm.isActiveAndEnabled || !hm.enabled;
+            if (hm != null && removed && printLogs)
+            {
+                Bonfire.Log.LogDebug($"[EnemyHealth]: Removed enemy {hm.name}");
+                Bonfire.Log.LogDebug($"hp: {hm.hp}, id={hm.GetInstanceID()}, enabled: {hm.enabled}, " +
+                    $"isActive: {hm.isActiveAndEnabled}, isDead: {hm.isDead}");
+            }
+
+            return removed;
+        }
     }
 }

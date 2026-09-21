@@ -205,7 +205,8 @@ namespace BonfireSilksong.Leveling.UI
             }
             else if (GotFreeLevel)
             {
-                ApplyText = $"{AvailableRelicLevels} Free Levels available!";
+                ApplyText =
+                    $"{AvailableRelicLevels} Free {(AvailableRelicLevels > 1 ? "Levels" : "Level")}) available!";
             }
             else
             {
@@ -241,7 +242,7 @@ namespace BonfireSilksong.Leveling.UI
 
 
         private int _cachedLvl = 0;
-        private int _cachedPendingRelics = 0;
+        private int _cachedRelicsObtained = 0;
         private int _cachedConsumedRelics = 0;
         private int _cachedRespecRelics = 0;
         private int _cachedRespecCost = 0;
@@ -268,12 +269,13 @@ namespace BonfireSilksong.Leveling.UI
                 updated = true;
             }
 
-            if (_cachedPendingRelics != s.PendingRelicLevels)
+            if (_cachedRelicsObtained != LevelingSystem.Instance.CachedRelicsObtained)
             {
-                _cachedPendingRelics = s.PendingRelicLevels;
+                _cachedRelicsObtained = LevelingSystem.Instance.CachedRelicsObtained;
                 updated = true;
             }
 
+            // this is probably not even needed?
             if (_cachedConsumedRelics != s.ConsumedRelicLevels)
             {
                 _cachedConsumedRelics = s.ConsumedRelicLevels;

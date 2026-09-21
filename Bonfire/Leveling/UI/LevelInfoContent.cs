@@ -17,11 +17,12 @@ namespace BonfireSilksong.Leveling.UI
             $"Every {DexterityStat.ClawlineHitLimit}th hit from Clawline deals 2x damage " +
             "(default Clawline use counts as 2 hits).";
         public static string DexterityMilestone2 =>
-            "Clawline silk cost removed, can now critically hit.";
+            "Clawline can now critically hit.";
         public static string DexterityMilestone3 =>
-            "All critical hits now heal 1 mask.\n" +
+            "Critical hits now heal 1 mask.\n" +
             "\n" +
             "Clawline:\n" +
+            " - silk cost removed.\n" +
             " - damage bonus increased (25% -> 50%).\n" +
             " - 7th hit will always heal 1 mask and casts 'Silk Spear' silk skill without costing silk.\n" +
             "   Skill scales normally from silk skill damage bonuses.";
@@ -33,7 +34,8 @@ namespace BonfireSilksong.Leveling.UI
             "- Taunt now enables an aura around you which flashes every second, consuming 1 silk and " +
             "dealing damage to enemies inside it. Damage and range increases with Intelligence stat.\n" +
             "- If you taunt with Throwing Rings: aura will instead cost 2 silk per second and has its range " +
-            "reduced by 50%, but you get +3 extra damage from each active silk in spool.\n" +
+            $"reduced by 50%, but you get +{IntelligenceStat.WeaverAuraRingTauntDamageMultiplier} extra damage from " +
+            "each active silk in spool.\n" +
             "- Taunt no longer grants the 50% damage bonus for next hit, however its initial cost is also" +
             "removed. Taunting again disables active aura effect, meaning you can use it tactically" +
             "without needing to wait until all your silk is depleted.\n" +
@@ -59,8 +61,8 @@ namespace BonfireSilksong.Leveling.UI
             "scaling.\n" +
             "- Weaver's Light: Gains a new \"Void Burst\" toggle state. Void Burst makes taunt a single-use " +
             "ability, consuming all silk when used while giving following benefits: \n" +
-            "  - Range increased by 5.\n" +
-            "  - Each silk in spool increases damage by +6.\n" +
+            $"  - Range increased by {IntelligenceStat.BurstRangeIncrease}.\n" +
+            $"  - Each silk in spool increases damage by +{IntelligenceStat.BurstSilkDamageMultiplier}.\n" +
             "\n" +
             "Taunting with Throwing Rings has no additional effects when Void Burst is enabled.";
 
@@ -97,21 +99,18 @@ namespace BonfireSilksong.Leveling.UI
             "equal to current mask limit from Resilience. So if Resilience gives 3 masks and you active mask " +
             "is to 2 or less, cost reduction no longer applies. Be aware this is no longer true while in " +
             "Plasmified state as max hp is again equal to normal mask count and ignores Resilience bonus masks " +
-            "entirely.\n" +
-            "=> Both playstyles are quite risky to play early, but Vengeful will lean more towards the tanky/" +
-            "low-risk, but one-dimensional playstyle whereas with Hollow you want to minimize hits taken at all " +
-            "cost to keep huge damage bonus benefits.\n" +
+            "entirely." +
             "\n" +
             "<Vengeful>\n " +
             "- Reflect damage back to enemies around you when you take damage. All your non-reflect damage is " +
-            "reduced by 99%, but deals always at least 1 damage. Only exception to this rule is the \"Memory " +
-            "Crystal\" blue tool which deals its full damage.\n" +
-            "- Reflect base damage is 5. Damage scales from 1. Resilience stat extra blue masks count (max 8) " +
-            "and 2. mask upgrades (max 5).\n" +
-            "- Bind no longer heals normal masks, but instead 1 blue mask.\n" +
+            "reduced by 99%, but deals always at least 1 damage. Only exceptions to this rule are the \"Memory " +
+            "Crystal\" blue tool and damage-over-time effects which both deal their full damage.\n" +
+            "- Reflect base damage is 5. Damage scales from 1. Resilience stat extra blue masks count (max 8, each " +
+            "gives +3 damage) and 2. mask upgrades (max 5, each gives +5 damage).\n" +
+            "- Bind no longer heals normal masks, but instead 2 blue mask.\n" +
             "- You gain 1 silk after getting hit by an enemy.\n" +
-            "=> Low-risk playstyle: you can become very tanky, but are also limited to one-dimensional " +
-            "offensive gameplay of ramming enemies with your body.\n" +
+            "=> Low-risk playstyle: you become very tanky, but also limit your offensive gameplay to mostly melee " +
+            "range and need to use health in order to deal any serious damage.\n" +
             "\n" +
             "<Hollow>\n" +
             "- Bind can no longer be used at all.\n" +
@@ -122,11 +121,14 @@ namespace BonfireSilksong.Leveling.UI
             "additively while mask upgrades give passive bonus of 8% instead.\n" +
             "- All non-Resilience stat milestones require 3 less points to become active. You must still have at " +
             "least 1 point in a stat to activate any of its milestones.\n" +
-            "=> High-risk playstyle as healing is pretty much non-existent, but gives a universal damage boost " +
-            "and allows reaching non-Resilience milestones with fewer stat points.";
+            "=> High-risk playstyle: healing becomes very limited, but you get a universal damage boost and can " +
+            "reachi non-Resilience milestones with fewer stat points.";
         public static string ResilienceMilestone2 =>
             "Additional buffs to blue health modes:\n" +
-            "<Vengeful> Bind now heals 2 blue masks, reflect damage area increased by 1.\n" +
+            "<Vengeful> Bind now heals 2 blue masks, reflect damage area increased by 1. Reflect damage now also " +
+            $"checks if at least one enemy was in extended outer circle area ({ResilienceStat.ReflectArea()} <= " +
+            $"radius <= {2 * ResilienceStat.ReflectArea()}); if so, deal 1/2 of damage to closest enemy in that " +
+            "area, give additional 1 silk and display blue circle as an indicator.\n" +
             "<Hollow> You get flat +10 damage bonus which is applied after mask bonuses. Milestone bonus " +
             "increased to 5.";
         public static string ResilienceMilestone3 =>
@@ -159,8 +161,10 @@ namespace BonfireSilksong.Leveling.UI
             "- Doesn't have a silk cost.\n" +
             "- While Silk Nails is enabled, you can no longer use Pale Nails silk skill.\n" +
             "\n" +
-            "Additionally: you can now toggle your summons on/off using Needolin. This will also disable/enable the " +
-            "GUI toggle buttons for custom summons.\n" +
+            "Additionally: you can now toggle your summons on/off using Needolin, this will also disable/enable the " +
+            "GUI toggle buttons for custom summons. However if you keep playing Needolin for more than 1 second, " +
+            "summons are disabled again in order prevent stun abuse on boss fights (you and boss stand still, but " +
+            "summons still keep attacking).\n" +
             "- Following are counted as summons: Wispfire Lantern, Silk Nails, Cogfly Warrior.\n" +
             "- Hornet's texture displays a brief flash when Needolin animation starts, this signals the toggle " +
             "was succesful.\n" +
@@ -257,7 +261,8 @@ namespace BonfireSilksong.Leveling.UI
 
                 case GlobalMilestone.MAGGOTREPEL:
                     return
-                    $"★ Obtain 25 maps (current count: {pd.MapCount}) ‹- OR -› Defeat \"Groal the Great\" boss ★\n" +
+                    $"★ Obtain {GlobalStat.MapCountRequirement} maps (you have: {pd.MapCount}) ‹- OR -› " +
+                    "Defeat \"Groal the Great\" boss ★\n" +
                     "\"Wreath of Purity\" effect is always active once you obtain the tool.";
 
                 case GlobalMilestone.SILKREGEN:

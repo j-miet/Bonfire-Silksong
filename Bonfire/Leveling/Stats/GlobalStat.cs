@@ -24,6 +24,7 @@ namespace BonfireSilksong.Leveling
         public const int ExtraRosaryThreshold = 5;
         public const int CurrencyMultiplier = 2;
         public const int SilkRegenInterval = 10;
+        public const int MapCountRequirement = 24;
 
         public static bool CheckFastTravelCondition => CheckGlobalMilestone(GlobalMilestone.BENCHTELEPORT);
 
@@ -51,7 +52,7 @@ namespace BonfireSilksong.Leveling
                         pd.HasMelodyArchitect && pd.HasMelodyConductor && pd.HasMelodyLibrarian;
 
                 case GlobalMilestone.MAGGOTREPEL:
-                    return pd.DefeatedSwampShaman || pd.MapCount >= 25;
+                    return pd.DefeatedSwampShaman || pd.MapCount >= MapCountRequirement;
 
                 case GlobalMilestone.SILKREGEN:
                     return pd.blackThreadWorld && pd.completedAbyssAscent;

@@ -1,5 +1,8 @@
+using System.Collections.Generic;
+
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace BonfireSilksong.Leveling
 {
@@ -8,6 +11,20 @@ namespace BonfireSilksong.Leveling
     /// </summary>
     public static class PaleNailsSpawner
     {
+        /// <summary>
+        /// Attach to SceneManager.SceneLoaded: this should properly dispose of nail objects from previous scene if
+        /// were still active before scene transition.
+        /// </summary>
+        public static void OnSceneLoaded(Scene oldScene, LoadSceneMode mode)
+        {
+            Bonfire.Log.LogDebug("Checking pale nails recycle");
+            foreach (var nail in _activeNails)
+            {
+                nail?.Recycle();
+            }
+            _activeNails.Clear();
+        }
+
         /// <summary>
         /// Simulates Pale Nails silk skill spawn without player animation or silk cost.
         /// </summary>
@@ -38,6 +55,10 @@ namespace BonfireSilksong.Leveling
             var b = SpawnFromPool(needlePrefab, hornetPos, Quaternion.identity, hornet);
             var c = SpawnFromPool(needlePrefab, hornetPos, Quaternion.identity, hornet);
 
+            _activeNails.Add(a);
+            _activeNails.Add(b);
+            _activeNails.Add(c);
+
             Bonfire.Log.LogDebug($"Spawned needle objects '{a.name}'");
 
             // however each needle (top, middle, bottom) must call its own event.
@@ -46,6 +67,8 @@ namespace BonfireSilksong.Leveling
             TriggerEvent(c, "Control", "BOT1");
         }
 
+
+        private static List<GameObject> _activeNails = new List<GameObject>();
 
         private static GameObject GetPrefabAction(PlayMakerFSM fsm, string stateName, int spawnActionIndex)
         {

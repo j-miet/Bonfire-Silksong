@@ -102,11 +102,6 @@ namespace BonfireSilksong.Teleport
         {
             if (!FastTravelDisplay) return;
 
-            // color filter on top of map to make map screen slightly darker
-            //GUI.color = new Color(0, 0, 0, 0.2f);
-            //GUI.DrawTexture(new Rect(0, 0, BonfireGUI.Width, BonfireGUI.Height), Texture2D.whiteTexture);
-            //GUI.color = Color.white;
-
             // bench list + dark, filled background to hide map elements underneath
             Rect listRect = new Rect(ListX, ListY, ListW, ListH);
 
@@ -213,8 +208,8 @@ namespace BonfireSilksong.Teleport
             actions.RsRight.Enabled = false;
 
             // allow these through: patched InventoryPaneInput.Update will prevent any inputs from doing their
-            // normal behavior while map is open. However it still allows them to register which allows BonfireGUI
-            // to check if they were pressed and perform actions
+            // normal behavior while map is open. However it still allows them to register which then allows BonfireGUI
+            // to check if they were pressed and perform custom actions
             //
             //actions.OpenInventory.Enabled = false;
             //actions.OpenInventoryMap.Enabled = false;
@@ -394,7 +389,6 @@ namespace BonfireSilksong.Teleport
             UpdateActiveLocationData(); // must only call this after filling _benchPinScenes!
 
             Bonfire.Log.LogDebug($"=> Found {_benchPinScenes.Count} bench pins in total. Scene names:");
-
             foreach (var l in _benchActiveLocationData.Values)
             {
                 foreach (var e in l)

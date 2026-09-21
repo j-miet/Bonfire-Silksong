@@ -108,7 +108,7 @@ namespace BonfireSilksong
         /// <summary>
         /// Log PlayMaker FSM variables, specifically int, float and bool types.
         /// </summary>
-        public static void FSMVariables()
+        public static void HornetFSMVariables()
         {
             Log.LogDebug("[Debug] HeroController FSM variables");
             foreach (var fsm in HeroController.instance.GetComponents<PlayMakerFSM>())

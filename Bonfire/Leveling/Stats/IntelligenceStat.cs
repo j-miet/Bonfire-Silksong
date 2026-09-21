@@ -18,6 +18,9 @@ namespace BonfireSilksong.Leveling
     {
         public const int WeaverAuraBaseDamage = 5;
         public const float WeaverAuraBaseRange = 5f; // actual aura range, used in visuals + hit detection
+        public const int WeaverAuraRingTauntDamageMultiplier = 3;
+        public const int BurstSilkDamageMultiplier = 5;
+        public const float BurstRangeIncrease = 5f;
 
         public static bool BindCostInit = false;
         public static bool ExtraBind = false;
@@ -43,6 +46,8 @@ namespace BonfireSilksong.Leveling
         }
 
         public static bool AuraOrBurstEnabled => IsWeaverAuraEnabled || IsVoidBurstEnabled;
+        public static bool WeaverAuraActive => WeaverAuraTaunt || WeaverAuraRingTaunt;
+        public static bool WeaverAuraTakeSilk { get; private set; } = false;
         public static bool WeakBindUnlocked => CheckIntelligenceMilestone(2);
 
         public static int IntelligenceMilestone(int m)
@@ -105,7 +110,6 @@ namespace BonfireSilksong.Leveling
             int damage = WeaverAuraBaseDamage;
 
             if (totalInt <= 0) return 0;
-            if (totalInt == 1) return damage;
 
             damage += (int)Math.Floor(totalInt * 0.5f);
 
@@ -129,7 +133,7 @@ namespace BonfireSilksong.Leveling
             }
             else if (WeaverAuraRingTaunt || (isGUI && GUISilkBonus))
             {
-                damage += currentSilk * 3;
+                damage += currentSilk * WeaverAuraRingTauntDamageMultiplier;
             }
 
             if (!isGUI)
@@ -257,7 +261,7 @@ namespace BonfireSilksong.Leveling
         /// </summary>
         public static void CheckWeaverAura(float dt)
         {
-            if (!WeaverAuraRingTaunt && !WeaverAuraTaunt) return;
+            if (!WeaverAuraActive) return;
 
             if (UseVoidBurst()) return;
 
@@ -272,26 +276,24 @@ namespace BonfireSilksong.Leveling
                 int silk = PlayerData.instance.silk;
                 var hc = HeroController.instance;
 
-                if (silk <= 0)
-                {
-                    _weaverAuraCooldown = 0;
-                    WeaverAuraTaunt = false;
-                    WeaverAuraRingTaunt = false;
-                }
-                else if (WeaverAuraTaunt && silk >= 1)
+                if (WeaverAuraTaunt && silk >= 1)
                 {
                     // cost of 3 means conditions for Egg of Flealia are valid, otherwise take silk normally
                     if (LevelingPatch.CustomSilkSkillCostGetter() != 3)
+                    {
+                        WeaverAuraTakeSilk = true;
                         hc.TakeSilk(1);
+                        WeaverAuraTakeSilk = false;
+                    }
 
                     if (DealWeaverAuraDamage() && CheckWeakBindRequirement())
                         hc.AddSilk(1, false);
 
                     if (IsWeaverAuraEnabled && Bonfire.Instance.Status.ShowCustomRangeIndicator)
                     {
-                        RangeIndicator.Display(
+                        RangeIndicator.Display("weaverAura",
                             WeaverAuraRange(Bonfire.Instance.Status.IntelligenceStat),
-                            null,
+                            new Color(0.7f, 0.7f, 0.7f),
                             null);
                     }
 
@@ -301,19 +303,25 @@ namespace BonfireSilksong.Leveling
                 }
                 else if (WeaverAuraRingTaunt && silk >= 2)
                 {
+                    WeaverAuraTakeSilk = true;
                     if (LevelingPatch.CustomSilkSkillCostGetter() != 3)
+                    {
                         hc.TakeSilk(2);
+                    }
                     else
+                    {
                         hc.TakeSilk(1);
+                    }
+                    WeaverAuraTakeSilk = false;
 
                     if (DealWeaverAuraDamage() && CheckWeakBindRequirement())
                         hc.AddSilk(1, false);
 
                     if (IsWeaverAuraEnabled && Bonfire.Instance.Status.ShowCustomRangeIndicator)
                     {
-                        RangeIndicator.Display(
+                        RangeIndicator.Display("weaverAura",
                             WeaverAuraRange(Bonfire.Instance.Status.IntelligenceStat),
-                            null,
+                            new Color(0.7f, 0.7f, 0.7f),
                             new Color(0.75f, 0.45f, 0.25f));
                     }
 
@@ -323,12 +331,18 @@ namespace BonfireSilksong.Leveling
                 }
                 else
                 {
-                    _weaverAuraCooldown = 0;
+                    DisableWeaverAura();
+                    Bonfire.Log.LogDebug("[IntelligenceStat] Weaver Aura: Disabled");
                 }
             }
         }
 
-        public static void ResetWeaverAuraTimer() => _weaverAuraCooldown = 0;
+        public static void DisableWeaverAura()
+        {
+            _weaverAuraCooldown = 0;
+            WeaverAuraTaunt = false;
+            WeaverAuraRingTaunt = false;
+        }
 
         /// <summary>
         /// Checks if conditions for weak bind are true. Weak bind reduces bind healing to 1, but also makes 
@@ -346,7 +360,7 @@ namespace BonfireSilksong.Leveling
         }
 
         /// <summary>
-        /// 
+        /// Spawns Voltvessels Bola projectile from target enemy (HealthManager.gameObject).
         /// </summary>
         public static void CastVoltvesselBolaOnHit(HealthManager hm, in HitInstance hit)
         {
@@ -401,95 +415,92 @@ namespace BonfireSilksong.Leveling
                 return;
             }
 
-            foreach (var fsm in HeroController.instance.GetComponents<PlayMakerFSM>())
+            var fsm = PlayMakerFSM.FindFsmOnGameObject(HeroController.instance.gameObject, "Bind");
+            if (fsm == null) return;
+
+            Bonfire.Log.LogDebug("[IntelligenceStat] Update bind FSM values");
+
+            // cost
+            silkCost = fsm.FsmVariables.GetFsmInt("Silk Cost");
+            silkCostWitch = fsm.FsmVariables.GetFsmInt("Silk Cost Witch");
+
+            if (silkCost != null)
             {
-                if (fsm.FsmName != "Bind")
-                    continue;
-
-                Bonfire.Log.LogDebug("[IntelligenceStat] Update bind FSM values");
-
-                // cost
-                silkCost = fsm.FsmVariables.GetFsmInt("Silk Cost");
-                silkCostWitch = fsm.FsmVariables.GetFsmInt("Silk Cost Witch");
-
-                if (silkCost != null)
+                if (CheckWeakBindRequirement())
                 {
-                    if (CheckWeakBindRequirement())
-                    {
-                        silkCost.Value = (int)Math.Round(cost * 0.33f);
-                    }
-                    else
-                    {
-                        silkCost.Value = cost;
-                    }
+                    silkCost.Value = (int)Math.Round(cost * 0.33f);
                 }
-
-                if (silkCostWitch != null)
+                else
                 {
-                    if (CheckWeakBindRequirement())
-                    {
-                        silkCostWitch.Value = (int)Math.Round(cost * 0.33f);
-                    }
-                    else
-                    {
-                        silkCostWitch.Value = cost;
-                    }
+                    silkCost.Value = cost;
                 }
+            }
 
-                Bonfire.Log.LogDebug($"Applied cost reduction: Normal = {silkCost}, Witch = {silkCostWitch}");
-
-                // amount of binds in succession (e.g. default 1, Multibinder sets this to 2)
-                bindAmount = fsm.FsmVariables.GetFsmInt("Bind Amount");
-                if (bindAmount != null)
+            if (silkCostWitch != null)
+            {
+                if (CheckWeakBindRequirement())
                 {
-                    if (CheckWeakBindRequirement() &&
-                        (ToolItemManager.IsToolEquipped("Dazzle Bind") ||
-                        ToolItemManager.IsToolEquipped("Dazzle Bind Upgraded"))
-                        )
-                    {
-                        bindAmount.Value += 1;
-                        ExtraBind = true;
-
-                        Bonfire.Log.LogDebug($"Updated bind amount to {bindAmount.Value}");
-                    }
+                    silkCostWitch.Value = (int)Math.Round(cost * 0.33f);
                 }
-
-                // - OBSOLETE, better to directly patch HeroController.AddHealth as this doesn't work with Multibinder 
-                // tool's heal amount.
-                /*
-                healAmount = fsm.FsmVariables.GetFsmInt("Heal Amount");
-                if (healAmount != null)
+                else
                 {
-                    if (CheckWeakBindRequirement())
-                    {
-                        healAmount = (int)Math.Round(cost * 0.33f);
-
-                        Bonfire.Log.LogDebug($"Heal amount reduced, amount={healAmount.Value}");
-                    }
+                    silkCostWitch.Value = cost;
                 }
-                */
+            }
 
-                // duration
-                bindTime = fsm.FsmVariables.GetFsmFloat("Bind Time");
+            Bonfire.Log.LogDebug($"Applied cost reduction: Normal = {silkCost}, Witch = {silkCostWitch}");
 
-                if (bindTime != null)
-                {
-                    float baseValue = bindTime.Value;
-
-                    if (CheckIntelligenceMilestone(3) &&
+            // amount of binds in succession (e.g. default 1, Multibinder sets this to 2)
+            bindAmount = fsm.FsmVariables.GetFsmInt("Bind Amount");
+            if (bindAmount != null)
+            {
+                if (CheckWeakBindRequirement() &&
                     (ToolItemManager.IsToolEquipped("Dazzle Bind") ||
-                    ToolItemManager.IsToolEquipped("Dazzle Bind Upgraded")))
-                    {
-                        bindTime.Value *= 0.67f;
-                    }
+                    ToolItemManager.IsToolEquipped("Dazzle Bind Upgraded"))
+                    )
+                {
+                    bindAmount.Value += 1;
+                    ExtraBind = true;
 
-                    if (CheckWeakBindRequirement())
-                    {
-                        bindTime.Value *= 0.67f;
-                    }
-
-                    Bonfire.Log.LogDebug($"Applied duration reduction ({baseValue} -> {bindTime.Value})");
+                    Bonfire.Log.LogDebug($"Updated bind amount to {bindAmount.Value}");
                 }
+            }
+
+            // - OBSOLETE, better to directly patch HeroController.AddHealth as this doesn't work with Multibinder 
+            // tool's heal amount.
+            /*
+            healAmount = fsm.FsmVariables.GetFsmInt("Heal Amount");
+            if (healAmount != null)
+            {
+                if (CheckWeakBindRequirement())
+                {
+                    healAmount = (int)Math.Round(cost * 0.33f);
+
+                    Bonfire.Log.LogDebug($"Heal amount reduced, amount={healAmount.Value}");
+                }
+            }
+            */
+
+            // duration
+            bindTime = fsm.FsmVariables.GetFsmFloat("Bind Time");
+
+            if (bindTime != null)
+            {
+                float baseValue = bindTime.Value;
+
+                if (CheckIntelligenceMilestone(3) &&
+                (ToolItemManager.IsToolEquipped("Dazzle Bind") ||
+                ToolItemManager.IsToolEquipped("Dazzle Bind Upgraded")))
+                {
+                    bindTime.Value *= 0.67f;
+                }
+
+                if (CheckWeakBindRequirement())
+                {
+                    bindTime.Value *= 0.67f;
+                }
+
+                Bonfire.Log.LogDebug($"Applied duration reduction ({baseValue} -> {bindTime.Value})");
             }
         }
 
@@ -514,8 +525,6 @@ namespace BonfireSilksong.Leveling
         // is slightly longer than visual indicator.
         private const float WeaverAuraRangeOffset = 0.2f;
         private const float WeaverAuraRingTauntRangeMultiplier = 0.5f;
-        private const int BurstSilkDamageMultiplier = 6;
-        private const float BurstRangeIncrease = 5f;
 
         private static bool _startedBinding = false;
         private static float _weaverAuraCooldown = 0f;
@@ -545,27 +554,27 @@ namespace BonfireSilksong.Leveling
             int silk = PlayerData.instance.silk;
             var hc = HeroController.instance;
 
+            WeaverAuraTakeSilk = true;
             hc.TakeSilk(silk);
+            WeaverAuraTakeSilk = false;
 
             if (DealWeaverAuraDamage() && CheckWeakBindRequirement())
                 hc.AddSilk(1, false);
 
             if (Bonfire.Instance.Status.ShowCustomRangeIndicator)
             {
-                RangeIndicator.Display(
+                RangeIndicator.Display("weaverAura",
                     WeaverAuraRange(Bonfire.Instance.Status.IntelligenceStat),
-                    null,
+                    new Color(0.5f, 0.5f, 0.5f),
                     new Color(0.2f, 0.2f, 0.4f));
             }
 
             SpawnPrefab.SpawnHero(HeroController.instance.takeHitDoubleBlackThreadEffectPrefab);
             HeroController.instance.GetComponent<SpriteFlash>().FlashShadowRecharge();
 
-            _weaverAuraCooldown = 0;
-            WeaverAuraTaunt = false;
-            WeaverAuraRingTaunt = false;
+            DisableWeaverAura();
 
-            Bonfire.Log.LogDebug("[IntelligenceStat] Pale Burst cast");
+            Bonfire.Log.LogDebug("[IntelligenceStat] Void Burst cast");
 
             return true;
         }

@@ -17,8 +17,6 @@ namespace BonfireSilksong.Leveling
 
     public static class ResilienceStat
     {
-        public const int ReflectBaseDamage = 5;
-
         public static bool BlockNextHit = false;
 
         public static bool BlueMaskStateUnlocked => CheckResilienceMilestone(1);
@@ -50,12 +48,12 @@ namespace BonfireSilksong.Leveling
         public static int BlueMasks(int totalRes)
         {
             if (totalRes <= 0) return 0;
-            else if (totalRes < 4) return 1;
-            else if (totalRes < 9) return 2;
-            else if (totalRes < 15) return 3;
-            else if (totalRes < 20) return 4;
-            else if (totalRes < 25) return 5;
-            else if (totalRes < 30) return 6;
+            else if (totalRes < 3) return 1;
+            else if (totalRes < 5) return 2;
+            else if (totalRes < 9) return 3;
+            else if (totalRes < 14) return 4;
+            else if (totalRes < 20) return 5;
+            else if (totalRes < 27) return 6;
             else if (totalRes < 35) return 7;
             else return 8;
         }
@@ -134,15 +132,38 @@ namespace BonfireSilksong.Leveling
         /// </summary>
         public static void HandleReflectDamageHitLogic(HazardType hazard)
         {
-            if (IsInBlueState(BlueState.REFLECT))
+            // reflect damage logic, triggered only outside iframes
+            if (IsInBlueState(BlueState.REFLECT) && HeroController.instance.CanTakeDamage())
             {
-                DealReflectDamage();
+                bool hitEnemyInSecondaryRange = DealReflectDamage();
+                float primaryRange = ReflectArea(isGUI: true);
+                float secondaryRange = primaryRange * 2;
 
                 if (Bonfire.Instance.Status.ShowCustomRangeIndicator)
-                    RangeIndicator.Display(ReflectArea(isGUI: true), null, null);
+                {
+                    if (hitEnemyInSecondaryRange)
+                    {
+                        Color secondaryColor = new Color(0.6f, 0.6f, 0.8f);
+                        RangeIndicator.Display("reflectSecondary",
+                            secondaryRange,
+                            secondaryColor,
+                            secondaryColor);
+                    }
+
+                    Color primaryColor = new Color(0.6f, 0.8f, 0.6f);
+                    RangeIndicator.Display("reflect",
+                        primaryRange,
+                        primaryColor,
+                        primaryColor);
+                }
 
                 if (hazard == HazardType.ENEMY)
-                    HeroController.instance.AddSilk(1, false);
+                {
+                    if (hitEnemyInSecondaryRange)
+                        HeroController.instance.AddSilk(2, false);
+                    else
+                        HeroController.instance.AddSilk(1, false);
+                }
             }
         }
 
@@ -153,7 +174,7 @@ namespace BonfireSilksong.Leveling
         {
             if (IsInBlueState(BlueState.REFLECT) && !HeroController.instance.IsInLifebloodState)
             {
-                int masks = 1;
+                int masks = 2;
 
                 if (CheckResilienceMilestone(2))
                     masks += 1;
@@ -173,6 +194,27 @@ namespace BonfireSilksong.Leveling
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Heal custom amount of blue masks with a small delay. Useful if blue hp needs to be added repeatedly, this
+        /// avoids FSM event overriding.
+        /// </summary>
+        public static IEnumerator BlueStateHealBlueMasks(int amount)
+        {
+            yield return new WaitForSecondsRealtime(0.25f);
+
+            int masks = amount;
+            int updated = PlayerData.instance.healthBlue + amount;
+            int res = BlueMasks(Bonfire.Instance.Status.ResilienceStat);
+
+            if (updated > res)
+                masks -= updated - res;
+
+            Bonfire.Log.LogDebug("[ResilienceStat] Healed blue masks on crit: " + masks);
+
+            GameManager.instance.QueuedBlueHealth = masks;
+            EventRegister.SendEvent(EventRegisterEvents.AddQueuedBlueHealth);
         }
 
         /// <summary>
@@ -272,29 +314,7 @@ namespace BonfireSilksong.Leveling
         public static bool IsInAnyBlueStateAndPlasmified()
         {
             return HeroController.instance.IsInLifebloodState &&
-                CheckResilienceMilestone(3) &&
-                (IsInBlueState(BlueState.REFLECT) || IsInBlueState(BlueState.GLASSCANNON));
-        }
-
-        /// <summary>
-        /// Heal custom amount of blue masks with a small delay. Useful if blue hp needs to be added repeatedly, this
-        /// avoids FSM event overriding.
-        /// </summary>
-        public static IEnumerator BlueStateHealBlueMasks(int amount)
-        {
-            yield return new WaitForSecondsRealtime(0.25f);
-
-            int masks = amount;
-            int updated = PlayerData.instance.healthBlue + amount;
-            int res = BlueMasks(Bonfire.Instance.Status.ResilienceStat);
-
-            if (updated > res)
-                masks -= updated - res;
-
-            Bonfire.Log.LogDebug("[ResilienceStat] Healed blue masks on crit: " + masks);
-
-            GameManager.instance.QueuedBlueHealth = masks;
-            EventRegister.SendEvent(EventRegisterEvents.AddQueuedBlueHealth);
+                CheckResilienceMilestone(3) && IsInAnyBlueState();
         }
 
         /// <summary>
@@ -303,6 +323,7 @@ namespace BonfireSilksong.Leveling
         public static int UpdateBlueStateDamageTaken(int amount)
         {
             int damageTaken = amount;
+            bool inAnyBlueState = IsInAnyBlueState();
 
             if (IsInBlueStateAndPlasmified(BlueState.GLASSCANNON))
             {
@@ -314,17 +335,18 @@ namespace BonfireSilksong.Leveling
                 // IsInBlueState as the latter will always get accepted if the former is true. 
                 damageTaken = amount;
             }
-            else if (IsInAnyBlueState() && PlayerData.instance.healthBlue <= 0)
+            else if (inAnyBlueState && PlayerData.instance.healthBlue <= 0)
             {
                 // if player has no blue masks left while in blue state, damage taken is 10x.
                 damageTaken *= 10;
             }
-            else if (IsInAnyBlueState())
+            else if (inAnyBlueState)
             {
                 damageTaken = Math.Max(1, amount - 1);
             }
 
-            Bonfire.Log.LogDebug($"[ResilienceStat] Damage taken in blue state: {damageTaken}");
+            if (inAnyBlueState)
+                Bonfire.Log.LogDebug($"[ResilienceStat] Damage taken in blue state: {damageTaken}");
 
             return damageTaken;
         }
@@ -335,11 +357,9 @@ namespace BonfireSilksong.Leveling
         /// </summary>
         public static void HandleBlockCheck(HeroController instance, HazardType hazardType)
         {
-            if (instance.cState.evading || instance.cState.invulnerable) return;
+            if (!instance.CanTakeDamage()) return;
 
             Bonfire.Log.LogDebug("[ResilienceStat] Took damage from hazard type: " + hazardType);
-
-            HandleReflectDamageHitLogic(hazardType); // reflect damage logic, triggered only outside iframes
 
             if (hazardType != HazardType.ENEMY) return; // only block enemy attacks
 
@@ -402,13 +422,18 @@ namespace BonfireSilksong.Leveling
 
         private static int _hitsSinceShielded = 0;
 
-        private static HitInstance CreateReflectHitInstance(HeroController instance)
+        private static HitInstance CreateReflectHitInstance(HeroController instance, bool inPrimaryRange)
         {
             instance.gameObject.name = "Bonfire-Reflect";
+            int reflectDamage = ReflectDamage(Bonfire.Instance.Status.ResilienceStat);
+            if (!inPrimaryRange)
+            {
+                reflectDamage = (int)Math.Ceiling(0.5 * reflectDamage);
+            }
 
             return new HitInstance
             {
-                DamageDealt = ReflectBaseDamage,
+                DamageDealt = reflectDamage,
                 Source = instance.gameObject,
                 AttackType = AttackTypes.Generic,
                 IsFirstHit = false,
@@ -422,16 +447,16 @@ namespace BonfireSilksong.Leveling
         }
 
         // Create a reflect damage HitInstance and apply it on enemies in range.
-        private static void DealReflectDamage()
+        private static bool DealReflectDamage()
         {
             Bonfire.Log.LogDebug("[ResilienceStat] Reflecting damage to enemies.");
 
-            if (!IsInBlueState(BlueState.REFLECT))
-                return;
-
             var hc = HeroController.instance;
 
-            float range = ReflectArea(); // for now keep this fixed, might add range increases to later milestones
+            float primaryRange = ReflectArea();
+            float secondaryRange = 2 * primaryRange;
+            float closestEnemyDistance = float.MaxValue;
+            HealthManager closestEnemy = null;
 
             foreach (var e in EnemyHealth.EnemyMaxHp.Keys)
             {
@@ -439,18 +464,38 @@ namespace BonfireSilksong.Leveling
                     continue;
 
                 float dist = Vector2.Distance(hc.transform.position, e.transform.position);
-                if (dist > range)
-                    continue;
 
-                HealthManager hm = e.GetComponent<HealthManager>();
-
-                if (hm == null)
-                    continue;
-
-                HitInstance hit = CreateReflectHitInstance(hc);
-
-                hm.Hit(hit);
+                // apply reflect damage to enemy outside base area: HealthManagers object references must match
+                if (dist > primaryRange)
+                {
+                    // if enemy outside primary range, check secondary range and hit the first
+                    if (dist <= secondaryRange && CheckResilienceMilestone(2) && dist < closestEnemyDistance)
+                    {
+                        closestEnemy = e;
+                        closestEnemyDistance = dist;
+                        Bonfire.Log.LogDebug($"Secondary range: closest enemy updatet to {closestEnemy.name}");
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    HitInstance hit = CreateReflectHitInstance(hc, inPrimaryRange: true);
+                    e.Hit(hit);
+                }
             }
+
+            if (closestEnemy != null)
+            {
+                // apply a separate damage instance to enemy outside primary range, but inside secondary range
+                Bonfire.Log.LogDebug($"Secondary range: dealt damage to enemy {closestEnemy.name}");
+                HitInstance hit = CreateReflectHitInstance(hc, inPrimaryRange: false);
+                closestEnemy.Hit(hit);
+            }
+
+            return closestEnemy != null;
         }
     }
 }

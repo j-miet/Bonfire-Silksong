@@ -30,7 +30,7 @@ namespace BonfireSilksong.Leveling
 
             GameObject silkSpear = needleThrow.gameObject;
 
-            // reset pattern for put FSM in active state.
+            // reset pattern to put FSM in active state.
             silkSpear.SetActive(false);
             silkSpear.SetActive(true);
 

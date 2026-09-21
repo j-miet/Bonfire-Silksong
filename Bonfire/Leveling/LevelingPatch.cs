@@ -5,6 +5,7 @@ using GlobalSettings;
 using HarmonyLib;
 
 using BonfireSilksong.GUIComponents;
+using System.Collections;
 
 namespace BonfireSilksong.Leveling
 {
@@ -15,6 +16,7 @@ namespace BonfireSilksong.Leveling
     public static class LevelingPatch
     {
         public static bool Taunted = false;
+        public static bool PlayingdNeedolin = false;
         public static int TotalSilkCache = 0;
 
         // PlayerData.instance.nailDamage
@@ -130,6 +132,35 @@ namespace BonfireSilksong.Leveling
         }
 
         /// <summary>
+        /// HeroController.Update (Postfix): Disable summons if needolin is played for a specified time. This is to
+        /// prevent abusing summons during some boss fights.
+        /// </summary>
+        public static void CheckNeedolinState(float dt)
+        {
+            if (!PlayingdNeedolin) _needolinTimer = NeedolinCheckLimit;
+
+            if (_needolinTimer > 0)
+            {
+                _needolinTimer -= dt;
+            }
+            else if (!WisdomStat.BlockSummons)
+            {
+                WisdomStat.BlockSummons = true;
+                Bonfire.Log.LogDebug("[LevelingPatch] Blocked summons after playing Needolin " +
+                    $"for {NeedolinCheckLimit} second.");
+            }
+        }
+
+        /// <summary>
+        /// HeroWispLantern.SpawnWispsRoutine (Prefix): Prevent 'routine is null' error by calling replacing the result
+        /// with an empty routine.
+        /// </summary>
+        public static IEnumerator EmptyRoutine()
+        {
+            yield break;
+        }
+
+        /// <summary>
         /// HealthManager.OnEnable (Postfix): Update enemy rosary and shell shard drop count.
         /// </summary>
         public static void UpdateCurrencyDrops(HealthManager instance)
@@ -180,16 +211,17 @@ namespace BonfireSilksong.Leveling
                 newShards = GlobalStat.ApplyCurrencyMultiplier(newShards);
             }
 
-            Bonfire.Log.LogDebug($"[LuckStat] Check currency values for {instance.name}\n" +
-            $"<Vanilla> small={small}, medium={medium}, large={large}, shards={shards}\n" +
-            $"<Modded> base bonus: {baseRosaryBonus}, small={small}, medium={medium}, large={large}, shards={shards}");
+            Bonfire.Log.LogDebug($"[LuckStat] Check currency values for {instance.name}");
+            Bonfire.Log.LogDebug($"<Vanilla> small={small}, medium={medium}, large={large}, shards={shards}");
+            Bonfire.Log.LogDebug($"<Modded> base bonus: {baseRosaryBonus}, " +
+                $"small={newSmall}, medium={newMedium}, large={large}, shards={shards}");
 
             // SetGeo: these determine how many rosary beads of each type are dropped, not the value of that type. 
             // Their actual currency values are: small/shell shard = 1, medium = 5, large = 15.
-            instance.SetGeoSmall(small);
-            instance.SetGeoMedium(medium);
-            instance.SetGeoLarge(large);
-            instance.SetShellShards(shards);
+            instance.SetGeoSmall(newSmall);
+            instance.SetGeoMedium(newMedium);
+            instance.SetGeoLarge(newLarge);
+            instance.SetShellShards(newShards);
         }
 
         /// <summary>
@@ -199,7 +231,7 @@ namespace BonfireSilksong.Leveling
         /// </summary>
         public static void ApplyHitBonuses(HealthManager hm, ref HitInstance hit)
         {
-            if (!hit.IsHeroDamage || hit.Source == null) return;
+            if (hm == null || !hit.IsHeroDamage || hit.Source == null) return;
 
             string sourceName = hit.Source.name;
             var tool = hit.RepresentingTool;
@@ -250,9 +282,8 @@ namespace BonfireSilksong.Leveling
             }
             else if (sourceName == "Bonfire-Reflect")
             {
-                // Custom Reflect damage source
-
-                int reflectDamage = ResilienceStat.ReflectDamage(Bonfire.Instance.Status.ResilienceStat);
+                // Custom Reflect damage source (damage bonuses are already applied during HitInstance creation)
+                int reflectDamage = hit.DamageDealt;
 
                 if (ResilienceStat.IsInBlueStateAndPlasmified(BlueState.REFLECT) && isCrit)
                 {
@@ -438,7 +469,8 @@ namespace BonfireSilksong.Leveling
 
             if (LuckStat.IsPinwielderEnabled && tool?.name == "Straight Pin")
             {
-                hit.DamageDealt = (int)Math.Max(Math.Round(hit.DamageDealt * 0.25), 1);
+                // round to ceiling value, Straight Pin has 5/8/11/14/17 damage scaling which becomes 2/2/3/4/5.
+                hit.DamageDealt = (int)Math.Max(Math.Ceiling(hit.DamageDealt * 0.25), 1);
                 Bonfire.Log.LogDebug($"Pinwielder state enabled, Straight Pin damage reduced to {hit.DamageDealt}");
             }
 
@@ -448,7 +480,6 @@ namespace BonfireSilksong.Leveling
             {
                 if (tool?.name != "Revenge Crystal")
                 {
-                    // round to ceiling value, Straight Pin has 5/8/11/14/17 damage scaling which becomes 2/2/3/4/5.
                     hit.DamageDealt = (int)Math.Max(Math.Ceiling(hit.DamageDealt * 0.01), 1);
                     Bonfire.Log.LogDebug($"Reflect state enabled, damage reduced to {hit.DamageDealt}");
                 }
@@ -463,6 +494,9 @@ namespace BonfireSilksong.Leveling
             Bonfire.Log.LogDebug("=> Modified Damage Output: " + hit.DamageDealt);
         }
 
+
+        private const float NeedolinCheckLimit = 1f;
+        private static float _needolinTimer = NeedolinCheckLimit;
 
         // helpers for getting current rosary and shell shard values
         private static int GetRosaries(string size, HealthManager enemy)
