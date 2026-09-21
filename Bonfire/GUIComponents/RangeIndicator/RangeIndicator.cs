@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace BonfireSilksong.GUIComponents
 {
@@ -8,10 +11,87 @@ namespace BonfireSilksong.GUIComponents
     /// </summary>
     public class RangeIndicator
     {
+        public string Name => _name;
+
+        public RangeIndicator(string name)
+        {
+            _name = name;
+        }
+
+        public static void Add(RangeIndicator indicator)
+        {
+            _rangeIndicators.Add(indicator.Name, indicator);
+        }
+
+        /// <summary>
+        /// Attach to SceneManager.SceneLoaded: this should properly hide the indicator on scene transitions.
+        /// </summary>
+        public static void OnSceneLoaded(Scene oldScene, LoadSceneMode mode)
+        {
+            foreach (var ind in _rangeIndicators.Values)
+            {
+                if (ind._rangeCircle != null && ind._rangeCircle.enabled)
+                {
+                    ind._rangeDisc.enabled = false;
+                    ind._rangeCircle.enabled = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Add fading effect to range indicator by reducing alpha based on time left. Needs to be called in OnGUI.
+        /// </summary>
+        public static void UpdateFading()
+        {
+            foreach (var ind in _rangeIndicators.Values)
+            {
+                if (ind._rangeCircle == null || !ind._rangeCircle.enabled)
+                    return;
+
+                float remaining = ind._rangeIndicatorUntil - Time.time;
+
+                if (remaining <= 0f)
+                {
+                    ind._rangeCircle.enabled = false;
+                    return;
+                }
+
+                float alpha = remaining / RangeDisplayTime;
+
+                // the circle has more alpha to clearly show the outer edge.
+                Color circleColor = new Color(ind._circleColor.r, ind._circleColor.g, ind._circleColor.b, alpha);
+                Color discColor = new Color(ind._discColor.r, ind._discColor.g, ind._discColor.b, alpha * 0.2f);
+
+                ind._rangeCircle.startColor = circleColor;
+                ind._rangeCircle.endColor = circleColor;
+                ind._rangeDisc.material.color = discColor;
+            }
+        }
+
         /// <summary>
         /// Display a disc texture around the player. Use with UpdateFading.
         /// </summary>
-        public static void Display(float radius, Color? circleColor, Color? discColor)
+        public static void Display(string indicatorName, float radius, Color? circleColor, Color? discColor)
+        {
+            var indicator = _rangeIndicators.TryGetValue(indicatorName, out var ind) ? ind : null;
+            indicator?.Enable(radius, circleColor, discColor);
+        }
+
+
+        private const float RangeDisplayTime = 0.75f;
+
+        private readonly string _name;
+        public static Dictionary<string, RangeIndicator> _rangeIndicators = new Dictionary<string, RangeIndicator>();
+
+        private LineRenderer _rangeCircle;
+        private float _rangeIndicatorUntil;
+        private Color _circleColor;
+
+        private MeshRenderer _rangeDisc;
+        private MeshFilter _rangeDiscMesh;
+        private Color _discColor;
+
+        private void Enable(float radius, Color? circleColor, Color? discColor)
         {
             _circleColor = circleColor ?? new Color(1f, 1f, 1f);
             _discColor = discColor ?? new Color(1f, 1f, 1f);
@@ -26,48 +106,11 @@ namespace BonfireSilksong.GUIComponents
             }
 
             _rangeCircle.enabled = true;
+            _rangeDisc.enabled = true; // needed only because OnSceneLoaded disables this
             _rangeIndicatorUntil = Time.time + RangeDisplayTime;
         }
 
-        /// <summary>
-        /// Add fading effect to range indicator by reducing alpha based on time left. Needs to be called in OnGUI.
-        /// </summary>
-        public static void UpdateFading()
-        {
-            if (_rangeCircle == null || !_rangeCircle.enabled)
-                return;
-
-            float remaining = _rangeIndicatorUntil - Time.time;
-
-            if (remaining <= 0f)
-            {
-                _rangeCircle.enabled = false;
-                return;
-            }
-
-            float alpha = remaining / RangeDisplayTime;
-
-            // the circle has more alpha to clearly show the outer edge.
-            Color circleColor = new Color(_circleColor.r, _circleColor.g, _circleColor.b, alpha);
-            Color discColor = new Color(_discColor.r, _discColor.g, _discColor.b, alpha * 0.2f);
-
-            _rangeCircle.startColor = circleColor;
-            _rangeCircle.endColor = circleColor;
-            _rangeDisc.material.color = discColor;
-        }
-
-
-        private const float RangeDisplayTime = 0.75f;
-
-        private static LineRenderer _rangeCircle;
-        private static float _rangeIndicatorUntil;
-        private static Color _circleColor;
-
-        private static MeshRenderer _rangeDisc;
-        private static MeshFilter _rangeDiscMesh;
-        private static Color _discColor;
-
-        private static void CreateRangeDisc(float radius)
+        private void CreateRangeDisc(float radius)
         {
             // first create the outer edge i.e. the circle
             GameObject circleObj = new GameObject("RangeCircle");
@@ -105,7 +148,7 @@ namespace BonfireSilksong.GUIComponents
             SetDiscRadius(radius);
         }
 
-        private static void CreateDiscMesh(float radius)
+        private void CreateDiscMesh(float radius)
         {
             int segments = 128;
 
@@ -147,7 +190,7 @@ namespace BonfireSilksong.GUIComponents
             _rangeDiscMesh.mesh = mesh;
         }
 
-        private static void SetDiscRadius(float newRadius)
+        private void SetDiscRadius(float newRadius)
         {
             int positionCount = _rangeCircle.positionCount;
 
