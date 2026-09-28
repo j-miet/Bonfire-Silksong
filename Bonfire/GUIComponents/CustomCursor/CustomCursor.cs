@@ -204,6 +204,8 @@ namespace BonfireSilksong.GUIComponents
         // GUILayout.Button wrapper
         private static bool CustomButton(bool clicked)
         {
+            if (!GUI.enabled) return false;
+
             if (GameManager.instance.inputHandler.gameController.IsAttached &&
                 IsCursorPressed())
             {
@@ -216,6 +218,8 @@ namespace BonfireSilksong.GUIComponents
 
         public static bool CustomToggle(bool clicked)
         {
+            if (!GUI.enabled) return false;
+
             bool newValue = clicked;
 
             _offsetStack.Push(_currentOffset);

@@ -36,11 +36,19 @@ namespace BonfireSilksong.GUIComponents
         // log message loader, attach this to BepInEx logger listener in MonoBehavior.Awake callback
         public void LogEvent(object sender, LogEventArgs eventArgs)
         {
-            if (!Bonfire.Instance.Status.DebugMode ||
-                !(eventArgs.Level.HasFlag(LogLevel.Debug) ||
-                  eventArgs.Level.HasFlag(LogLevel.Info) ||
-                  eventArgs.Level.HasFlag(LogLevel.Error)))
+            if (!Bonfire.Instance.Status.DebugMode)
                 return;
+
+            // remove this block if general logging is needed
+            if (eventArgs.Source == null || eventArgs.Source.SourceName != Bonfire.ModName)
+                return;
+
+            if (!(eventArgs.Level.HasFlag(LogLevel.Debug) ||
+                eventArgs.Level.HasFlag(LogLevel.Info) ||
+                eventArgs.Level.HasFlag(LogLevel.Error)))
+            {
+                return;
+            }
 
             string message;
             if (DisplayExtendedLogs)
@@ -144,11 +152,11 @@ namespace BonfireSilksong.GUIComponents
             Rect contentRect = new Rect(0, 0, Width - ScrollbarWidth, contentHeight);
 
             if (_followBottom)
-                _infoWindowScrollPos.y = maxScrollY;
+                _loggingWindowScrollPos.y = maxScrollY;
 
-            _infoWindowScrollPos = GUI.BeginScrollView(scrollViewRect, _infoWindowScrollPos, contentRect);
+            _loggingWindowScrollPos = GUI.BeginScrollView(scrollViewRect, _loggingWindowScrollPos, contentRect);
 
-            int firstVisibleLine = Mathf.Max(0, Mathf.FloorToInt(_infoWindowScrollPos.y / LineHeight) - 1);
+            int firstVisibleLine = Mathf.Max(0, Mathf.FloorToInt(_loggingWindowScrollPos.y / LineHeight) - 1);
             // +2 accounts for one line above and below the message area
             int visibleLineCount = Mathf.CeilToInt(viewHeight / LineHeight) + 2;
             int lastVisibleLine = Mathf.Min(_messages.Count, firstVisibleLine + visibleLineCount);
@@ -160,7 +168,7 @@ namespace BonfireSilksong.GUIComponents
 
             GUI.EndScrollView();
 
-            _followBottom = _infoWindowScrollPos.y >= maxScrollY - BottomScrollThreshold;
+            _followBottom = _loggingWindowScrollPos.y >= maxScrollY - BottomScrollThreshold;
 
             GUILayout.EndArea();
         }
@@ -184,7 +192,7 @@ namespace BonfireSilksong.GUIComponents
         private Color _bgColor;
         private Color _borderColor;
 
-        private Vector2 _infoWindowScrollPos;
+        private Vector2 _loggingWindowScrollPos;
         private string _logText = "";
         private bool _followBottom = false;
     }
