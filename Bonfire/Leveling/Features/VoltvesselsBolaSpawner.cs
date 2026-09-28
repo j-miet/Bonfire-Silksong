@@ -4,8 +4,14 @@ using UnityEngine;
 
 namespace BonfireSilksong.Leveling
 {
-    public static class VoltvesselBolaSpawner
+    /// <summary>
+    /// Spawns Voltvessels tool's Bola projectile.
+    /// </summary>
+    public static class VoltvesselsBolaSpawner
     {
+        /// <summary>
+        /// Spawn Voltvessels bola on top of target object.
+        /// </summary>
         public static void SpawnBola(GameObject target)
         {
             if (target == null) return;
@@ -18,7 +24,7 @@ namespace BonfireSilksong.Leveling
             }
 
             // offState = spear, onState = bola. Each is wrapped into a private class 'State' which then finally gives
-            // the UsageOptions.ThrowPrefab, the GameObject itself.
+            // the UsageOptions.ThrowPrefab (the GameObject itself).
             object onState = _onStateField.GetValue(t);
             ToolItem.UsageOptions usageOptions = (ToolItem.UsageOptions)_usageField.GetValue(onState);
             GameObject bolaPrefab = usageOptions.ThrowPrefab;

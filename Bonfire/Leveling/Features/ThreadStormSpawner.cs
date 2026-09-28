@@ -4,8 +4,15 @@ using UnityEngine;
 
 namespace BonfireSilksong.Leveling
 {
+    /// <summary>
+    /// Thread Storm silk skill custom spawner. Limited to only 1 spawner at a time: another one cannot spawn until
+    /// first one finished and gets discarded.
+    /// </summary>
     public static class ThreadStormSpawner
     {
+        /// <summary>
+        /// Spawns Thread Storm effect on target object for specified duration.
+        /// </summary>
         public static void CastThreadStorm(GameObject target, float effectDuration)
         {
             if (target == null || _isActive) return;

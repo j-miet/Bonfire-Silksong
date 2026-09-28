@@ -13,7 +13,7 @@ namespace BonfireSilksong.Leveling
     {
         /// <summary>
         /// Attach to SceneManager.SceneLoaded: this should properly dispose of nail objects from previous scene if
-        /// were still active before scene transition.
+        /// they were still active before scene transition.
         /// </summary>
         public static void OnSceneLoaded(Scene oldScene, LoadSceneMode mode)
         {
@@ -59,7 +59,7 @@ namespace BonfireSilksong.Leveling
             _activeNails.Add(b);
             _activeNails.Add(c);
 
-            Bonfire.Log.LogDebug($"Spawned needle objects '{a.name}'");
+            //Bonfire.Log.LogDebug($"Spawned needle objects '{a.name}'");
 
             // however each needle (top, middle, bottom) must call its own event.
             TriggerEvent(a, "Control", "TOP1");

@@ -4,11 +4,12 @@ using UnityEngine;
 namespace BonfireSilksong.Leveling
 {
     /// <summary>
-    /// Rune Rage silk skill custom spawner.
+    /// Silk spear silk skill custom spawner.
     /// </summary>
     public static class SilkSpearSpawner
     {
         /// <summary>
+        /// Casts silk spear skill without cost or locking player into animation.
         /// </summary>
         public static void CastSilkSpear()
         {
