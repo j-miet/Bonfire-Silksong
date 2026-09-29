@@ -155,8 +155,6 @@ namespace BonfireSilksong.Settings
 
             if (!s.EnemyHealthBarsEnabled) return;
 
-            _maxHpUpdates.Clear();
-
             if (Camera.main == null) return;
 
             foreach (var kvp in EnemyHealth.EnemyMaxHp)
@@ -169,15 +167,12 @@ namespace BonfireSilksong.Settings
 
                 float maxHp = kvp.Value;
 
-                // extra check + update for enemies whose HP might get updated after initial data check 
-                // (e.g. Act3 void enemies)
-                if (hm.hp > maxHp)
-                {
-                    _maxHpUpdates.Add((hm, hm.hp));
-                    maxHp = hm.hp;
-                }
-
                 float currentHp = hm.hp;
+                // some bosses can temporarily reset their hp value on phase transition e.g. Cogwork Dancers set this
+                // to 99999f. This checks prevents hp bar visual to jump up when that happens.
+                if (currentHp >= EnemyHealth.HpResetSentinel)
+                    continue;
+
                 bool isBoss = EnemyHealth.EnemyIsBoss.TryGetValue(hm, out bool b) && b;
 
                 if (currentHp == maxHp && !isBoss) continue; // full HP = hide bars for normal enemies
@@ -232,10 +227,6 @@ namespace BonfireSilksong.Settings
 
                 GUI.color = Color.white;
             }
-
-            // perform write operation to main dictionary only after updates
-            foreach (var (hm, hp) in _maxHpUpdates)
-                EnemyHealth.EnemyMaxHp[hm] = hp;
         }
 
         /// <summary>
@@ -283,7 +274,6 @@ namespace BonfireSilksong.Settings
         private readonly string[] _crestNames = {
             "Hunter_v3", "Wanderer", "Reaper", "Warrior", "Witch", "Toolmaster", "Spell" };
         private readonly Dictionary<string, ToolCrest> _crestDict = new Dictionary<string, ToolCrest>();
-        private readonly List<(HealthManager hm, float hp)> _maxHpUpdates = new List<(HealthManager hm, float hp)>();
         private bool _allCrestsUnlocked = false;
 
         private static bool _hpBarColorsInitialized;
@@ -390,16 +380,26 @@ namespace BonfireSilksong.Settings
                 "Enable debug mode.\n" +
                 "\n" +
                 "[ LeftControl + F2 ]\n" +
-                "Force a respawn at bench in scene \"Tut_03\" - this location corresponds to Ruined Chapel bench.\n" +
+                "Teleport to bench in scene \"Tut_03\" - this location corresponds to Ruined Chapel bench.\n" +
+                "=> There's a bug which sets Hornet into a falling/hover animation after teleporting. Haven't been " +
+                "able to fix this because it happens so rarely/inconsistently, despite it being present ever since " +
+                "the teleport system was first implemented.\n" +
+                "So if you keep getting issue or want to pre-emptively guard againts it, just enable debug mode and " +
+                "use this feature whenever necessary: the forced teleport seems to reset Hornet's state again and " +
+                "fixes the animation lock. An alternative to this is to simply quit to main menu then load the save " +
+                "again: this is of course a much slower process, but it also won't reset your spawn location in case " +
+                "you want to avoid that.\n" +
+                "\n" +
                 "[ LeftControl + F3 ]\n" +
                 $"Display compact log overlay top-right with message limit of {LoggingOverlay.MaxMessages}. Displays " +
                 "newline characters properly, but this can lead to uneven rows where a part of the text is only " +
-                "partially visible. Can cause performance issues if logs are updated repeatedly.\n" +
+                "partially visible. Can cause performance issues if logs get updated very frequently.\n" +
+                "\n" +
                 "[ LeftControl + F4 ]\n" +
                 $"Display extended log overlay top-right with message limit of {LoggingOverlay.MaxMessagesExtended} " +
                 "and makes logs scrollable. Performance-wise much better than compact log, but cannot display " +
                 "newline characters and instead replaces them with empty spaces. Doesn't include a search feature " +
-                "so combine this with the actual BepInEx/LogOutput.txt file for best experience.",
+                "so combine this with the actual BepInEx/LogOutput.txt file for optimal debug experience.",
                 GUIStyles.WordWrapToggleStyle,
                 GUILayout.Width(SettingsWidth - SettingsOuterOffset - SettingsInnerOffset - 50));
         }
@@ -469,9 +469,9 @@ namespace BonfireSilksong.Settings
 
             GUILayout.Label("(");
             GUILayout.Label("enemy", GUIStyles.EnemyHpStyle);
-            GUILayout.Label("/");
+            GUILayout.Label("-");
             GUILayout.Label("boss", GUIStyles.BossHpStyle);
-            GUILayout.Label("→");
+            GUILayout.Label(">");
             GUILayout.Label("has default hotkey \"LeftControl + H\")");
 
             GUILayout.EndHorizontal();
@@ -503,6 +503,17 @@ namespace BonfireSilksong.Settings
                 s.EnemyHpDisplayNumbers,
                 "Larger bars with HP numbers displayed");
 
+            GUILayout.EndHorizontal();
+            GUILayout.Space(10);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(10);
+
+            GUILayout.Label(
+                "- Boss check uses game's internal flag to detect if the current scene is a boss scene." +
+                " However this seems to be quite inconsistent: for example neither Cogwork Dancers nor Grand Mother " +
+                " Silk are not counted as bosses.\n" +
+                "- Progressive bar colors use the same 3-color scale for both normal enemies and bosses.");
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
 

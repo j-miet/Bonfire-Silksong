@@ -37,8 +37,35 @@ namespace BonfireSilksong.Teleport
             bool hasAnyMap = PlayerData.instance.HasAnyMap;
             bool hasBenchPins = PlayerData.instance.hasPinBench;
 
-            GUI.enabled = BonfireGUI.NoWindowsPending && GlobalStat.CheckFastTravelCondition;
-            if (CustomCursor.Button("Fast Travel", GUIStyles.ButtonStyle, GUILayout.Height(40f)))
+            string fastTravelButton = "Fast Travel";
+            bool sessionInit = Bonfire.Instance.SessionInitialized;
+
+            var pd = PlayerData.instance;
+            bool act3BeastlingCallLocked = pd.blackThreadWorld && !pd.UnlockedFastTravelTeleport;
+
+            if (!sessionInit && GlobalStat.CheckFastTravelCondition)
+            {
+                // display a timer for initialization period
+                GUI.enabled = false;
+                int initTimer = (int)Mathf.Ceil(Bonfire.Instance.SessionInitTimer);
+                fastTravelButton += $" - initializing (time remaining {initTimer})";
+            }
+            else
+            {
+                if (act3BeastlingCallLocked)
+                {
+                    GUI.enabled = false;
+                    fastTravelButton += " is locked, you should visit the Bell Beast";
+                }
+                else
+                {
+                    GUI.enabled = Bonfire.Instance.SessionInitialized &&
+                        BonfireGUI.NoWindowsPending &&
+                        GlobalStat.CheckFastTravelCondition;
+                }
+            }
+
+            if (CustomCursor.Button(fastTravelButton, GUIStyles.ButtonStyle, GUILayout.Height(40f)))
             {
                 CustomCursor.ResetCursorPosition();
 
@@ -110,14 +137,21 @@ namespace BonfireSilksong.Teleport
             GUI.DrawTexture(listRect, Texture2D.whiteTexture);
             GUI.color = old;
 
+            // cache pin states before bench list panel drawing which can modify them, otherwise layout & repaint see
+            // possible different values and execute different code paths (and in general this is a very tricky part
+            // of managing complex GUI states so pre-caching values is needed often)
+            bool hasPin = _selectedPin != null;
+            bool hasScene = _selectedScene != null;
+
             CustomCursor.BeginArea(listRect);
             DrawBenchListPanel();
             CustomCursor.EndArea();
 
-            // if a bench is clicked: confirmation panel with dark background and border
-            if (_selectedPin != null)
+            if (hasPin || hasScene)
             {
-                float confirmW = 400f, confirmH = 110f;
+                // if a bench is clicked: confirmation panel with dark background and border
+                float confirmW = 400f;
+                float confirmH = 110f;
                 float confirmX = BonfireGUI.Width / 2f - confirmW / 2f;
                 float confirmY = BonfireGUI.Height - confirmH - 20f;
                 Rect confirmRect = new Rect(confirmX, confirmY, confirmW, confirmH);
@@ -125,41 +159,27 @@ namespace BonfireSilksong.Teleport
                 old = GUI.color;
                 GUI.color = new Color(0.8f, 0.7f, 0.3f, 0.9f);
                 GUI.DrawTexture(
-                    new Rect(
-                        confirmX - 2, confirmY - 2,
-                        confirmW + 4, confirmH + 4),
-                        Texture2D.whiteTexture);
+                    new Rect(confirmX - 2, confirmY - 2, confirmW + 4, confirmH + 4),
+                    Texture2D.whiteTexture);
 
                 GUI.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
                 GUI.DrawTexture(confirmRect, Texture2D.whiteTexture);
+
                 GUI.color = old;
 
                 CustomCursor.BeginArea(confirmRect);
-                DrawTeleportConfirmPanel();
-                CustomCursor.EndArea();
-            }
-            // for benches which don't have a pin location on map (same code, just different draw method called)
-            else if (_selectedScene != null)
-            {
-                float confirmW = 400f, confirmH = 110f;
-                float confirmX = BonfireGUI.Width / 2f - confirmW / 2f;
-                float confirmY = BonfireGUI.Height - confirmH - 20f;
-                Rect confirmRect = new Rect(confirmX, confirmY, confirmW, confirmH);
 
-                old = GUI.color;
-                GUI.color = new Color(0.8f, 0.7f, 0.3f, 0.9f);
-                GUI.DrawTexture(
-                    new Rect(
-                        confirmX - 2, confirmY - 2,
-                        confirmW + 4, confirmH + 4),
-                        Texture2D.whiteTexture);
+                if (hasPin)
+                {
+                    // default case is when bench location is determined by its map pin
+                    DrawTeleportConfirmPanel();
+                }
+                else
+                {
+                    // for benches which don't have a pin location on map
+                    DrawTeleportConfirmPanelExtraLocations();
+                }
 
-                GUI.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
-                GUI.DrawTexture(confirmRect, Texture2D.whiteTexture);
-                GUI.color = old;
-
-                CustomCursor.BeginArea(confirmRect);
-                DrawTeleportConfirmPanelExtraLocations();
                 CustomCursor.EndArea();
             }
         }
@@ -206,14 +226,6 @@ namespace BonfireSilksong.Teleport
             actions.RsDown.Enabled = false;
             actions.RsLeft.Enabled = false;
             actions.RsRight.Enabled = false;
-
-            // allow these through: patched InventoryPaneInput.Update will prevent any inputs from doing their
-            // normal behavior while map is open. However it still allows them to register which then allows BonfireGUI
-            // to check if they were pressed and perform custom actions
-            //
-            //actions.OpenInventory.Enabled = false;
-            //actions.OpenInventoryMap.Enabled = false;
-            //actions.QuickMap.Enabled = false;
         }
 
         // reverts keyboard input blocking.
@@ -230,10 +242,6 @@ namespace BonfireSilksong.Teleport
             actions.RsDown.Enabled = true;
             actions.RsLeft.Enabled = true;
             actions.RsRight.Enabled = true;
-
-            //actions.OpenInventory.Enabled = true;
-            //actions.OpenInventoryMap.Enabled = true;
-            //actions.QuickMap.Enabled = true;
         }
 
         // bench location data parser, updated data is inserted into BenchActiveLocationData.

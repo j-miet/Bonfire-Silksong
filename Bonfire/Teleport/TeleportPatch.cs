@@ -10,14 +10,16 @@ namespace BonfireSilksong.Teleport
     {
         /// <summary>
         /// HeroController.FinishedEnteringScene (Postfix):
-        /// Handle transition post-check: set spawn location to targeted bench, update location and save game.
+        /// Handle transition post-check: set spawn location to targeted bench and save game.
         /// </summary>
         public static void HandleArrival(HeroController instance)
         {
             if (!BenchTeleport.IsBenchTeleporting)
                 return;
 
-            BenchTeleport.IsBenchTeleporting = false;
+            Bonfire.Log.LogDebug("[TeleportPatch] Set spawn location");
+
+            Bonfire.Log.LogDebug($" - gravity: {HeroController.instance.IsGravityApplied}");
 
             var markers = RespawnMarker.Markers
                 .FirstOrDefault(r => r.gameObject != null &&
@@ -32,18 +34,23 @@ namespace BonfireSilksong.Teleport
                 // main/side area
                 benchFSM?.SetState("Set Spawn Location");
                 benchFSM?.SendEventSafe("OVERRIDE");
-                Bonfire.Log.LogDebug("[TeleportPatchLogic] Set spawn location");
+                Bonfire.Log.LogDebug("- Updated spawn location");
+            }
+            else
+            {
+                Bonfire.Log.LogDebug("- Failed to update spawn location");
             }
 
             instance.proxyFSM.SendEventSafe("HeroCtrl-EnteringScene");
 
             GameManager.instance.SaveGame(null);
+
+            BenchTeleport.IsBenchTeleporting = false;
         }
 
         /// <summary>
         /// GameManager.EnterHero (Prefix): Check if the bench location is valid for respawning after player is loaded 
-        /// into scene. Settles for a fallback in case the value set by BenchTeleport turned out not to be a valid 
-        /// bench marker for target scene.
+        /// into scene. Settles for a fallback in case the value set by BenchTeleport turned out not to be a valid one.
         /// </summary>
         public static void CheckMarkerValidity(GameManager instance)
         {
@@ -53,7 +60,7 @@ namespace BonfireSilksong.Teleport
             string scene = instance.playerData.tempRespawnScene;
             string marker = instance.playerData.tempRespawnMarker;
 
-            Bonfire.Log.LogDebug($"[TeleportPatchLogic] EnterHero: scene={scene}, marker={marker}");
+            Bonfire.Log.LogDebug($"[TeleportPatch] EnterHero: scene={scene}, marker={marker}");
 
             List<RespawnMarker> markers = RespawnMarker.Markers
                 .Where(r =>
@@ -87,9 +94,9 @@ namespace BonfireSilksong.Teleport
         }
 
         /// <summary>
-        /// InventoryPaneInput.Update (Prefix): block ESC/inventory pane navigation when fast travel menu is open.
+        /// InventoryPaneInput.Update (Prefix): block default input behavior in map screen.
         /// </summary>
-        public static bool InFastTravelDisplayScreen()
+        public static bool BlockedInputInFastTravelScreen()
         {
             if (TeleportGUI.FastTravelDisplay)
                 return true;

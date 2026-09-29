@@ -14,9 +14,11 @@ namespace BonfireSilksong.Settings
         /// </summary>
         public static void RegisterCrestChapelScenes(string scene)
         {
+            if (scene == null) return;
+
             var s = Bonfire.Instance.Status;
 
-            Bonfire.Log.LogDebug($"[SettingsPatch] Check if scene '{scene}' is crest chapel scene.");
+            Bonfire.Log.LogDebug($"[SettingsPatch] Checking if scene '{scene}' is a crest chapel scene.");
 
             switch (scene)
             {

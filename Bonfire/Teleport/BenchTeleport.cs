@@ -148,6 +148,14 @@ namespace BonfireSilksong.Teleport
             if (!AbyssChecks(targetScene))
                 return false;
 
+            // disable teleport in "The Slab" until Hornet gets her gear back
+            if (pd.CurrentCrestID == "Cloakless"
+                && !pd.slab_cloak_battle_completed
+                && GameManager.instance.GetCurrentMapZoneEnum() == MapZone.THE_SLAB)
+            {
+                return false;
+            }
+
             if (string.IsNullOrEmpty(respawnScene) ||
                 string.IsNullOrEmpty(respawnMarker))
             {
@@ -175,15 +183,20 @@ namespace BonfireSilksong.Teleport
         {
             // 1. first time visit and trying to teleport out is prevented. Must complete the ascent normally. However
             // can tp between abyss benches normally.
-            if (PlayerData.instance.respawnScene.Contains("Abyss_")
-                && !targetScene.Contains("Abyss_")
-                && !PlayerData.instance.completedAbyssAscent)
+            if (PlayerData.instance.respawnScene.Contains("Abyss_") &&
+                !targetScene.Contains("Abyss_") &&
+                !PlayerData.instance.completedAbyssAscent)
+            {
                 return false;
+            }
 
             // 2. finished ascent and trying to teleport to abyss without using the fixed diving bell is prevented
-            if (targetScene.Contains("Abyss_")
-                && !Bonfire.Instance.Status.VisitedAbyssSecondTime)
+            if (targetScene.Contains("Abyss_") &&
+                PlayerData.instance.completedAbyssAscent &&
+                !Bonfire.Instance.Status.VisitedAbyssSecondTime)
+            {
                 return false;
+            }
 
             return true;
         }
@@ -204,7 +217,7 @@ namespace BonfireSilksong.Teleport
 
             Bonfire.Log.LogDebug("[BenchTeleport] Calling ReadyForRespawn to teleport");
 
-            gm.ReadyForRespawn(false);
+            gm.ReadyForRespawn(isFirstLevelForPlayer: false);
         }
 
         /// <summary>
