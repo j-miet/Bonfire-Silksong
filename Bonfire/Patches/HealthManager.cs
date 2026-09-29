@@ -64,6 +64,16 @@ namespace BonfireSilksong.Patches
             }
         }
 
+        // private HitInstance ApplyDamageScaling(HitInstance hitInstance)
+        [HarmonyPatch(typeof(HealthManager), "ApplyDamageScaling")]
+        class HealthManager_ApplyDamageScaling
+        {
+            static void Postfix(ref HitInstance __result)
+            {
+                LevelingPatch.ApplyDotDamageBonuses(ref __result);
+            }
+        }
+
         // Use ref here because HitInstance is a struct (value type) and its damage value won't update otherwise.
         //
         // public IHitResponder.HitResponse Hit(HitInstance hitInstance)

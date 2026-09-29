@@ -68,14 +68,14 @@ namespace BonfireSilksong.Patches
 
                 float dt = Time.deltaTime;
 
-                EnemyHealth.RemoveUnused(dt);
+                EnemyHealth.UpdateHealthValues(dt);
 
                 // these should prevent checks during non-gameplay events like dialogue
                 if (gm.GameState != GameState.PLAYING ||
                     gm.IsNonGameplayScene() ||
                     pd.disablePause)
                 {
-                    // Bonfire.Log.LogInfo("[HeroController.Update] Gameplay state:\n" +
+                    // Bonfire.Log.LogDebug("[HeroController.Update] Gameplay state:\n" +
                     //     $"Gamestate: {gm.GameState}\n" +
                     //     $"isNonGamePlayScene: {gm.IsNonGameplayScene()}\n" +
                     //     $"disablePause: {PlayerData.instance.disablePause}");
@@ -87,7 +87,6 @@ namespace BonfireSilksong.Patches
                 ArtificeStat.CheckToolRegen(dt);
                 WisdomStat.CheckSilkNails(dt);
                 IntelligenceStat.CheckWeaverAura(dt);
-
 
                 // acceptingInput is very versatile for checking when inputs can be accepted, but it's also weirdly
                 // restrictive e.g. sprinting already sets it to false. It's good for cogfly respawning: fast travel
@@ -103,7 +102,10 @@ namespace BonfireSilksong.Patches
                 }
 
                 // needolin also blocks inputs: if inputs are again available & needolin playing state is true, reset it
-                if (LevelingPatch.PlayingdNeedolin && hc.acceptingInput)
+                // There's no simple way to handle the 'playing needoling while sitting on a bench' state so needolin
+                // tracking is immediately set to false. This is fine because you are in a non-combat state anyway
+                // so summon disable feature is not important here.
+                if (LevelingPatch.PlayingdNeedolin && (hc.acceptingInput || pd.atBench))
                     LevelingPatch.PlayingdNeedolin = false;
             }
         }

@@ -10,9 +10,17 @@ namespace BonfireSilksong.Patches
         [HarmonyPatch(typeof(HeroWispLantern), "SpawnWispsRoutine")]
         class HeroWispLantern_SpawnWispsRoutine
         {
-            static void Prefix()
+            static bool Prefix(ref IEnumerator __result)
             {
+                if (WisdomStat.BlockSummons)
+                {
+                    __result = LevelingPatch.EmptyRoutine();
+                    return false;
+                }
+
                 WisdomStat.WispLanternSilkOnSpawn();
+
+                return true;
             }
         }
 
@@ -23,22 +31,6 @@ namespace BonfireSilksong.Patches
             static void Prefix(HeroWispLantern __instance)
             {
                 WisdomStat.ApplyWispLanternSpeedBuff(__instance);
-            }
-        }
-
-        // private void ToggleWispLantern(bool isEquipped)
-        [HarmonyPatch(typeof(HeroWispLantern), "SpawnWispsRoutine")]
-        class HeroWispLantern_ToggleWispLantern
-        {
-            static bool Prefix(ref IEnumerator __result)
-            {
-                if (WisdomStat.BlockSummons)
-                {
-                    __result = LevelingPatch.EmptyRoutine();
-                    return false;
-                }
-
-                return true;
             }
         }
     }

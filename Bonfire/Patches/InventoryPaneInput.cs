@@ -11,7 +11,7 @@ namespace BonfireSilksong.Patches
         {
             static bool Prefix()
             {
-                return !TeleportPatch.InFastTravelDisplayScreen();
+                return !TeleportPatch.BlockedInputInFastTravelScreen();
             }
         }
     }
