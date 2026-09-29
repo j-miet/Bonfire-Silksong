@@ -29,7 +29,7 @@ namespace BonfireSilksong
         public int RespecCost = 0;
 
         // GUI styles
-        public int LevelingInfoStyle = 0;
+        public int LevelingInfoStyle = 1;
         public int BenchMenuStyle = 1;
 
         // stat milestones (always ensure Leveling.UI.GameData -> CacheUpdated checks all of these)

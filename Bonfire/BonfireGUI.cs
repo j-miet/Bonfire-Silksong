@@ -43,7 +43,7 @@ namespace BonfireSilksong
                 return !(SettingsGUI.PendingSettingsWindow ||
                     SettingsGUI.PendingCrestUnlock ||
                     SettingsGUI.PendingStatusReset ||
-                    InfoWindow.PendingInfoWindow);
+                    HelpWindow.PendingHelpWindow);
             }
         }
 
@@ -104,10 +104,9 @@ namespace BonfireSilksong
 
             if (TeleportGUI.FastTravelDisplay)
             {
-                Bonfire.Instance.ShowCursor();
-
                 Teleport.DrawBenchFastTravelUI();
 
+                Bonfire.Instance.ShowCursor();
                 CustomCursor.DrawCustomCursor();
 
                 GUI.matrix = oldMatrix;
@@ -141,7 +140,7 @@ namespace BonfireSilksong
                 Settings.DrawCrestUnlockUI();
                 Settings.DrawPlayerStatusResetUI();
 
-                InfoWindow.Display();
+                HelpWindow.Display();
             }
             else
             {
@@ -150,7 +149,7 @@ namespace BonfireSilksong
                 SettingsGUI.PendingCrestUnlock = false;
                 SettingsGUI.PendingSettingsWindow = false;
                 SettingsGUI.PendingStatusReset = false;
-                InfoWindow.PendingInfoWindow = false;
+                HelpWindow.PendingHelpWindow = false;
             }
 
             if (!PlayerData.instance.atBench && _benchCheck)
@@ -166,15 +165,16 @@ namespace BonfireSilksong
 
             Settings.DrawEnemyHealthBars();
 
+            if (s.ShowDamageOverlay)
+            {
+                DamageOverlay.Display(s.DamageOverlayX, s.DamageOverlayY);
+            }
+
+            // debug log window can just render on top of everything else except custom cursor
             if (s.DebugMode && (GUILogger.DisplayLogs || GUILogger.DisplayExtendedLogs))
             {
                 GUILogger.Update();
                 GUILogger.Display();
-            }
-
-            if (s.ShowDamageOverlay)
-            {
-                DamageOverlay.Display(s.DamageOverlayX, s.DamageOverlayY);
             }
 
             // cursor visual when controller is plugged in
@@ -237,7 +237,7 @@ namespace BonfireSilksong
                     Bonfire.Instance.SaveSettings();
                     SettingsGUI.PendingSettingsWindow = false;
                 }
-                else if (InfoWindow.PendingInfoWindow) InfoWindow.PendingInfoWindow = false;
+                else if (HelpWindow.PendingHelpWindow) HelpWindow.PendingHelpWindow = false;
             }
         }
 
@@ -260,10 +260,12 @@ namespace BonfireSilksong
 
         private void InitializeRangeIndicators()
         {
-            // register all different indicators here
+            // register all different indicators here. Instances allow multiple different indicators to be displayed at
+            // once. Outside the name identifier they all operate similarly and use Display method for range & color
+            // customization.
             RangeIndicator.Add(new RangeIndicator("reflect"));
             RangeIndicator.Add(new RangeIndicator("reflectSecondary"));
-            RangeIndicator.Add(new RangeIndicator("weaverAuraRing"));
+            RangeIndicator.Add(new RangeIndicator("weaverAura"));
         }
     }
 }

@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-using BepInEx.Logging;
 using HutongGames.PlayMaker;
 using UnityEngine;
 
@@ -20,22 +19,22 @@ namespace BonfireSilksong
         /// </summary>
         public static void BenchFSM(Transform spawnPoint)
         {
-            Log.LogDebug("[Debug] Bench Control");
+            Bonfire.Log.LogDebug("[Debug] Bench Control");
             if (spawnPoint == null) return;
 
             var benchFSM = FSMUtility.LocateFSM(spawnPoint.gameObject, "Bench Control");
             if (benchFSM == null)
             {
-                Log.LogDebug("No Bench Control FSM found on spawnPoint");
+                Bonfire.Log.LogDebug("No Bench Control FSM found on spawnPoint");
                 return;
             }
 
-            Log.LogDebug("'Bench Control' FSM States");
+            Bonfire.Log.LogDebug("'Bench Control' FSM States");
             foreach (var state in benchFSM.FsmStates)
             {
-                Log.LogDebug($"- State: {state.Name}");
+                Bonfire.Log.LogDebug($"- State: {state.Name}");
                 foreach (var transition in state.Transitions)
-                    Log.LogDebug($"  - Event: {transition.EventName} => {transition.ToState}");
+                    Bonfire.Log.LogDebug($"  - Event: {transition.EventName} => {transition.ToState}");
             }
         }
 
@@ -44,19 +43,19 @@ namespace BonfireSilksong
         /// </summary>
         public static void BlueHpVariableFSM()
         {
-            Log.LogDebug("[Debug] Blue Health variables");
+            Bonfire.Log.LogDebug("[Debug] Blue Health variables");
             var gameCameras = GameCameras.instance.gameObject;
             foreach (var fsm in gameCameras.GetComponentsInChildren<PlayMakerFSM>(includeInactive: true))
             {
                 if (fsm.FsmName != "Blue Health Control") continue;
 
-                Log.LogDebug("Variables:");
+                Bonfire.Log.LogDebug("Variables:");
                 foreach (var v in fsm.FsmVariables.IntVariables)
-                    Log.LogDebug($"  int: {v.Name} = {v.Value}");
+                    Bonfire.Log.LogDebug($"  int: {v.Name} = {v.Value}");
                 foreach (var v in fsm.FsmVariables.FloatVariables)
-                    Log.LogDebug($"  float: {v.Name} = {v.Value}");
+                    Bonfire.Log.LogDebug($"  float: {v.Name} = {v.Value}");
                 foreach (var v in fsm.FsmVariables.BoolVariables)
-                    Log.LogDebug($"  bool: {v.Name} = {v.Value}");
+                    Bonfire.Log.LogDebug($"  bool: {v.Name} = {v.Value}");
             }
         }
 
@@ -65,9 +64,9 @@ namespace BonfireSilksong
         /// </summary>
         public static void AllGlobalFSMEvents()
         {
-            Log.LogDebug("[Debug ] FSM global events");
+            Bonfire.Log.LogDebug("[Debug ] FSM global events");
             foreach (var e in FsmEvent.globalEvents)
-                Log.LogDebug(e);
+                Bonfire.Log.LogDebug(e);
         }
 
         /// <summary>
@@ -75,14 +74,14 @@ namespace BonfireSilksong
         /// </summary>
         public static void CollectablesAndTools()
         {
-            Log.LogDebug("[Debug] Collectables and tools");
-            Log.LogDebug("-- CollectableItem --");
+            Bonfire.Log.LogDebug("[Debug] Collectables and tools");
+            Bonfire.Log.LogDebug("-- CollectableItem --");
             foreach (var item in Resources.FindObjectsOfTypeAll<CollectableItem>())
-                Log.LogDebug(item.name);
+                Bonfire.Log.LogDebug(item.name);
 
-            Log.LogDebug("-- Tools --");
+            Bonfire.Log.LogDebug("-- Tools --");
             foreach (var tool in Resources.FindObjectsOfTypeAll<ToolItem>())
-                Log.LogDebug($"{tool.name} ({tool.GetType().FullName})");
+                Bonfire.Log.LogDebug($"{tool.name} ({tool.GetType().FullName})");
         }
 
         /// <summary>
@@ -93,14 +92,14 @@ namespace BonfireSilksong
             var enemies = Resources.FindObjectsOfTypeAll<HealthManager>();
             if (enemies.Length > 0)
             {
-                Log.LogDebug("[Debug] Enemy drops");
+                Bonfire.Log.LogDebug("[Debug] Enemy drops");
                 foreach (var field in enemies[0].GetType().GetFields(
                     BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
                 {
                     if (field.Name.ToLower().Contains("geo")
                         || field.Name.ToLower().Contains("rosary")
                         || field.Name.ToLower().Contains("drop"))
-                        Log.LogDebug($"{field.Name}: {field.GetValue(enemies[0])}");
+                        Bonfire.Log.LogDebug($"{field.Name}: {field.GetValue(enemies[0])}");
                 }
             }
         }
@@ -110,16 +109,16 @@ namespace BonfireSilksong
         /// </summary>
         public static void HornetFSMVariables()
         {
-            Log.LogDebug("[Debug] HeroController FSM variables");
+            Bonfire.Log.LogDebug("[Debug] HeroController FSM variables");
             foreach (var fsm in HeroController.instance.GetComponents<PlayMakerFSM>())
             {
-                Log.LogDebug($"FSM: {fsm.FsmName}");
+                Bonfire.Log.LogDebug($"FSM: {fsm.FsmName}");
                 foreach (var variable in fsm.FsmVariables.FloatVariables)
-                    Log.LogDebug($"  float: {variable.Name} = {variable.Value}");
+                    Bonfire.Log.LogDebug($"  float: {variable.Name} = {variable.Value}");
                 foreach (var variable in fsm.FsmVariables.IntVariables)
-                    Log.LogDebug($"  int: {variable.Name} = {variable.Value}");
+                    Bonfire.Log.LogDebug($"  int: {variable.Name} = {variable.Value}");
                 foreach (var variable in fsm.FsmVariables.BoolVariables)
-                    Log.LogDebug($"  bool: {variable.Name} = {variable.Value}");
+                    Bonfire.Log.LogDebug($"  bool: {variable.Name} = {variable.Value}");
             }
         }
 
@@ -128,9 +127,9 @@ namespace BonfireSilksong
         /// </summary>
         public static void VisitedScenes()
         {
-            Log.LogDebug("[Debug] Visited scenes");
+            Bonfire.Log.LogDebug("[Debug] Visited scenes");
             foreach (var s in PlayerData.instance.scenesVisited)
-                Log.LogDebug("Scene: " + s);
+                Bonfire.Log.LogDebug("Scene: " + s);
         }
 
         /// <summary>
@@ -152,7 +151,7 @@ namespace BonfireSilksong
                     .Select(c => c.GetType().Name)
             );
 
-            Log.LogDebug(
+            Bonfire.Log.LogDebug(
                 $"{indent}{root.name} | " +
                 $"scale={root.localScale} | " +
                 $"pos={root.localPosition} | " +
@@ -305,7 +304,36 @@ namespace BonfireSilksong
             }
         }
 
+        /*
+        -- check Fsm event sequences for specific GameObject --
 
-        private static readonly ManualLogSource Log = Bonfire.Log;
+        [HarmonyPatch(typeof(HutongGames.PlayMaker.Fsm), "ProcessEvent")]
+        class Fsm_ProcessEvent
+        {
+            static void Prefix(HutongGames.PlayMaker.Fsm __instance, HutongGames.PlayMaker.FsmEvent fsmEvent)
+            {
+                var go = __instance.GameObject;
+
+                if (go == null || !go.name.StartsWith("Hero_Hornet"))
+                    return;
+
+                Bonfire.Log.LogInfo($"[{Time.frameCount}] EVENT {__instance.Name}: {fsmEvent?.Name}");
+            }
+        }
+
+        [HarmonyPatch(typeof(HutongGames.PlayMaker.Fsm), "EnterState")]
+        class Fsm_EnterState
+        {
+            static void Prefix(HutongGames.PlayMaker.Fsm __instance, HutongGames.PlayMaker.FsmState state)
+            {
+                var go = __instance.GameObject;
+
+                if (go == null || !go.name.StartsWith("Hero_Hornet"))
+                    return;
+
+                Bonfire.Log.LogInfo($"[{Time.frameCount}] STATE {__instance.Name}: {state.Name}");
+            }
+        }
+        */
     }
 }

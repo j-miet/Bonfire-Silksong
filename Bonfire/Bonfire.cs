@@ -18,13 +18,21 @@ namespace BonfireSilksong
     /// <summary>
     /// Main class for Bonfire-Silksong mod.
     /// </summary>
-    [BepInPlugin("hkmods.silksong.bonfire-silksong", "Bonfire-Silksong", "0.10.0")]
+    [BepInPlugin(ModID, ModName, ModVersion)]
     public class Bonfire : BaseUnityPlugin
     {
+        public const string ModID = "jeooh.silksong.bonfire-silksong";
+        public const string ModName = "Bonfire-Silksong";
+        public const string ModVersion = "0.10.0";
+        public const string LocalizationFile = "en.loc";
+
         public static Bonfire Instance;
-        internal static ManualLogSource Log;
+        internal static ManualLogSource Log = BepInEx.Logging.Logger.CreateLogSource(ModName);
 
         public PlayerStatus Status;
+        public bool SessionInitialized = false;
+
+        public float SessionInitTimer { get; private set; }
 
         /// <summary>
         /// Check if game is in main menu or non-gameplay scene. Should be called at the start of each Unity callback
@@ -148,6 +156,8 @@ namespace BonfireSilksong
         {
             Instance = this;
             Log = Logger;
+            Localization.Loc = new Localization();
+            Localization.Loc.Load($"Bonfire-Silksong/{LocalizationFile}");
 
             Log.LogInfo("Initializing Bonfire-Silksong...");
 
@@ -185,6 +195,7 @@ namespace BonfireSilksong
         private void Update()
         {
             LevelingSystem.ResetInitFlags();
+            CheckSessionInit();
 
             if (IsNotGamePlayState()) return;
 
@@ -203,10 +214,12 @@ namespace BonfireSilksong
             if (PlayerData.instance == null) return;
 
             var pd = PlayerData.instance;
+            var gm = GameManager.instance;
+            if (pd == null || gm == null) return;
 
             if (pd.atBench)
             {
-                if (!pd.isInventoryOpen && !GameManager.instance.isPaused)
+                if (!pd.isInventoryOpen && !gm.isPaused)
                 {
                     ShowCursor();
 
@@ -248,14 +261,41 @@ namespace BonfireSilksong
             SaveSettings();
             Init();
 
-            SettingsPatch.RegisterCrestChapelScenes(GameManager.instance.GetSceneNameString());
+            SettingsPatch.RegisterCrestChapelScenes(GameManager.instance?.GetSceneNameString());
 
             LevelingSystem.Instance.RefreshRelicsDeposited();
             LevelingSystem.MilestoneBonus = ResilienceStat.GetGlassCannonMilestoneBonus(Status.ResilienceStat);
+
             WisdomStat.UpdateCogflyWarriorSpawnLimit();
         }
 
         // -- other --
+
+        // a safety check to ensure game has had enough time to load in the save file.
+        // Current use case is to prevent access to bench fast travel button before game allows the player to stand
+        // up from bench. Issue is that when game map is accessed before this loading period, it seems mess with 
+        // position calculations, leaving the player in a falling animation state after map is closed. So the fix is
+        // to simulate this period manually.
+        // Pausing the game prevents timer from increasing because game hud will also stop rendering during pause and 
+        // hud being fully generated is a good indicator.
+        // - Init flag has to be reset after entering main menu again so that this check may run each time.
+        // - If a better flag will be found from game code itself, that'd nice. Until then this will suffice.
+        private void CheckSessionInit()
+        {
+            if (SessionInitialized || GameManager.instance?.GameState == GameState.MAIN_MENU)
+            {
+                SessionInitTimer = 10f; // adjust this if the wait period feels too short/long
+                return;
+            }
+
+            SessionInitTimer -= Time.deltaTime;
+            if (SessionInitTimer > 0f)
+            {
+                return;
+            }
+
+            SessionInitialized = true;
+        }
 
         // update when player sits down on a bench and flip it only after standing up.
         // Used for blue hp updates where an additional flag needs to cancel ongoing update loop if player ends up
@@ -273,9 +313,9 @@ namespace BonfireSilksong
                 // Debug.GetAllBenchScenes();
                 // Log.LogDebug("----------------------");
                 // Debug.GetHornetAllFsmStateAction();
-                // Log.LogInfo("-----------------------");
+                // Log.LogDebug("-----------------------");
                 // Debug.HornetFSMVariables();
-                // Log.LogInfo("-----------------------");
+                // Log.LogDebug("-----------------------");
 
                 _satDown = true;
                 BlueHealthUpdate.SatDownAtBench = true;
@@ -292,10 +332,12 @@ namespace BonfireSilksong
                     BlueHealthUpdate.SatDownAtBench = false;
                 }
             }
-            else if (!PlayerData.instance.atBench)
+            else if (!PlayerData.instance.atBench && _satDown)
             {
                 _satDown = false;
                 BlueHealthUpdate.SatDownAtBench = false;
+
+                WisdomStat.UpdateToolEquippedState();
             }
         }
 
