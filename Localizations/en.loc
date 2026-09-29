@@ -1,0 +1,546 @@
+# This file contains the raw text strings for GUI windows as key-value pairs.
+# - Data is incomplete: so far only HelpWindow and majority of Levelhelp is included.
+# - Eventually this file should become the centralized source for all the GUI strings, making content updates much easier.
+# == Syntax ==
+# - If value strings containg words in brackets e.g. {name}, these are treated as placeholders for variable values.
+# - Newlines are parsed into actual GUI text, making it a bit difficult to keep this raw text file easily readable. 
+
+
+### GUIComponents/HelpWindow ###
+
+### Overview
+
+help.title:
+    Help/reference for Bonfire-Silksong mod
+help.text:
+    - The contents here are revised occasionally, but it's still possible some segments have outdated 
+    info in them. And of course expect to find typos here and there.
+    - Silksong is going to get multiple content update DLCs. Each of them will affect general gameplay 
+    and progression possibilities in one way or another. Therefore it's very likely this mod also sees 
+    substantial changes over time.
+
+help.guihotkeys.title:
+    GUI Hotkeys
+help.guihotkeys.text:
+    -- General --
+    "Spell/Tool" or "Bind" = close topmost overlay window.
+    
+    -- Bench Fast Travel --
+    "Map" / "QuickMap" / "Inventory" / menu close (Escape on keyboard) = close map overlay.
+    "Needolin" = travel to selected bench location.
+    
+    -- Gamepad --
+    - Right stick to move cursor.
+    - Attack/Jump input to click GUI buttons.
+    - Left/Right Bumper to move scrollbar up/down.
+
+help.goodtoknow.title:
+    Good to know
+help.goodtoknow.text:
+    - Needolin silk cost is removed. To balance this around summons/minions from Wisdom stat: playing needolin for at least 1 second disables all summons & you need to tap Needolin button again to  enable them. However if you have no points in Wisdom and use Wispfire Lantern tool, lantern still keeps attacking enemies with its normal cost of 1 silk which balances things.
+
+    - After you unlock the bench fast travel feature: every time you load to game from main menu, the teleport button will be disabled for ~10 seconds before being enabled again. This is just safety feature to prevent you from opening the menu too soon before game can properly load everything.
+    
+    - Regarding the bench fast travel: there's a bug which sets Hornet into a falling/hover animation after teleporting, preventing you from doing pretty much anything except fly around... 
+    Haven't been able to fix this because it happens so rarely/inconsistently, despite it being present ever since the teleport system was first implemented.
+      => If you keep facing this issue or want to pre-emptively guard againts it:
+         - keep debug mode enabled (you can find this under Settings window)
+         - when this happens, press "LeftControl + F2" to force a teleport into Ruined Chapel bench location. This forced teleport seems to reset Hornet's current state, fixing the issue temporarily.
+      => An alternative to this is to simply quit to main menu then load the save again: this is of course a much slower process, but it also won't reset your spawn location in case you want to avoid that.
+
+    - This mod uses a separate crit calculation for its features. If a stat feature says "can now critically hit" or something similar, it means rolling a crit from Wanderer's Crest, Magnetite Dice tool etc. does not count. 
+    To get crit chance, you need to
+        1. level the Luck stat (global)
+        2. reach certain stat milestones
+     => By default, only direct needle hits & "needle strike" ability can land critical hits. Reaching certain milestones can enable crit rolling for other damage sources.
+     => Damage-over-time (DoT) effects cannot benefit from crit chance!
+
+    - This mod has some optional quality-of-life features. While some of these are intended as safety/backup features e.g Debug mode respawn or Crest tool slot unlocker, feel free to use them any time if this enhances your gaming experience!
+    
+
+### Leveling System
+
+help.leveling.title:
+    Leveling System
+
+help.leveling.general.title:
+    General
+help.leveling.general.text:
+    - Leveling costs rosaries. Cost scaling should be reasonable so you can still afford to buy normal stuff like vendor items, benches, maps etc.
+
+    - All stats cap at 99 points. This value serves just as an upper boundary, you won't be getting anywhere close to it with normal gameplay: cost of next level uses formula f(n) = n^2 + 10*n + 50 so going from 1 to 99 alone costs a total of Σ(f, k=1, n=98) = 371959 rosaries.
+    
+    - You can get free level-ups from each tier 3-5 relic returned to Relic Seeker Scrounge. These include: Choral Commandment, Rune Harp, Arcane Egg.
+    
+    - You can respec your stat levels. You keep all free levels and can immediately use them afterwards. All your rosaries spent on level ups are also refunded. Respeccing costs Silkeaters: first one is  free, and each one after increases the cost by 1.
+    
+    - <GUI> If you scroll the stat info panel, you might see occasional small jumps to opposite scroll direction. These happen because GUI actually renders only the nearest info panels based on current scrollbar position and replaces the rest with filler content to keep total scroll length very close to a constant value. The process of deciding what to hide exactly at given position is handled manually and will therefore include some minor inconsistencies. 
+    However the performance increase this gives, especially on lower-end GPUs, is quite significant. Besides, I doubt most users would even notice it without reading this paragraph.
+
+
+# Stats
+
+help.leveling.stats.title:
+    Stats
+
+help.leveling.stats.globalbuffs.title:
+    Global Buffs
+help.leveling.stats.globalbuffs.text:
+    These require certain level and/or bonus condition e.g. "Defeat boss X", to become active. Current ones provide QoL. They are not very interesting gameplay-wise, you can except more interesting bonuses in the future.
+
+    The flat currency bonus ensures all enemies now drop rosaries: this extra cash should help a bit in early/midgame economy.
+
+help.leveling.stats.currencymultiplier.title:
+    Currency multiplier
+help.leveling.stats.currencymultiplier.text:
+    This value increases the total drop count of each currency type (shell shards and small/medium/large rosary beads), rounded down: if bonus is 50% & enemy drops 3 small & 1 large rosary bead + 5 shell shards, the updated drops are
+    
+    - 1.5 * 3 -> 4.5 => 4 small rosary beads
+    - 1.5 * 0 => 0 medium rosary beads
+    - 1.5 * 1 -> 1.5 => 1 large rosary bead
+    - 1.5 * 5 -> 7.5 => 7 shell shards
+
+
+# Attributes
+
+help.leveling.stats.attributes.title:
+    Attributes
+help.leveling.stats.attributes.text:
+    These form the core of leveling system. You increase the total player level by allocating points into any of them. Stat have primary attributes + possible milestones.
+
+help.leveling.stats.primary.title:
+    Primary attributes
+help.leveling.stats.primary.text:
+    Each stat has 1-2 primary attributes which scale with stat level. These give small, but consistent power-ups. Scaling itself can vary:
+    
+    - Percentage bonuses tend to increase every level, but are obviously less useful if base damage is low.
+    
+    - Flat bonuses give more benefit early. Their scaling is often stat-specfic: Resilience gives extra blue masks occasionally and mask count caps at 8, Artifice tool replenishment & Wisdom silk regen require a minimum of 5 points to become useful, Wisdom's extra silk on needle hits increases every 20 levels (20 -> +1, 40 -> +2 etc) and so forth.
+    
+    - Strength's needle damage scaling is also a bit different: it scales from current needle upgrades so you will get more damage per point for higher upgraded needles. Also be aware that GUI displays the total value, not bonus: with 0 points you will always see vanilla needle damage.
+
+help.leveling.stats.intelligence1.title:
+    Intelligence: silk skill needle scaling
+help.leveling.stats.intelligence1.text:
+    In vanilla game, silk skills scale from needle damage. This still applies to damage from base needle upgrades, but any bonus damage from leveling Strength will not buff them further. Idea is that Intelligence stat specifically targets silk skills damage whereas Strength is for needle-based attacks. Keeping bonuses from both would give skills too much power in early/mid game.
+
+help.leveling.stats.resilience1.title:
+    Resilience: blue masks persistence
+help.leveling.stats.resilience1.text:
+    In vanilla game, blue masks reset to 0 every time you visit a bench. This mod uses a custom system to override default behavior for any masks gained from leveling Resilience stat. The system will perform this update after following actions
+     - closing inventory or menu screens
+     - applying levels
+     - level respecs
+     - after using bench fast travel
+    
+    To emphasize: this only happens when you're at any bench. You can except normal behavior otherwise.
+    
+    This system is not perfect: it has been tested quite thoroughly, but sometimes the blue hp updates don't refresh properly and your health var visuals can have 1. missing blue masks and 2. gap between normal and blue masks. If these happen, know that the actual blue hp value should still get updated even if visuals did not. The easiest fix is to sit down on a bench again, or if you're already sitting, just open then close any inventory or map screen to force a HUD refresh.
+    
+    -> One simple example of failed hp update is when you load into save file, leave bench as soon as possible and open inventory: game still renders the hp HUD, but is interrupted because of inventory overlay. If you wait a bit then close invetory, you will get partial or missing blue mask visuals.
+
+help.leveling.stats.wisdom1.title:
+    Wisdom: gain silk after N hits
+help.leveling.stats.wisdom1.text:
+    A shared counter tracks your hits on enemies. After Nth hit, you get 1 silk and counter resets to 0. Importantly: this works for all damage types and gives a nice global source of silk generation.
+
+help.leveling.stats.luck1.title:
+    Luck: critical hits
+help.leveling.stats.luck1.text:
+    If milestone mentions crit e.g. "can apply critical hit", this only applies to crits generated through Luck stat. Game's own crits e.g. from Wanderer's Crest or Magnetite Dice, don't count! This also applies to Dexterity stat Crit Damage Bonus.
+
+# Milestones
+
+help.leveling.milestones.title:
+    Milestones
+help.leveling.milestones.text1:
+    All stats give you additional bonuses after certain point thresholds are reached. These milestone bonuses can vary from simple buffs to gameplay-altering mechanics.
+    
+    - Unlike global unlocks: these are solely tied to certain stat level and have no other gameplay/progression requirements.
+    - Many milestones unlock optional features which can be toggled on/off using their respective GUI buttons. This means you can change them only during bench visits. Some of them might prevent normal gameplay functions like using a certain tool or even specific button inputs.
+    
+    - Some milestones can definitely be stronger than others, although this also depends on how well you utilize them. Futhermore some of these can make the gameplay significantly more relaxing/less riskier, while others lean to more active, possibly high-risk/high-reward approach.
+    - Milestones for a stat are generally tailored around a few specific playstyles/damage sources. Now this doesn't mean you cannot find useful utility and/or synergies under stats: even the first milestones which tend to have very low stat requirements can still give you significant benefits!"
+help.leveling.milestones.text2:
+
+    Stat milestones are centered around certain playstyles/damage sources. But even if you're focusing on just one specific source, you can still find some useful utility and synergies in other stat paths. Feel free to experiment! Anyway here's the simple overview of each stat:
+
+help.leveling.milestones.strength.title:
+    Strength
+help.leveling.milestones.strength.text:
+    - Needle
+    - Needle Strike
+help.leveling.milestones.dexterity.title:
+    Dexterity
+help.leveling.milestones.dexterity.text:
+    - Clawline
+help.leveling.milestones.intelligence.title:
+    Intelligence
+help.leveling.milestones.intelligence.text:
+    - Silk Skills
+    - Claw Mirror
+    - Weaver's Light (modded damage source)
+help.leveling.milestones.artifice.title:
+    Artifice
+help.leveling.milestones.artifice.text:
+    - Mainly red tools
+    - Damage-inflicting blue tools also get some benefits
+help.leveling.milestones.resilience.title:
+    Resilience
+help.leveling.milestones.resilience.text:
+    - Normal hp replaced with blue masks: you can either play a tank build with limited offensive capabilities, or a high damage glass cannon where taking damage must be avoided at all cost. Each changes the normal gameplay loop quite a bit. Furthermore, reaching the final milestone and entering Plasmified state adds a more offensive variant of current blue hp state.
+    - Damage types: Reflect (modded damage source) and universal damage buffs
+help.leveling.milestones.wisdom.title:
+    Wisdom
+help.leveling.milestones.wisdom.text:
+    - Very relaxed summon/minion gameplay: let them do most* of the damage, or engage in combat normally and let them provide support.
+        * While summons can target almost all enemies, there are some exceptions to this rule: the most annoying example is probably "Father of the Flame" boss.
+    - Damage sources: Silk Nails & Cogfly Warrior (modded variants of Pale Nails & Cogfly) + Wispfire Lantern tool.
+    - Summons don't seem to always target enemies properly:
+      - Lavalugs in Deep Docks are an example of this: they can ignored entirely on some scenes.
+      - Silk Nails uses normal Pale Nails tracking so it can have issues with aligning the nails to enemy direction. Happens more frequently with enemies crawling on ceiling e.g. Kiliks in The Marrow: it spawns them and launches them to initial direction.
+      => For most enemies they work normally so this is not really an issue.
+help.leveling.milestones.luck.title:
+    Luck
+help.leveling.milestones.luck.text:
+    - Focuses on the 3 pin tools: Straight Pin, Threefold Pin and Longpin.
+    - Is also the only source of custom crit chance stat which is required for mod's own critical hit system.
+    => Luck was originally meant to be a support stat with no milestones at all. But it was more interesting to introduce at least something, and the idea of a ranged-only build fit into this nicely. So current milestones were quickly hacked together: while not as polished as milestones of other stat paths, it should at least give more agency to these 3 pin tools in the later stages of the game"
+
+
+### Bench Fast Travel
+
+help.teleport.title:
+    Bench fast travel
+help.teleport.text:
+    This mod introduces a built-in fast travel system where you can teleport between unlocked bench locations. Clicking the "Fast Travel" button in bench menu opens the game map with a custom overlay which lists all unlocked benches, each categorized under a map zone.
+    
+    - The concept of map zone may vary. Example of this is "The Citadel" which combines other related subareas under it e.g. Choral Chambers, High Halls, Whispering Vaults, Whiteward and Cogwork Core, where each could be separated into their own zones. But this is a clear exception, others tend to be more isolated.
+    
+    - If bench location data is not found, it's placed under "Other" category.
+
+
+# Unlock conditions
+
+help.teleport.unlock.title:
+    Unlock conditions & How to use
+help.teleport.unlock.text:
+    Following conditions are required for bench fast travel:
+    1. Defeat Bell Beast in Act 1 (primary condition)
+    2. Obtain map and Bench Pins items from Shakra (map menu access).
+
+help.teleport.unlock.usage.title:
+    Usage
+help.teleport.unlock.usage.text:
+    - Sit on a bench and click "Fast Travel" button.
+    - Select location, click the the "Travel" button at bottom-middle.
+    - Map menu closes and after a short black screen you should wake at your desired bench location
+    - To close the map menu, you either
+      - Press any of the following keybinds: "Inventory", "Map", "Quick Map" or cancel (Escape on keyboard)
+      - Click the 'Close bench menu' button.
+
+
+# Additional details
+
+help.teleport.extradetails.title:
+    Additional details
+
+help.teleport.extradetails.mapscreen.title:
+    Map screen overlay
+help.teleport.extradetails.mapscreen.text:
+    - Map screen is the default one except a custom overlay is opened on top of it. Most inputs are disabled here in order to prevent inventory navigation bugs.
+    
+    - When you click at any bench location, map camera pans over the corresponding bench pin if possible: if bench pin is closer to the edge of map and map camera can't move on top of it, the camera will instead move as close as possible.
+    
+    - There are also some benches that have no bench pin available. Such locations are marked with a star symbol after their name e.g. "Bellhome ★" in Bellhart. And because these benches don't have the pin location data available, clicking at them will not move camera at all.
+
+help.teleport.extradetails.styles.title:
+    Styles
+help.teleport.extradetails.styles.text:
+    Bench menu has 4 simple style variants:
+    - Basic + Default Names -> no zone colors, uses game's internal bench scene names
+    - Basic + Custom Names -> no zone colors, uses custom bench names
+    - Colored + Default Names -> zone colors, internal scene names
+    - Colored + Custom Names -> zone colors and custom bench names
+    You can rotate through these by clicking the style button above the bench list.
+
+help.teleport.extradetails.benchunlocking.title:
+    Bench unlocking
+help.teleport.extradetails.benchunlocking.text:
+    You can only fast travel to already unlocked benches.
+    - for bench pins this means the map pin must have normal color. Disabled benches have this darker, grayed-out coloring instead.
+    
+    - for non-pin locations, there are specific checks which are tied to game progression. You will unlock them naturally. A simple example is again "Bellhome ★": you need to have unlocked the home and visited it once.
+
+help.teleport.extradetails.benchavailability.title:
+    Bench availability
+help.teleport.extradetails.benchavailability.text:
+    - Certain benches can be available normally up to a certain progression point, then get disabled. For example: the bench in Bonebottom is destroyed permanently in Act 3 and cannot be accessed afterwards. Another example, but for pin-free locations: Widow boss bench is also destroyed in Act 3.
+    
+    - Abyss in Act 3 requires some extra checks: if player is allowed to teleport out of Abyss on 1. visit, this can possibly break quest progression and cause a softlock. Thus following rules are enforced:
+    
+      - 1. Visit: Can only teleport between Abyss benches, complete ascent normally to leave.
+      - After Ascent: Can't teleport back to Abyss before using Diving Bell again for 2. visit.
+      - 2. Visit: "Last Dive" quest can no longer break, can freely teleport in and out of Abyss from now.
+
+
+### Settings
+
+help.settings.title:
+    Extra Settings Panel
+help.settings.text:
+    Clicking the "Extra Settings" button in bench menu opens a new window. In there you can change some of the settings for this mod. Text labels should describe functionality for each. However here's some additional information:
+
+help.settings.customcursor.title:
+    Custom cursor
+help.settings.customcursor.text:
+    All of the GUI menus are normally navigated with mouse cursor. And yes: this cursor actually uses mouse position and there seems to be no simple way to sync it with Gamepad controls. To support Gamepad users, a custom cursor object is introduced: it is not 100% accurate compared to mouse cursor and doesn't display the button hover effect, but as long as you click clearly inside the button edges it should register inputs just fine.
+
+help.settings.debug.title:
+    Debug mode
+help.settings.debug.text:
+    - Meant primarily for debugging. However there's this rare bug where game fails to load Hornet's position coordinates properly after using bench fast travel, putting here in a falling/hover animation state. This can be fixed by either using debug respawn feature or just save&exit -> reload.
+    - When debug mode is enabled, mod will constantly store the logs in a temporary variable. When debug window is opened, it pulls the debug logs from this variable and prints them. The stored data is very miminal, around a few megabytes of memory, and therefore should have no impact on game's performance. And if you disable debug mode or quit the game, all the stored data is immediately flushed. For permanent logs, use "BepInEx/LogOutput.txt" file.
+    - Log window displays logs only from this mod whereas LogOutput.txt displays logs from all mods.
+
+help.settings.crestunlock.title:
+    Crest unlocking
+help.settings.crestunlock.text:
+    You can unlock any of the crest listed. Hunter's 1. evolve and non-selectable crests like Cursed & Cloakless are not available.
+
+help.settings.crestunlock.chapelaccess.title: 
+    Access to crest chapels
+help.settings.crestunlock.chapelaccess.text:
+    If you have unlocked a crest, this is the normal condition game uses to lock the corresponding chapel door, preventing further access. For all crests except Beast this is fine as those areas have no progression-related items. However Chapel of the Beast has Savage Beastfly boss: defeating it serves as a requirement for the rematch later which awards a mask shard. So chapel door has to remain open even if Beast crest is already unlocked, otherwise 100% progression is not possible.
+
+    The solution is to force re-access to all chapels even if you have unlocked their crests. The logic goes like this:
+    - Beast: has Savage Beastfly been killed?
+      -> Yes = close the door.
+      -> No = keep it open.
+    - Others: has player visited the chapel in this save file?
+      -> Yes = set the visit flag to true and close the door.
+      -> No = keep it open.
+    => Chapel of the Beast closes only after boss kill whereas other crest chapels allow a one-time visit. And just like in vanilla game: if you die and leave cocoon inside the chapel, it stays there. If door closes, you need to use Silkeater or die again in order to retrieve it.
+
+help.settings.crestunlock.slots.title:
+    Crest slot unlocks
+help.settings.crestunlock.slots.text: 
+    If you want to unlock all tool slots for any crest: just equip the crest of your choice, then press the slot unlock button in crest unlock menu. Unlike crest unlock buttons, this one stays active after use so just click once and it should work.
+    - This was originally meant to be a safety feature as Witch crest questline could apparently reset the already unlocked crest slots. This seems to be fixed now, but there's no harm in keeping this feature so feel free to use it.
+
+
+### Leveling/UI/LevelInfoContent ###
+
+## Global unlocks
+
+levelinfo.global.currencybase:
+    ★ Defeat "Moss Mother" boss ★
+    Increases the base amount of rosary beads and shell shards dropped by enemies.
+    Starts at +1 and gains another +1 every {extrarosarythreshold} levels.
+levelinfo.global.benchteleport:
+    ★ Defeat "Bell Beast" boss & Obtain a Map + Bench Pins from Shakra ★
+    Unlocks access to bench fast travel.
+levelinfo.global.qoltools:
+    ★ Reach level {qoltoollevelreq} ★
+    The effects of the "Compass" and "Magnetite Brooch" are always active once you obtain the corresponding tool.
+levelinfo.global.shardrefill:
+    ★ Reach level {shardrefilllevelreq} & Defeat "Cogwork Dancers" boss ★
+    Shell Shards are fully replenished during bench visits.
+levelinfo.global.maggotrepel:
+    ★ Obtain {mapcountreq} maps (you have: {mapcount}) ‹- OR -› Defeat "Groal the Great" boss ★
+    "Wreath of Purity" effect is always active once you obtain the tool.
+levelinfo.global.extradotdamage:
+    ★ Defeat bosses "Forebrothers Signis & Gron", "Disgraced Chef Lugoli" & "Voltvyrm" ★
+    Damage-over-time effects deal {dotdamagemultiplier}x damage.
+levelinfo.global.currencymultiplier:
+    ★ Unlock "Beastling Call" ability ★
+    Enemy rosary and shell shard drops increased by {currencybuffincrease}% per level.
+    This effect is applied after all other currency bonuses.
+levelinfo.global.silkregen:
+    ★ Ascend from the Abyss ★
+    Passively regenerate 1 silk every {silkregeninterval} seconds.
+levelinfo.global.respecfree:
+    ★ Obtain any of the old hearts in Act 3 ★
+    Respec cost removed.
+
+## Stat milestones
+
+levelinfo.strength.milestone1:
+    Needle strike: active charge time reduced by 20%.
+    Can toggle on/off automatic release when fully charged.
+levelinfo.strength.milestone2:
+    Needle range increased by 33% and its initial charge time reduced by 20%.
+levelinfo.strength.milestone3:
+    - Flintslate and Flea Brew tools have infinite buff duration.
+    - Downslash damage increased by 100%.
+    - Needle strike: both initial and active charge time reduction buffed (20% -> 40%).
+
+levelinfo.dexterity.milestone1:
+    Clawline damage increased by 25%.
+    Every {clawlinehitlimit}th hit from Clawline deals 2x damage (default Clawline use counts as 2 hits)
+levelinfo.dexterity.milestone2:
+    Clawline can now critically hit.
+levelinfo.dexterity.milestone3:
+    - Critical hits now heal 1 mask
+    - You get a global, additive {dexteritycritbonus}% crit chance bonus.
+    
+    Clawline:
+     - silk cost removed.
+     - damage bonus increased (25% -> 50%).
+     - 7th hit will always heal 1 mask and casts "Silk Spear" silk skill without costing silk.
+       Skill scales normally from silk skill damage bonuses.
+
+levelinfo.intelligence.milestone1:
+    Toggle on/off "Weaver's Light".
+    
+    <Weaver's Light>
+    - Taunt now enables an aura around you which flashes every second, consuming 1 silk and dealing damage to enemies inside it. Damage and range increases with Intelligence stat.
+    - If you taunt with Throwing Rings: aura will instead cost 2 silk per second and has its range reduced by 50%, but you get +{weaverauraringmultiplier} extra damage from each active silk in spool.
+    - Taunt no longer grants the 50% damage bonus for next hit, however its initial cost is also removed. Taunting again disables active aura effect, meaning you can use it tactically without needing to wait until all your silk is depleted.
+    - Equipping Egg of Flealia reduces aura silk cost by 1 when on max hp.
+levelinfo.intelligence.milestone2:
+    Toggle on/off "Weak Bind".
+
+    <Weak Bind>
+    - Bind heals 1 mask and costs 1/3 of current cost, but keeps its current speed,
+    - You take + 1 damage from everything, but get the following bonuses:
+      - Silk Skills: Each hit instance spawns Voltvessels bola projectile on top of enemy. Bolas have a custom, flat intelligence damage scaling which can only benefit from global damage buffs. This effect also disables normal use of Voltvessels tool.
+      - Claw Mirror: procs additional time (similar to Multibinder effect), binding speed increased by 33%.
+      - Weaver's Light: gives 1 silk if at least one enemy got hit by the aura.
+levelinfo.intelligence.milestone3:
+    Silk skills, Claw Mirror and Taunt can crit + each also gets an additive {intelligencecritbonus}% crit chance bonus.
+    Equipping Claw Mirror increases binding speed by 33%.
+levelinfo.intelligence.milestone4:
+    Give more effects to all Intelligence-focused abilities:
+    - Silk skills: silk cost reduced by 1.
+    - Claw Mirror: every 2 points in Intelligence adds +1 damage. Damage is applied after Artifice stat scaling.
+    - Weaver's Light: Gains a new "Void Burst" toggle state. Void Burst makes taunt a single-use ability, consuming all silk when used while giving following benefits:
+      - Range increased by {burstrangeincrease}.
+      - Each silk in spool increases damage by +{burstdamagemultiplier}.
+    
+    Taunting with Throwing Rings has no additional effects when Void Burst is enabled.
+
+levelinfo.artifice.milestone1:
+    - Pimpillo: has 2x tool capacity and can apply critical hits.
+    - Sawtooth Circlet: can apply critical hits.
+levelinfo.artifice.milestone2:
+    - Rosary Cannon: has infinite, free refills -> every time you begin the use animation, it becomes fully loaded.
+    - Silkshot: silk cost removed, can apply critical hits.
+    - Sawtooth Circlet: gives 1 silk from first enemy hit.
+levelinfo.artifice.milestone3:
+    - Rosary Cannon: +2 flat damage which is applied before Artifice stat damage bonus.
+    - Silkshot: has infinite charges.
+    - Sawtooth Circlet: horizontal range increased by 50%.
+    - Pimpillo: casts "Rune Rage" silk skill on top of enemy on hit without costing silk. Skill scales normally from any silk skill damage buffs.
+levelinfo.artifice.milestone4:
+    Offensive red tool has 33% chance to spawn a copy of itself when used. When a copy is spawned, neither original nor copy cost charges.
+    - Following tools cannot benefit from this: Silkshot, Delver's Drill, Rosary Cannon, 
+      Voltvessels Spear (Bolas do work), Snare Setter.
+
+levelinfo.resilience.milestone1:
+    You can now select "Vengeful" or "Hollow" blue mask state.
+    
+    When Vengeful/Hollow is active:
+    - Blue masks effectively replace normal masks: if you have no blue hp left, the next hit will inflict "default damage x 10".
+    - All damage taken is reduced by 1, but must always deal at least 1 damage.
+    - You can enter Plasmified state only after unlocking the final Resilience milestone. Plasmified refers to blue health regen state which is normally triggered after getting 9 blue masks.
+    - Egg of Flealia gives silk cost reduction only if your active blue mask count is greater than or equal to current mask limit from Resilience. 
+    So if Resilience gives 3 masks and you active mask is to 2 or less, cost reduction no longer applies. 
+    Be aware this is no longer true while in Plasmified state as max hp is again equal to normal mask count and ignores Resilience bonus masks entirely.
+    
+    <Vengeful>
+    - Reflect damage back to enemies around you when you take damage. All your non-reflect damage is reduced by 99%, but deals always at least 1 damage. Only exceptions to this rule are the "Memory Crystal" blue tool and damage-over-time effects which both deal their full damage.
+    - Reflect base damage is 5. Damage scales from 1. Resilience stat extra blue masks count (max 8, each gives +3 damage) and 2. mask upgrades (max 5, each gives +5 damage).
+    - Bind no longer heals normal masks, but instead 2 blue mask.
+    - You gain 1 silk after getting hit by an enemy.
+    => Low-risk playstyle: you become very tanky, but also limit your offensive gameplay to mostly melee range and need to use health in order to deal any serious damage.
+    
+    <Hollow>
+    - Bind can no longer be used at all.
+    - You can no longer benefit from stat primary damage bonuses (Strength, Dexterity, Intelligence, Artifice) or Luck crit chance, except during Plasmified state after unlockking final milestone. Bonuses from milestones work normally.
+    - Damage from all sources is increased by 50%. Each active blue mask in hp bar gives 7% extra damage additively while mask upgrades give passive bonus of 8% instead.
+    - All non-Resilience stat milestones require 3 less points to become active. You must still have at least 1 point in a stat to activate any of its milestones.
+    => High-risk playstyle: healing becomes very limited, but you get a universal damage boost and can reachi non-Resilience milestones with fewer stat points.
+levelinfo.resilience.milestone2:
+    Additional buffs to blue health modes:
+    <Vengeful> Bind now heals 2 blue masks, reflect damage area increased by 1. 
+    Reflect damage now also checks if at least one enemy was in extended outer circle area ({reflectarea} <= radius <= {extendedreflectarea}); if so, deal 1.5x damage to closest enemy in outer circle and give additional 1 silk.
+    <Hollow> You get flat +10 damage bonus which is applied after mask bonuses. Milestone bonus increased to 5.
+levelinfo.resilience.milestone3:
+    While in Vengful/Hollow state, you can now enter Plasmified state and Plasmium Phial will instantly trigger Plasmified when used. While Plasmified, your use of Plasmium Phial is again blocked but you get a more offensive variant of current state:
+    
+    <Vengeful>
+    - Each active blue mask in hp bar now also gives additional +10 reflect damage.
+    - Reflect damage can now critically hit.
+    - Reflect area increased by 2.
+    - Penalty: you take normal amount of damage again and bind heals only the default amount of 1 during Plasmification.
+    
+    <Hollow>
+    - Active blue mask bonus increased (7% -> 20%).
+    - Crit change and crit damage can now be applied normally.
+    - Milestone bonus increased to 10.
+    - Penalty: you take normal amount of damage + additional 2 masks (1 becomes 3, 2 becomes 4 and so on).
+    
+    - Your max hp in Plasmified state is equal to your normal mask count. Each active mask is counted into blue mask damage bonus while Vengeful/Hollow state is active.
+    - While Plasmified, you gain a global, additive {bluestateplasmifiedcritbonus}% crit chance bonus.
+
+levelinfo.wisdom.milestone1:
+    - Toggle on/off "Silk Nails" which is a custom variant of Pale Nails silk skill.
+    - Can also toggle summons on/off by playing Needolin.
+    
+    <Silk Nails>
+    - Has its own damage and spawn cooldown scaling from Wisdom.
+    - Spawns automatically when enemies are near.
+    - Doesn't have a silk cost.
+    - While Silk Nails is enabled, you can no longer use Pale Nails silk skill. However, equipping the silk skill gives Silk Nails +2 base damage.
+    
+    <Toggle Summons>
+    - You can now toggle your summons on/off using/tapping Needolin, this will also disable/enable the GUI toggle buttons for custom summons.
+      - If you're not sitting on a bench and keep playing Needolin for more than 1 second, summons are disabled again. This is to prevent abuse on boss fights (you and boss stand still, but summons still keep attacking).
+    - Following are counted as summons => Wispfire Lantern, Silk Nails, Cogfly Warrior.
+    - Hornet's texture displays a brief flash when Needolin animation starts, this signals the toggle was succesful.
+    - This setting will not be saved between sessions and starts always in "ALLOWED" state. This then means if you close the game and relaunch it, the first Needolin toggle will always switch to "BLOCKED".
+
+    => This feature is meant to serve as a quality of life during platforming sections where bouncing off of enemies could become very difficult with summons attacking them.
+levelinfo.wisdom.milestone2:
+    Toggle on/off "Cogfly Warrior" which is a custom variant of Cogfly red tool.
+    
+    <Cogfly Warrior>
+    - Has its own damage and attack cooldown scaling from Wisdom.
+    - Has no max hit limit, meaning the minion is permanent + it auto-summons itself if some game event ends up destroying it (e.g. cutscenes).
+    - Total cogfly amount limited to 1.
+    - While Cogfly Warrior is enabled, you can no longer use Cogfly tool. However, equipping the tool gives Cogfly Warrior +2 base damage.
+levelinfo.wisdom.milestone3:
+    Wispfire Lantern silk cost removed, attack delay halved and spawn cooldown is down to 2 seconds.
+    => Wispfire Lantern has no Wisdom stat scaling, instead it receives only flat buffs from this and next milestone.
+levelinfo.wisdom.milestone4:
+    All summons are buffed:
+    - Silk Nails: Can now critically hit and gains an additive {silknailscritbonus}% crit chance bonus.
+    - Cogfly Warrior: summon limit increased by 1.
+    - Wispfire Lantern: attack cooldown down to 1/3 of original, spawns a wisp every second.
+
+levelinfo.luck.milestone1:
+    Can toggle "Pinwielder" on/off. All of the Luck milestone bonuses require this state to be active.
+    
+    <Pinwielder>
+    - Focuses on 3 pin tools: Straight Pin, Threefold Pin and Longpin.
+    - Has infinite ranged attack, but with very low damage output in early game. Relies a lot on higher crit chance, milestone bonuses and buffs from other stat trees. With 3. & 4. milestones, high crit chance and various other synergies, damage output will be very high.
+    - Later milestones will specifically utilize Thread Storm silk skill:
+    
+    => Pinwielder's Thread Storm effect:
+    - Casts the Thread Storm silk skill normally except it spawns on top of enemy. Skill scales from silk skill damage bonuses.
+    - Only one instance of Thread Storm can be active at a time: effect cannot be re-triggered until previous one ends.
+    - You can no longer cast Thread Storm skill normally.
+    
+    # Initial bonuses for this milestone #
+    - Straight Pin: has infinite charges, but deals 1/4 of its normal damage (rounded up to the next integer value)
+    - Threefold Pin & Longpin: can now critically hit.
+levelinfo.luck.milestone2:
+    Straight Pin: can now critically hit + crits give 1 silk.
+    Threefold Pin: crits add +8 damage which is applied before Dexterity crit multiplier.
+levelinfo.luck.milestone3:
+    Longpin: casts Thread Storm on crit when projectile thits an enemy. Effect lasts for {threadstormduration} seconds.
+levelinfo.luck.milestone4:
+    - Straight Pin: crit casts Thread Storm with effect duration of {threadstormduration} seconds.
+    - Threefold Pin: crit damage bonus buffed (+8 -> +30).
+    - Longpin: now always casts Thread Storm on enemy hit (no crit required), effect lasts {threadstormdurationextended} seconds.
