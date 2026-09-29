@@ -45,12 +45,12 @@ namespace BonfireSilksong.Leveling.UI
             GUILayout.Space(20);
 
             if (CustomCursor.Button(
-                "Mod Info",
+                "Help",
                 GUIStyles.ButtonStyle,
                 GUILayout.Width(240f),
                 GUILayout.Height(40f)))
             {
-                InfoWindow.PendingInfoWindow = true;
+                HelpWindow.PendingHelpWindow = true;
             }
 
             GUILayout.FlexibleSpace();
@@ -129,13 +129,13 @@ namespace BonfireSilksong.Leveling.UI
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical("box");
-            Components.StatLabel("");   // spacer to align with column 1, because Str doesn't have a second modifier
+            Components.StatLabel("");   // str: spacer to keep column aligned because no strenght has no second stat
             Components.StatLabel("Crit Damage Bonus: " + _data.CritDamageBonus);
             Components.StatLabel("Bind Cost: " + _data.BindCost);
             Components.StatLabel("Tool Regen Interval: " + _data.ToolRegenInterval);
             Components.StatLabel("Block Chance: " + _data.BlockChance);
             Components.StatLabel("Extra Silk in Spool: " + _data.ExtraSilkTotal);
-            Components.StatLabel("Extra Currency From Enemies: " + _data.RosaryCountIncrease);
+            Components.StatLabel("");   // luck: same as str column
             GUILayout.EndVertical();
 
             GUILayout.EndHorizontal();
@@ -265,7 +265,7 @@ namespace BonfireSilksong.Leveling.UI
             Components.StatLabelExtended($"{_data.ToolDamageBonus}\n{_data.ToolRegenInterval}");
             Components.StatLabelExtended($"{_data.ExtraMasks}\n{_data.BlockChance}");
             Components.StatLabelExtended($"{_data.ExtraSilkOnHit}\n{_data.ExtraSilkTotal}");
-            Components.StatLabelExtended($"{_data.CritChance}\n{_data.RosaryCountIncrease}");
+            Components.StatLabelExtended($"{_data.CritChance}");
             GUILayout.EndVertical();
 
             GUILayout.EndHorizontal();

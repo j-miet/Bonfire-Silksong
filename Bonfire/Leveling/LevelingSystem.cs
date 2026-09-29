@@ -105,6 +105,7 @@ namespace BonfireSilksong.Leveling
             {
                 IntelligenceStat.BindCostInit = false;
                 BlueHealthUpdate.BlueHpInit = false;
+                Bonfire.Instance.SessionInitialized = false;
             }
         }
 
@@ -429,7 +430,7 @@ namespace BonfireSilksong.Leveling
                 if (data.IsDeposited) total++;
             }
 
-            Bonfire.Log.LogDebug("Update relic cache");
+            Bonfire.Log.LogDebug("[LevelingSystem] Updated relic cache");
 
             return total;
         }

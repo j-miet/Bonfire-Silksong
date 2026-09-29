@@ -19,6 +19,7 @@ namespace BonfireSilksong.Leveling.UI
         public string TotalLuck { get; private set; }
 
         public string RosaryBaseIncrease { get; private set; }
+        public string RosaryMultiplier { get; private set; }
 
         public string NeedleBaseDamage { get; private set; }
 
@@ -51,7 +52,6 @@ namespace BonfireSilksong.Leveling.UI
         public string LanternSpawnCooldown { get; private set; }
 
         public string CritChance { get; private set; }
-        public string RosaryCountIncrease { get; private set; }
 
         public string NeedleAutoChargeStatus { get; private set; }
         public string WeaverAuraStatus { get; private set; }
@@ -98,6 +98,7 @@ namespace BonfireSilksong.Leveling.UI
             // stat formula strings
             // Global
             RosaryBaseIncrease = "+" + GlobalStat.IncreaseCurrencyBaseDrops(CurrentLvl).ToString();
+            RosaryMultiplier = (GlobalStat.GetCurrencyMultiplier(lvl) * 100).ToString("F0") + "%";
 
             // Strength
             NeedleBaseDamage = StrengthStat.NeedleDamage(5 + 4 * PlayerData.instance.nailUpgrades, strNew).ToString();
@@ -190,7 +191,6 @@ namespace BonfireSilksong.Leveling.UI
 
             // Luck
             CritChance = LuckStat.CritChance(luckNew).ToString() + "%";
-            RosaryCountIncrease = (LuckStat.IncreaseRosaryCount(100, luckNew) - 100).ToString() + "%";
 
             // "Apply" button label
             int pRelics = s.PendingRelicLevels;
@@ -242,6 +242,7 @@ namespace BonfireSilksong.Leveling.UI
 
 
         private int _cachedLvl = 0;
+        private int _cachedPendingRosaryLevels = 0;
         private int _cachedRelicsObtained = 0;
         private int _cachedConsumedRelics = 0;
         private int _cachedRespecRelics = 0;
@@ -256,6 +257,7 @@ namespace BonfireSilksong.Leveling.UI
 
         // this prevents unnecessary GUI data updates. Values to cache:
         // - current level -> this already handles almost everything
+        // - pending states & respecs -> for applying levels & respecs, these update button texts
         // - milestone button states -> secondary fields might display actual values only when their respective state
         // is active, thus requiring a separate update.
         private bool CacheUpdated(int currentLevel)
@@ -275,7 +277,12 @@ namespace BonfireSilksong.Leveling.UI
                 updated = true;
             }
 
-            // this is probably not even needed?
+            if (_cachedPendingRosaryLevels != s.PendingRosaryLevels)
+            {
+                _cachedPendingRosaryLevels = s.PendingRosaryLevels;
+                updated = true;
+            }
+
             if (_cachedConsumedRelics != s.ConsumedRelicLevels)
             {
                 _cachedConsumedRelics = s.ConsumedRelicLevels;

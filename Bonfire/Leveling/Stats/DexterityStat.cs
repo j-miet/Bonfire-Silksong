@@ -131,7 +131,7 @@ namespace BonfireSilksong.Leveling
                 // heal blue hp instead if in a blue state
                 if (ResilienceStat.IsInAnyBlueState() && !HeroController.instance.IsInLifebloodState)
                 {
-                    Bonfire.Instance.StartCoroutine(ResilienceStat.BlueStateHealBlueMasks(1));
+                    Bonfire.Instance.StartCoroutine(ResilienceStat.BlueStateHealBlueMasksDelayed(1));
                     return;
                 }
 

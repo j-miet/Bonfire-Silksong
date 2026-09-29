@@ -30,7 +30,7 @@ namespace BonfireSilksong.Leveling
             {
                 case 1: return 1;
                 case 2: return 20;
-                case 3: return 35;
+                case 3: return 30;
                 default: return LevelingSystem.MaxStatLevel;
             }
         }
@@ -143,14 +143,14 @@ namespace BonfireSilksong.Leveling
                 {
                     if (hitEnemyInSecondaryRange)
                     {
-                        Color secondaryColor = new Color(0.6f, 0.6f, 0.8f);
+                        Color secondaryColor = new Color(0.6f, 0.8f, 1f);
                         RangeIndicator.Display("reflectSecondary",
                             secondaryRange,
                             secondaryColor,
                             secondaryColor);
                     }
 
-                    Color primaryColor = new Color(0.6f, 0.8f, 0.6f);
+                    Color primaryColor = new Color(0.4f, 0.4f, 1f);
                     RangeIndicator.Display("reflect",
                         primaryRange,
                         primaryColor,
@@ -200,7 +200,7 @@ namespace BonfireSilksong.Leveling
         /// Heal custom amount of blue masks with a small delay. Useful if blue hp needs to be added repeatedly, this
         /// avoids FSM event overriding.
         /// </summary>
-        public static IEnumerator BlueStateHealBlueMasks(int amount)
+        public static IEnumerator BlueStateHealBlueMasksDelayed(int amount)
         {
             yield return new WaitForSecondsRealtime(0.25f);
 
@@ -211,7 +211,7 @@ namespace BonfireSilksong.Leveling
             if (updated > res)
                 masks -= updated - res;
 
-            Bonfire.Log.LogDebug("[ResilienceStat] Healed blue masks on crit: " + masks);
+            Bonfire.Log.LogDebug($"[ResilienceStat] Healed {masks} blue masks after delay.");
 
             GameManager.instance.QueuedBlueHealth = masks;
             EventRegister.SendEvent(EventRegisterEvents.AddQueuedBlueHealth);
@@ -422,13 +422,13 @@ namespace BonfireSilksong.Leveling
 
         private static int _hitsSinceShielded = 0;
 
-        private static HitInstance CreateReflectHitInstance(HeroController instance, bool inPrimaryRange)
+        private static HitInstance CreateReflectHitInstance(HeroController instance, bool inSecondaryRange)
         {
             instance.gameObject.name = "Bonfire-Reflect";
             int reflectDamage = ReflectDamage(Bonfire.Instance.Status.ResilienceStat);
-            if (!inPrimaryRange)
+            if (inSecondaryRange)
             {
-                reflectDamage = (int)Math.Ceiling(0.5 * reflectDamage);
+                reflectDamage = (int)(1.5 * reflectDamage);
             }
 
             return new HitInstance
@@ -465,10 +465,9 @@ namespace BonfireSilksong.Leveling
 
                 float dist = Vector2.Distance(hc.transform.position, e.transform.position);
 
-                // apply reflect damage to enemy outside base area: HealthManagers object references must match
                 if (dist > primaryRange)
                 {
-                    // if enemy outside primary range, check secondary range and hit the first
+                    // if enemy outside primary range, check secondary range and pick closest enemy
                     if (dist <= secondaryRange && CheckResilienceMilestone(2) && dist < closestEnemyDistance)
                     {
                         closestEnemy = e;
@@ -482,7 +481,7 @@ namespace BonfireSilksong.Leveling
                 }
                 else
                 {
-                    HitInstance hit = CreateReflectHitInstance(hc, inPrimaryRange: true);
+                    HitInstance hit = CreateReflectHitInstance(hc, inSecondaryRange: false);
                     e.Hit(hit);
                 }
             }
@@ -490,8 +489,8 @@ namespace BonfireSilksong.Leveling
             if (closestEnemy != null)
             {
                 // apply a separate damage instance to enemy outside primary range, but inside secondary range
-                Bonfire.Log.LogDebug($"Secondary range: dealt damage to enemy {closestEnemy.name}");
-                HitInstance hit = CreateReflectHitInstance(hc, inPrimaryRange: false);
+                Bonfire.Log.LogDebug($"Secondary range: dealt damage to closest enemy '{closestEnemy.name}'");
+                HitInstance hit = CreateReflectHitInstance(hc, inSecondaryRange: true);
                 closestEnemy.Hit(hit);
             }
 

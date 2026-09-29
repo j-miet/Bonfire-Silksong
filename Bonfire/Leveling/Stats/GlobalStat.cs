@@ -12,6 +12,7 @@ namespace BonfireSilksong.Leveling
         SHARDREFILL,
         CURRENCYMULTIPLIER,
         MAGGOTREPEL,
+        EXTRADOTDAMAGE,
         SILKREGEN,
         RESPECFREE,
     }
@@ -19,12 +20,13 @@ namespace BonfireSilksong.Leveling
     public static class GlobalStat
     {
         public const int QoLToolsLevelRequirement = 5;
-        public const int ShardRefillLevelRequirement = 20;
+        public const int ShardRefillLevelRequirement = 15;
         public const int CurrencyBuffLevelRequirement = 30;
-        public const int ExtraRosaryThreshold = 5;
-        public const int CurrencyMultiplier = 2;
+        public const int ExtraRosaryThreshold = 3;
+        public const int DotDamageMultiplier = 2;
+        public const float RosaryPercentageIncrease = 0.05f;
         public const int SilkRegenInterval = 10;
-        public const int MapCountRequirement = 24;
+        public const int MapCountRequirement = 26; // base game map count is 28 -> Abyss & Verdania are in Act 3
 
         public static bool CheckFastTravelCondition => CheckGlobalMilestone(GlobalMilestone.BENCHTELEPORT);
 
@@ -47,12 +49,14 @@ namespace BonfireSilksong.Leveling
                 case GlobalMilestone.SHARDREFILL:
                     return currentLvl >= ShardRefillLevelRequirement && pd.defeatedCogworkDancers;
 
-                case GlobalMilestone.CURRENCYMULTIPLIER:
-                    return currentLvl >= CurrencyBuffLevelRequirement &&
-                        pd.HasMelodyArchitect && pd.HasMelodyConductor && pd.HasMelodyLibrarian;
-
                 case GlobalMilestone.MAGGOTREPEL:
                     return pd.DefeatedSwampShaman || pd.MapCount >= MapCountRequirement;
+
+                case GlobalMilestone.EXTRADOTDAMAGE:
+                    return pd.defeatedZapCoreEnemy && pd.defeatedDockForemen && pd.defeatedRoachkeeperChef;
+
+                case GlobalMilestone.CURRENCYMULTIPLIER:
+                    return pd.blackThreadWorld && pd.UnlockedFastTravelTeleport;
 
                 case GlobalMilestone.SILKREGEN:
                     return pd.blackThreadWorld && pd.completedAbyssAscent;
@@ -81,9 +85,14 @@ namespace BonfireSilksong.Leveling
         /// <summary>
         /// Rosary (and shell shard) drop multiplier from enemies.
         /// </summary>
-        public static int ApplyCurrencyMultiplier(int droppedRosaries)
+        public static int ApplyCurrencyMultiplier(int droppedRosaries, int currentLvl)
         {
-            return droppedRosaries * CurrencyMultiplier;
+            return (int)Math.Round(droppedRosaries * (1f + GetCurrencyMultiplier(currentLvl)));
+        }
+
+        public static float GetCurrencyMultiplier(int currentLvl)
+        {
+            return currentLvl * RosaryPercentageIncrease;
         }
 
         /// <summary>
@@ -110,7 +119,8 @@ namespace BonfireSilksong.Leveling
             if (tool != null &&
                 Gameplay.CompassTool != null &&
                 tool.name == Gameplay.CompassTool.name &&
-                Gameplay.CompassTool.SavedData.IsUnlocked)
+                Gameplay.CompassTool.SavedData.IsUnlocked &&
+                CheckGlobalMilestone(GlobalMilestone.QOLTOOLS))
             {
                 return true;
             }
@@ -127,7 +137,8 @@ namespace BonfireSilksong.Leveling
             if (tool != null &&
                 Gameplay.MaggotCharm != null &&
                 tool.name == Gameplay.MaggotCharm.name &&
-                Gameplay.MaggotCharm.SavedData.IsUnlocked)
+                Gameplay.MaggotCharm.SavedData.IsUnlocked &&
+                CheckGlobalMilestone(GlobalMilestone.MAGGOTREPEL))
             {
                 return true;
             }
@@ -142,7 +153,9 @@ namespace BonfireSilksong.Leveling
         public static bool GetMagnetiteBroochToolEffect()
         {
             var magnetTool = ToolItemManager.GetToolByName("Rosary Magnet");
-            if (magnetTool != null && magnetTool.SavedData.IsUnlocked)
+            if (magnetTool != null &&
+                magnetTool.SavedData.IsUnlocked &&
+                CheckGlobalMilestone(GlobalMilestone.QOLTOOLS))
             {
                 return true;
             }

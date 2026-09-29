@@ -40,7 +40,7 @@ namespace BonfireSilksong.Leveling
                 case 1: return 1;
                 case 2: return 15;
                 case 3: return 30;
-                case 4: return 40;
+                case 4: return 35;
                 default: return LevelingSystem.MaxStatLevel;
             }
         }
@@ -78,7 +78,12 @@ namespace BonfireSilksong.Leveling
 
             if (totalWsdm <= 1) return damage;
 
-            damage += (int)Math.Floor(totalWsdm * 0.5f);
+            damage += totalWsdm / 3;
+
+            if (_paleNailsSpellEquipped)
+            {
+                damage += 2;
+            }
 
             return damage;
         }
@@ -107,6 +112,11 @@ namespace BonfireSilksong.Leveling
                 damage += (int)Math.Floor(m2 * 0.2f) + (int)Math.Floor((totalWsdm - m2) * 0.5f);
             }
 
+            if (_cogflyToolEquipped)
+            {
+                damage += 2;
+            }
+
             return damage;
         }
 
@@ -129,6 +139,26 @@ namespace BonfireSilksong.Leveling
                 CogflySpawner.SetCogflySpawnLimit(2);
             else
                 CogflySpawner.SetCogflySpawnLimit(1);
+        }
+
+        /// <summary>
+        /// Update tool/silk skill equip checks. Should call this after leaving the bench.
+        /// </summary>
+        public static void UpdateToolEquippedState()
+        {
+            var t = ToolItemManager.GetToolByName("Cogwork Flier");
+            if (t != null)
+            {
+                _cogflyToolEquipped = t.IsEquipped;
+                Bonfire.Log.LogDebug($"[WisdomStat] Cogfly tool equipped: {_cogflyToolEquipped}");
+            }
+
+            t = ToolItemManager.GetToolByName("Silk Boss Needle");
+            if (t != null)
+            {
+                _paleNailsSpellEquipped = t.IsEquipped;
+                Bonfire.Log.LogDebug($"[WisdomStat] Pale Nails silk skill equipped: {_paleNailsSpellEquipped}");
+            }
         }
 
         /// <summary>
@@ -234,7 +264,6 @@ namespace BonfireSilksong.Leveling
                     }
 
                     _silkNailCooldown = silkNailsCD;
-                    Bonfire.Log.LogDebug("Spawned Silk Nails");
 
                     return;
                 }
@@ -355,6 +384,9 @@ namespace BonfireSilksong.Leveling
 
         private static float _silkNailCooldown = 0f;
         private static int _hitCounter = 0;
+
+        private static bool _cogflyToolEquipped = false;
+        private static bool _paleNailsSpellEquipped = false;
 
         private static readonly FieldInfo _hpCurrentField = typeof(ClockworkHatchling)
             .GetField("hpCurrent", BindingFlags.Instance | BindingFlags.NonPublic);

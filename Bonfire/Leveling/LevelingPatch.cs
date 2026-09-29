@@ -133,17 +133,21 @@ namespace BonfireSilksong.Leveling
 
         /// <summary>
         /// HeroController.Update (Postfix): Disable summons if needolin is played for a specified time. This is to
-        /// prevent abusing summons during some boss fights.
+        /// prevent abusing summons during boss fights where playing needolin can stun the temporarily 'stun' the boss.
         /// </summary>
         public static void CheckNeedolinState(float dt)
         {
-            if (!PlayingdNeedolin) _needolinTimer = NeedolinCheckLimit;
+            if (!PlayingdNeedolin)
+            {
+                _needolinTimer = NeedolinCheckLimit;
+                return;
+            }
 
             if (_needolinTimer > 0)
             {
                 _needolinTimer -= dt;
             }
-            else if (!WisdomStat.BlockSummons)
+            else if (WisdomStat.CanBlockSummons && !WisdomStat.BlockSummons)
             {
                 WisdomStat.BlockSummons = true;
                 Bonfire.Log.LogDebug("[LevelingPatch] Blocked summons after playing Needolin " +
@@ -165,59 +169,48 @@ namespace BonfireSilksong.Leveling
         /// </summary>
         public static void UpdateCurrencyDrops(HealthManager instance)
         {
-            var s = Bonfire.Instance.Status;
-
             int small = GetRosaries("small", instance);
             int medium = GetRosaries("medium", instance);
             int large = GetRosaries("large", instance);
             int shards = GetShellShards(instance);
-            int newSmall = small;
-            int newMedium = medium;
-            int newShards = shards;
-            int newLarge = large;
 
             int baseRosaryBonus = GlobalStat.IncreaseCurrencyBaseDrops(LevelingSystem.GetCurrentLevel());
-
-            if (baseRosaryBonus > 0)
-            {
-                int modulo = baseRosaryBonus % GlobalStat.ExtraRosaryThreshold;
-                if (modulo == 0)
-                {
-                    newMedium += baseRosaryBonus / GlobalStat.ExtraRosaryThreshold;
-                }
-                else
-                {
-                    newMedium += baseRosaryBonus / GlobalStat.ExtraRosaryThreshold;
-                    newSmall += modulo;
-                }
-
-                newShards += baseRosaryBonus;
-            }
-
-            int luck = s.LuckStat;
-            if (luck > 0)
-            {
-                newSmall = LuckStat.IncreaseRosaryCount(newSmall, luck);
-                newMedium = LuckStat.IncreaseRosaryCount(newMedium, luck);
-                newLarge = LuckStat.IncreaseRosaryCount(newLarge, luck);
-                newShards = LuckStat.IncreaseRosaryCount(newShards, luck);
-            }
+            // Actual currency value for each drop: small/shell shard = 1, medium = 5, large = 15.
+            int newTotalRosaries = 15 * large + 5 * medium + small + baseRosaryBonus;
+            int newTotalShards = shards + baseRosaryBonus;
 
             if (GlobalStat.CheckGlobalMilestone(GlobalMilestone.CURRENCYMULTIPLIER))
             {
-                newSmall = GlobalStat.ApplyCurrencyMultiplier(newSmall);
-                newMedium = GlobalStat.ApplyCurrencyMultiplier(newMedium);
-                newLarge = GlobalStat.ApplyCurrencyMultiplier(newLarge);
-                newShards = GlobalStat.ApplyCurrencyMultiplier(newShards);
+                int clvl = LevelingSystem.GetCurrentLevel();
+                newTotalRosaries = GlobalStat.ApplyCurrencyMultiplier(newTotalRosaries, clvl);
+                newTotalShards = GlobalStat.ApplyCurrencyMultiplier(newTotalShards, clvl);
             }
 
-            Bonfire.Log.LogDebug($"[LuckStat] Check currency values for {instance.name}");
+            // Following calculations will split the raw bonus value into large, medium and small rosaries + shell
+            // shards can just use the bonus value itself.
+            // In C#, the resulting value is always integer as long as both dividend and divisor are integers.
+            // - Why do this step? If base bonus + multiplier are high, there can be lots of small/medium rosaries
+            // flying around. This operation reduces the spawned currency objects which can also reduce lag on 
+            // lower-end machines.
+            // Only downside is this can increase the chance of losing rosaries: if a single rosary falls into spikes
+            // or other type of hazard, and gets destroyed, there's a higher chance that object was a medium/large 
+            // rosary bead.
+            int largeCurrency = newTotalRosaries / 15;
+            int largeRemainder = newTotalRosaries % 15;
+            int mediumCurrency = largeRemainder / 5;
+            int smallCurrnency = largeRemainder % 5;
+
+            int newLarge = largeCurrency;
+            int newMedium = mediumCurrency;
+            int newSmall = smallCurrnency;
+            int newShards = newTotalShards;
+
+            Bonfire.Log.LogDebug($"[LevelingPatch] Check currency values for {instance.name}");
             Bonfire.Log.LogDebug($"<Vanilla> small={small}, medium={medium}, large={large}, shards={shards}");
             Bonfire.Log.LogDebug($"<Modded> base bonus: {baseRosaryBonus}, " +
-                $"small={newSmall}, medium={newMedium}, large={large}, shards={shards}");
+                $"small={newSmall}, medium={newMedium}, large={newLarge}, shards={newShards}");
 
             // SetGeo: these determine how many rosary beads of each type are dropped, not the value of that type. 
-            // Their actual currency values are: small/shell shard = 1, medium = 5, large = 15.
             instance.SetGeoSmall(newSmall);
             instance.SetGeoMedium(newMedium);
             instance.SetGeoLarge(newLarge);
@@ -242,13 +235,18 @@ namespace BonfireSilksong.Leveling
             // debugging/using damage display feature.
             // Custom damage instances already define the source earlier e.g. "Bonfire-Reflect" so they're already ok.
             // To further identify mod damage sources, their names should begin with 'Bonfire-' prefix.
+            // Finally, if the instance is a copy of normally usable damage source, it's usually for the best to 
+            // disable normal usage entirely, this makes it much easier to handle all the custom logic.
             if (tool != null)
             {
                 if (WisdomStat.IsSilkNailsEnabled && tool.name == "Silk Boss Needle")
+                {
                     sourceName = "Bonfire-SilkNails";
-
-                if (WisdomStat.IsCogflyWarriorEnabled && tool.name == "Cogwork Flier")
+                }
+                else if (WisdomStat.IsCogflyWarriorEnabled && tool.name == "Cogwork Flier")
+                {
                     sourceName = "Bonfire-CogflyWarrior";
+                }
             }
 
             Bonfire.Log.LogDebug($"[LevelingPatch] Recorded a hit => Hit source: {sourceName}, " +
@@ -331,7 +329,6 @@ namespace BonfireSilksong.Leveling
                 // -- red and blue tools --
 
                 string tName = tool.name;
-
                 int toolDamage = hit.DamageDealt;
 
                 // pre-bonus (applied before Artifice multiplier)
@@ -492,6 +489,61 @@ namespace BonfireSilksong.Leveling
 
             DamageOverlay.UpdateData(sourceName, tool?.name, vanillaDamage, hit.DamageDealt);
             Bonfire.Log.LogDebug("=> Modified Damage Output: " + hit.DamageDealt);
+        }
+
+        /// <summary>
+        /// HealthManage.ApplyDamageScaling (Postfix): Applies extra damage to damage-over-time effects. This has only
+        /// access to hitInstance which makes identifying DoT effects a bit difficult and therefore, has a chance to
+        /// apply it for some other less-known non-DoT damage instance.
+        /// </summary>
+        public static void ApplyDotDamageBonuses(ref HitInstance hit)
+        {
+            Bonfire.Log.LogDebug("[LevelingPatch] Apply DoT damage bonuses");
+            /*
+            if (hit.Source != null)
+                Bonfire.Log.LogDebug($"Source: {hit.Source}");
+            if (hit.RepresentingTool != null)
+                Bonfire.Log.LogDebug($"Tool: {hit.RepresentingTool}");
+
+            Bonfire.Log.LogDebug($"AttackType: {hit.AttackType}, " +
+                $"NailElement: {hit.NailElement}, " +
+                $"PoisonDamageTicks: {hit.PoisonDamageTicks}, " +
+                $"ZapDamageTicks: {hit.ZapDamageTicks}, " +
+                $"EffectType: {hit.HitEffectsType}, " +
+                $"DamageDealt: {hit.DamageDealt}, " +
+                $"SpecialType: {hit.SpecialType}");
+            */
+
+            string sourceName = null;
+
+            // most dot effects themselves don't need to have a Source GameObject, mostly because this effect instance
+            // doesn't need to to know how it was delivered on the enemy: this was already handled during the initial 
+            // hit.
+            if (hit.Source == null)
+            {
+                if (hit.IsHeroDamage)
+                    sourceName = "DoT-Hero"; // hero-inflicted effects
+                else
+                    sourceName = "DoT-General"; // some other effects such as Volt Filament tool's tick effect
+            }
+            else
+            {
+                // flintslate burn from needle hits
+                if (hit.NailElement == NailElements.Fire &&
+                    hit.HitEffectsType == EnemyHitEffectsProfile.EffectsTypes.LagHit)
+                {
+                    sourceName = "DoT-Flintslate";
+                }
+            }
+
+            if (sourceName == null) return;
+
+            int vanillaDamage = hit.DamageDealt;
+            if (GlobalStat.CheckGlobalMilestone(GlobalMilestone.EXTRADOTDAMAGE))
+                hit.DamageDealt = 2 * vanillaDamage;
+
+            DamageOverlay.UpdateData(sourceName, null, vanillaDamage, hit.DamageDealt);
+            Bonfire.Log.LogDebug("=> Modified DoT damage output: " + hit.DamageDealt);
         }
 
 

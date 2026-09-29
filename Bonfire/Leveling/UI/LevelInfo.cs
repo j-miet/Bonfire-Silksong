@@ -17,117 +17,100 @@ namespace BonfireSilksong.Leveling.UI
 
         public void Draw(float scrollHeight)
         {
-            float offset = 50f;
+            // cache checks to avoid stutters when scrollwheel height changes during repaint.
+            if (Event.current.type == EventType.Layout)
+                _drawRegion = GetDrawRegion(scrollHeight);
+
             GUILayout.BeginVertical();
 
             // these conditions check cursor position and render only some of the info boxes. While the current
             // implementation is very manual and has minor issues e.g. scrollbar nudging if dragged slowly, it's good 
             // to keep as it significantly reduces GUI rendering cost.
-            if (scrollHeight < Constants.GlobalTotalHeight + offset)
+            switch (_drawRegion)
             {
-                DrawGlobalLevelInfo();
-                DrawStrengthInfo();
-                DrawDexterityInfo();
-                DrawIntelligenceInfo();
-                GUILayout.Label(GUIContent.none,
-                    GUILayout.Height(
-                        +Constants.ArtificeTotalHeight
-                        + Constants.ResilienceTotalHeight
-                        + Constants.WisdomTotalHeight
-                        + Constants.LuckTotalHeight));
-            }
-            else if (scrollHeight <
-                Constants.GlobalTotalHeight
-                + Constants.StrengthTotalHeight
-                + offset)
-            {
-                GUILayout.Label(GUIContent.none, GUILayout.Height(Constants.GlobalTotalHeight));
-                DrawStrengthInfo();
-                DrawDexterityInfo();
-                DrawIntelligenceInfo();
-                GUILayout.Label(GUIContent.none,
-                    GUILayout.Height(
-                        Constants.ArtificeTotalHeight
-                        + Constants.ResilienceTotalHeight
-                        + Constants.WisdomTotalHeight
-                        + Constants.LuckTotalHeight));
-            }
-            else if (scrollHeight <
-                Constants.GlobalTotalHeight
-                + Constants.StrengthTotalHeight
-                + Constants.DexterityTotalHeight
-                + offset)
-            {
-                GUILayout.Label(GUIContent.none,
-                    GUILayout.Height(
-                        Constants.GlobalTotalHeight
-                        + Constants.StrengthTotalHeight));
-                DrawDexterityInfo();
-                DrawIntelligenceInfo();
-                DrawArtificeInfo();
-                GUILayout.Label(GUIContent.none,
-                    GUILayout.Height(
-                        Constants.ResilienceTotalHeight
-                        + Constants.WisdomTotalHeight
-                        + Constants.LuckTotalHeight));
-            }
-            else if (scrollHeight <
-                Constants.GlobalTotalHeight
-                + Constants.StrengthTotalHeight
-                + Constants.DexterityTotalHeight
-                + Constants.IntelligenceTotalHeight
-                + offset)
-            {
-                GUILayout.Label(GUIContent.none,
-                    GUILayout.Height(
-                        Constants.GlobalTotalHeight
-                        + Constants.StrengthTotalHeight
-                        + Constants.DexterityTotalHeight));
-                DrawIntelligenceInfo();
-                DrawArtificeInfo();
-                DrawResilienceInfo();
-                GUILayout.Label(GUIContent.none,
-                    GUILayout.Height(
-                        Constants.WisdomTotalHeight
-                        + Constants.LuckTotalHeight));
-            }
-            else if (scrollHeight <
-                Constants.GlobalTotalHeight
-                + Constants.StrengthTotalHeight
-                + Constants.DexterityTotalHeight
-                + Constants.IntelligenceTotalHeight
-                + Constants.ArtificeTotalHeight
-                + offset)
-            {
-                GUILayout.Label(GUIContent.none,
-                    GUILayout.Height(
-                        Constants.GlobalTotalHeight
-                        + Constants.StrengthTotalHeight
-                        + Constants.DexterityTotalHeight
-                        + Constants.IntelligenceTotalHeight));
-                DrawArtificeInfo();
-                DrawResilienceInfo();
-                DrawWisdomInfo();
-                GUILayout.Label(GUIContent.none, GUILayout.Height(Constants.LuckTotalHeight));
-            }
-            else
-            {
-                GUILayout.Label(GUIContent.none,
-                    GUILayout.Height(
-                        Constants.GlobalTotalHeight
-                        + Constants.StrengthTotalHeight
-                        + Constants.DexterityTotalHeight
-                        + Constants.IntelligenceTotalHeight
-                        + Constants.ArtificeTotalHeight));
-                DrawResilienceInfo();
-                DrawWisdomInfo();
-                DrawLuckInfo();
+                case 0:
+                    DrawGlobalLevelInfo();
+                    DrawStrengthInfo();
+                    DrawDexterityInfo();
+                    DrawIntelligenceInfo();
+                    GUILayout.Label(GUIContent.none,
+                        GUILayout.Height(
+                            +Constants.ArtificeTotalHeight
+                            + Constants.ResilienceTotalHeight
+                            + Constants.WisdomTotalHeight
+                            + Constants.LuckTotalHeight));
+                    break;
+                case 1:
+                    GUILayout.Label(GUIContent.none, GUILayout.Height(Constants.GlobalTotalHeight));
+                    DrawStrengthInfo();
+                    DrawDexterityInfo();
+                    DrawIntelligenceInfo();
+                    GUILayout.Label(GUIContent.none,
+                        GUILayout.Height(
+                            Constants.ArtificeTotalHeight
+                            + Constants.ResilienceTotalHeight
+                            + Constants.WisdomTotalHeight
+                            + Constants.LuckTotalHeight));
+                    break;
+                case 2:
+                    GUILayout.Label(GUIContent.none,
+                        GUILayout.Height(
+                            Constants.GlobalTotalHeight
+                            + Constants.StrengthTotalHeight));
+                    DrawDexterityInfo();
+                    DrawIntelligenceInfo();
+                    DrawArtificeInfo();
+                    GUILayout.Label(GUIContent.none,
+                        GUILayout.Height(
+                            Constants.ResilienceTotalHeight
+                            + Constants.WisdomTotalHeight
+                            + Constants.LuckTotalHeight));
+                    break;
+                case 3:
+                    GUILayout.Label(GUIContent.none,
+                        GUILayout.Height(
+                            Constants.GlobalTotalHeight
+                            + Constants.StrengthTotalHeight
+                            + Constants.DexterityTotalHeight));
+                    DrawIntelligenceInfo();
+                    DrawArtificeInfo();
+                    DrawResilienceInfo();
+                    GUILayout.Label(GUIContent.none,
+                        GUILayout.Height(
+                            Constants.WisdomTotalHeight
+                            + Constants.LuckTotalHeight));
+                    break;
+                case 4:
+                    GUILayout.Label(GUIContent.none,
+                        GUILayout.Height(
+                            Constants.GlobalTotalHeight
+                            + Constants.StrengthTotalHeight
+                            + Constants.DexterityTotalHeight
+                            + Constants.IntelligenceTotalHeight));
+                    DrawArtificeInfo();
+                    DrawResilienceInfo();
+                    DrawWisdomInfo();
+                    GUILayout.Label(GUIContent.none, GUILayout.Height(Constants.LuckTotalHeight));
+                    break;
+                case 5:
+                    GUILayout.Label(GUIContent.none,
+                        GUILayout.Height(
+                            Constants.GlobalTotalHeight
+                            + Constants.StrengthTotalHeight
+                            + Constants.DexterityTotalHeight
+                            + Constants.IntelligenceTotalHeight
+                            + Constants.ArtificeTotalHeight));
+                    DrawResilienceInfo();
+                    DrawWisdomInfo();
+                    DrawLuckInfo();
+                    break;
             }
 
             GUILayout.EndVertical();
         }
 
 
+        private int _drawRegion;
         private Color _infoButtonColor;
         private readonly GameData _d;
 
@@ -225,10 +208,14 @@ namespace BonfireSilksong.Leveling.UI
             GUI.color = colorOld;
 
             // global bonuses
+            bool multiplierUnlocked = GlobalStat.CheckGlobalMilestone(GlobalMilestone.CURRENCYMULTIPLIER);
+
             GUILayout.BeginVertical("box", GUILayout.Height(Constants.GlobalBoxHeight));
             GUILayout.Label("Bonus", GUIStyles.LvlInfoGlobalBonusStyle);
-            Components.InfoStatLabel($"Rosary & Shell Shard Drop Count: {_d.RosaryBaseIncrease}\n");
-            GUILayout.Label("Active States", GUIStyles.LvlInfoGlobalBonusStyle);
+            Components.InfoStatLabel($"Enemy Currency Drop Count: {_d.RosaryBaseIncrease}");
+            Components.InfoStatLabel($"Enemy Currency Drop Multiplier: " +
+                $"{(multiplierUnlocked ? _d.RosaryMultiplier : "- (locked)")}");
+            GUILayout.Label("Active states", GUIStyles.LvlInfoGlobalBonusStyle);
 
             if (StrengthStat.NeedleStrikeAutoReleaseUnlocked)
                 GUILayout.Label(_d.NeedleAutoChargeStatus, GUIStyles.LvlInfoLabelStyle);
@@ -254,21 +241,19 @@ namespace BonfireSilksong.Leveling.UI
 
             GUILayout.Label("Unlocks", GUIStyles.LvlInfoGlobalUnlockStyle);
 
-            GUI.color = new Color(0.9f, 0.9f, 0.9f);
+            GUI.color = new Color(1f, 0.8f, 0.7f);
             GUILayout.Label(
                 LevelInfoContent.GetGlobalInfoContent(GlobalMilestone.CURRENCYBASE),
                 LevelingSystem.HighLightStatMilestone(n, (int)GlobalMilestone.CURRENCYBASE)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
-            GUI.color = new Color(1f, 0.8f, 0.7f);
             GUILayout.Label(
                 LevelInfoContent.GetGlobalInfoContent(GlobalMilestone.BENCHTELEPORT),
                 LevelingSystem.HighLightStatMilestone(n, (int)GlobalMilestone.BENCHTELEPORT)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
-            GUI.color = new Color(0.7f, 1f, 0.9f);
             GUILayout.Label(
                 LevelInfoContent.GetGlobalInfoContent(GlobalMilestone.QOLTOOLS),
                 LevelingSystem.HighLightStatMilestone(n, (int)GlobalMilestone.QOLTOOLS)
@@ -282,28 +267,31 @@ namespace BonfireSilksong.Leveling.UI
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
-            GUI.color = new Color(0.3f, 0.8f, 0.7f);
-            GUILayout.Label(
-                LevelInfoContent.GetGlobalInfoContent(GlobalMilestone.CURRENCYMULTIPLIER),
-                LevelingSystem.HighLightStatMilestone(n, (int)GlobalMilestone.CURRENCYMULTIPLIER)
-                    ? GUIStyles.LvlInfoLabelStyle
-                    : GUIStyles.LvlInfoLabelDisabledStyle);
-
-            GUI.color = new Color(0.6f, 0.9f, 0.6f);
             GUILayout.Label(
                 LevelInfoContent.GetGlobalInfoContent(GlobalMilestone.MAGGOTREPEL),
                 LevelingSystem.HighLightStatMilestone(n, (int)GlobalMilestone.MAGGOTREPEL)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
+            GUILayout.Label(
+                LevelInfoContent.GetGlobalInfoContent(GlobalMilestone.EXTRADOTDAMAGE),
+                LevelingSystem.HighLightStatMilestone(n, (int)GlobalMilestone.EXTRADOTDAMAGE)
+                    ? GUIStyles.LvlInfoLabelStyle
+                    : GUIStyles.LvlInfoLabelDisabledStyle);
+
             GUI.color = new Color(1f, 0.6f, 0.5f);
+            GUILayout.Label(
+                LevelInfoContent.GetGlobalInfoContent(GlobalMilestone.CURRENCYMULTIPLIER),
+                LevelingSystem.HighLightStatMilestone(n, (int)GlobalMilestone.CURRENCYMULTIPLIER)
+                    ? GUIStyles.LvlInfoLabelStyle
+                    : GUIStyles.LvlInfoLabelDisabledStyle);
+
             GUILayout.Label(
                 LevelInfoContent.GetGlobalInfoContent(GlobalMilestone.SILKREGEN),
                 LevelingSystem.HighLightStatMilestone(n, (int)GlobalMilestone.SILKREGEN)
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
-            GUI.color = new Color(0.75f, 0.65f, 0.55f);
             GUILayout.Label(
                 LevelInfoContent.GetGlobalInfoContent(GlobalMilestone.RESPECFREE),
                 LevelingSystem.HighLightStatMilestone(n, (int)GlobalMilestone.RESPECFREE)
@@ -784,8 +772,35 @@ namespace BonfireSilksong.Leveling.UI
             GUILayout.BeginVertical("box", GUILayout.Height(Constants.LuckBoxHeight));
             GUILayout.Label("Primary", GUIStyles.LvlInfoHeaderPrimaryStyle);
             Components.InfoStatLabel("Crit Chance: " + _d.CritChance);
-            Components.InfoStatLabel("Extra Currency From Enemies: " + _d.RosaryCountIncrease);
             GUILayout.EndVertical();
+
+            GUILayout.BeginVertical("box", GUILayout.Height(Constants.LuckBoxHeight));
+            GUILayout.Label("Crit chance bonuses", GUIStyles.LvlInfoHeaderSecondaryStyle);
+            GUILayout.Label("G = global crit bonus", GUIStyles.LvlInfoLabelMilestone4Style);
+
+            GUILayout.Label("Dexterity", GUIStyles.LvlInfoLabelStyle);
+            GUILayout.Label(
+                $"- Final milestone (G): {LuckStat.GetBonusCritChance(CritBonus.DEXTERITYFINALMILESTONE)}%\n",
+                GUIStyles.LvlInfoLabelStyle);
+
+            GUILayout.Label("Intelligence", GUIStyles.LvlInfoLabelStyle);
+            GUILayout.Label(
+                $"- Silk skills, Claw Mirror & Weaver's Light: " +
+                $"{LuckStat.GetBonusCritChance(CritBonus.INTELLIGENMILESTONE3)}%\n",
+                GUIStyles.LvlInfoLabelStyle);
+
+            GUILayout.Label("Resilience", GUIStyles.LvlInfoLabelStyle);
+            GUILayout.Label(
+                $"- Vengeful/Hollow + Plasmified (G): " +
+                $"{LuckStat.GetBonusCritChance(CritBonus.BLUESTATEPLASMIFIED, isGUI: true)}%\n",
+                GUIStyles.LvlInfoLabelStyle);
+
+            GUILayout.Label("Wisdom", GUIStyles.LvlInfoLabelStyle);
+            GUILayout.Label(
+                $"- Silk Nails: {LuckStat.GetBonusCritChance(CritBonus.SILKNAILS)}%\n",
+                GUIStyles.LvlInfoLabelStyle);
+            GUILayout.EndVertical();
+
             GUILayout.EndHorizontal();
 
             // milestones
@@ -880,6 +895,51 @@ namespace BonfireSilksong.Leveling.UI
             if (req == 1) return $"[{req} point]\n";
 
             return $"[{req} points]\n";
+        }
+
+        private int GetDrawRegion(float scrollHeight)
+        {
+            float offset = 50f;
+            if (scrollHeight < Constants.GlobalTotalHeight + offset)
+            {
+                return 0;
+            }
+            else if (scrollHeight <
+                Constants.GlobalTotalHeight
+                + Constants.StrengthTotalHeight
+                + offset)
+            {
+                return 1;
+            }
+            else if (scrollHeight <
+                Constants.GlobalTotalHeight
+                + Constants.StrengthTotalHeight
+                + Constants.DexterityTotalHeight
+                + offset)
+            {
+                return 2;
+            }
+            else if (scrollHeight <
+                Constants.GlobalTotalHeight
+                + Constants.StrengthTotalHeight
+                + Constants.DexterityTotalHeight
+                + Constants.IntelligenceTotalHeight
+                + offset)
+            {
+                return 3;
+            }
+            else if (scrollHeight <
+                Constants.GlobalTotalHeight
+                + Constants.StrengthTotalHeight
+                + Constants.DexterityTotalHeight
+                + Constants.IntelligenceTotalHeight
+                + Constants.ArtificeTotalHeight
+                + offset)
+            {
+                return 4;
+            }
+
+            return 5;
         }
     }
 }

@@ -18,7 +18,7 @@ namespace BonfireSilksong.Leveling
                 case 1: return 10;
                 case 2: return 20;
                 case 3: return 30;
-                case 4: return 40;
+                case 4: return 35;
                 default: return LevelingSystem.MaxStatLevel;
             }
         }
@@ -165,8 +165,9 @@ namespace BonfireSilksong.Leveling
                 t.name == "Flintstone" ||
                 t.name == "Flea Brew" ||
                 t.name == "Lifeblood Syringe" ||
-                t.name == "Silk Snare" ||
                 (t.name == "Lightning Rod" && !PlayerData.instance.LightningToolToggle) ||
+                t.name == "Silk Snare" ||
+                t.name == "Extractor" || // needle phial
                 tool.Type == ToolItemType.Skill ||
                 tool.Type == ToolItemType.Blue ||
                 tool.Type == ToolItemType.Yellow)

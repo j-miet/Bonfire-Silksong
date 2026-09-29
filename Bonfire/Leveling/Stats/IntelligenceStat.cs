@@ -171,6 +171,8 @@ namespace BonfireSilksong.Leveling
         /// </summary>
         public static int BolaDamage(int totalInt)
         {
+            if (totalInt <= 0) return 0;
+
             return 1 + (int)Math.Floor(totalInt * 0.25);
         }
 
@@ -365,7 +367,7 @@ namespace BonfireSilksong.Leveling
         public static void CastVoltvesselBolaOnHit(HealthManager hm, in HitInstance hit)
         {
             if (CheckWeakBindRequirement() && hit.RepresentingTool?.Type == ToolItemType.Skill)
-                VoltvesselBolaSpawner.SpawnBola(hm.gameObject);
+                VoltvesselsBolaSpawner.SpawnBola(hm.gameObject);
         }
 
         /// <summary>
@@ -521,8 +523,8 @@ namespace BonfireSilksong.Leveling
         }
 
 
-        // offset: this is to make visual range better match with enemy hit position. In other words, the damage range 
-        // is slightly longer than visual indicator.
+        // offset: the damage range is slightly longer than visual indicator, this should make aura feel a bit more
+        // consistent when enemy is close to the edge.
         private const float WeaverAuraRangeOffset = 0.2f;
         private const float WeaverAuraRingTauntRangeMultiplier = 0.5f;
 

@@ -4,8 +4,21 @@ using UnityEngine;
 
 namespace BonfireSilksong.Leveling
 {
+    public enum CritBonus
+    {
+        DEXTERITYFINALMILESTONE,
+        INTELLIGENMILESTONE3,
+        BLUESTATEPLASMIFIED,
+        SILKNAILS
+    }
+
     public static class LuckStat
     {
+        public const int CritBonusDexterityFinalMilestone = 5;
+        public const int CritBonusIntelligenceMilestone3 = 4;
+        public const int CritBonusBlueStatePlasmified = 8;
+        public const int CritBonusSilkNails = 6;
+
         public const float ThreadStormDuration = 0.5f;
         public const float ThreadStormDurationExtended = 2f;
 
@@ -21,7 +34,7 @@ namespace BonfireSilksong.Leveling
                 case 1: return 5;
                 case 2: return 15;
                 case 3: return 25;
-                case 4: return 40;
+                case 4: return 35;
                 default: return LevelingSystem.MaxStatLevel;
             }
         }
@@ -40,23 +53,7 @@ namespace BonfireSilksong.Leveling
         {
             if (totalLck <= 0) return 0;
 
-            int critChance = 0;
-
-            if (ResilienceStat.IsInBlueStateAndPlasmified(BlueState.GLASSCANNON))
-                critChance += 10;
-
-            critChance += (int)Math.Round(60.0 / (1.0 + 15.0 * Math.Exp(-0.08 * totalLck)));
-
-            return critChance;
-        }
-
-        /// <summary>
-        /// Rosary (and shell shard) drop count multiplier from enemies.
-        /// Multiplier per level is additive 5% to current stat e.g. 1x -> 1.05x -> 1.10x -> 1.15x etc.
-        /// </summary>
-        public static int IncreaseRosaryCount(int droppedRosaries, int totalLck)
-        {
-            return (int)Math.Round(droppedRosaries * (1f + (totalLck * 0.05f)));
+            return (int)Math.Round(60.0 / (1.0 + 15.0 * Math.Exp(-0.08 * totalLck)));
         }
 
         /// <summary>
@@ -87,6 +84,65 @@ namespace BonfireSilksong.Leveling
         }
 
         /// <summary>
+        /// Helper method for ExtraCritChance & GUI panels.
+        /// </summary>
+        public static int GetBonusCritChance(CritBonus bonus, bool isGUI = false)
+        {
+            switch (bonus)
+            {
+                case CritBonus.DEXTERITYFINALMILESTONE:
+                    return DexterityStat.CheckDexterityMilestone(3) ? CritBonusDexterityFinalMilestone : 0;
+                case CritBonus.INTELLIGENMILESTONE3:
+                    return IntelligenceStat.CheckIntelligenceMilestone(3) ? CritBonusIntelligenceMilestone3 : 0;
+                case CritBonus.BLUESTATEPLASMIFIED:
+                    return ResilienceStat.IsInAnyBlueStateAndPlasmified() ||
+                        (isGUI && ResilienceStat.CheckResilienceMilestone(3))
+                        ? CritBonusBlueStatePlasmified
+                        : 0;
+                case CritBonus.SILKNAILS:
+                    return WisdomStat.CheckWisdomMilestone(4) ? CritBonusSilkNails : 0;
+                default: return 0;
+            }
+        }
+
+        /// <summary>
+        /// Get bonus crit chance for this hit.
+        /// </summary>
+        public static int ExtraCritChance(HitInstance hit)
+        {
+            int extraCrit = 0;
+
+            extraCrit += GetBonusCritChance(CritBonus.DEXTERITYFINALMILESTONE);
+            extraCrit += GetBonusCritChance(CritBonus.BLUESTATEPLASMIFIED);
+
+            if (hit.Source == null)
+                return extraCrit;
+
+            var n = hit.Source.name;
+            if (n == "Bonfire-SilkNails")
+            {
+                extraCrit += GetBonusCritChance(CritBonus.SILKNAILS);
+            }
+
+            // intelligence crit bonus for silk skills, claw mirror and weaver aura taunt
+            if (n == "Bonfire-WeaverAura")
+            {
+                extraCrit += GetBonusCritChance(CritBonus.INTELLIGENMILESTONE3);
+            }
+            else if (hit.RepresentingTool != null)
+            {
+                var t = hit.RepresentingTool;
+                if (t.Type == ToolItemType.Skill ||
+                    (t.Type == ToolItemType.Blue && (n == "Dazzle Bind" || n == "Dazzle Bind Upgraded")))
+                {
+                    extraCrit += GetBonusCritChance(CritBonus.INTELLIGENMILESTONE3);
+                }
+            }
+
+            return extraCrit;
+        }
+
+        /// <summary>
         /// HealthManager.Hit (Prefix): Check if hit was a crit and update StatsShared.Crit flag.
         /// </summary>
         public static void CheckIfCrit(HitInstance hit)
@@ -107,6 +163,8 @@ namespace BonfireSilksong.Leveling
             }
 
             int critChance = CritChance(Bonfire.Instance.Status.LuckStat);
+            critChance += ExtraCritChance(hit);
+
             if (critChance <= 0) // must have at least 1% crit chance
             {
                 Crit = false;
