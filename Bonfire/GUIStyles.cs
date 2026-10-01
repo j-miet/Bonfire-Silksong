@@ -22,7 +22,6 @@ namespace BonfireSilksong
         public static GUIStyle ButtonStyle;
 
         public static GUIStyle EnemyHpStyle;
-        public static GUIStyle BossHpStyle;
         public static GUIStyle HpHighStyle;
         public static GUIStyle HpMediumStyle;
         public static GUIStyle HpLowStyle;
@@ -164,14 +163,6 @@ namespace BonfireSilksong
             if (EnemyHpStyle == null)
             {
                 EnemyHpStyle = new GUIStyle(GUI.skin.label)
-                {
-                    normal = { textColor = Color.red }
-                };
-            }
-
-            if (BossHpStyle == null)
-            {
-                BossHpStyle = new GUIStyle(GUI.skin.label)
                 {
                     normal = { textColor = new Color(1f, 0.5f, 0f) }
                 };

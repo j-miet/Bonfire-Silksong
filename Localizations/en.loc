@@ -6,30 +6,34 @@
 # - Newlines are parsed into actual GUI text, making it a bit difficult to keep this raw text file easily readable. 
 
 
-### GUIComponents/HelpWindow ###
+### GUIComponents/HelpWindow.cs ###
 
 ### Overview
 
 help.title:
-    Help/reference for Bonfire-Silksong mod
+    Bonfire-Silksong - version {modversionnumber}
 help.text:
-    - The contents here are revised occasionally, but it's still possible some segments have outdated 
-    info in them. And of course expect to find typos here and there.
-    - Silksong is going to get multiple content update DLCs. Each of them will affect general gameplay 
-    and progression possibilities in one way or another. Therefore it's very likely this mod also sees 
-    substantial changes over time.
+    - The contents here are revised after each mod update. It's still possible some segments have outdated info in them & text might be formulated in a weird way at times. Also expect to find typos here and there.
+
+    - Silksong is going to get multiple content update DLCs. Each of them will affect general gameplay and progression possibilities in one way or another. Therefore it's very likely this mod also sees substantial changes over time.
 
 help.guihotkeys.title:
     GUI Hotkeys
-help.guihotkeys.text:
-    -- General --
-    "Spell/Tool" or "Bind" = close topmost overlay window.
+
+help.guihotkeys.general.title:
+    General
+help.guihotkeys.general.text:
+    - "Spell/Tool" or "Bind" = close topmost overlay window.
     
-    -- Bench Fast Travel --
-    "Map" / "QuickMap" / "Inventory" / menu close (Escape on keyboard) = close map overlay.
-    "Needolin" = travel to selected bench location.
+help.guihotkeys.benchteleport.title:
+    Bench Fast Travel
+help.guihotkeys.benchteleport.text:
+    - "Map" / "QuickMap" / "Inventory" / menu close (Escape on keyboard) = close map overlay.
+    - "Needolin" = travel to selected bench location.
     
-    -- Gamepad --
+help.guihotkeys.gamepad.title:
+    Gamepad custom cursor
+help.guihotkeys.gamepad.text:
     - Right stick to move cursor.
     - Attack/Jump input to click GUI buttons.
     - Left/Right Bumper to move scrollbar up/down.
@@ -39,23 +43,25 @@ help.goodtoknow.title:
 help.goodtoknow.text:
     - Needolin silk cost is removed. To balance this around summons/minions from Wisdom stat: playing needolin for at least 1 second disables all summons & you need to tap Needolin button again to  enable them. However if you have no points in Wisdom and use Wispfire Lantern tool, lantern still keeps attacking enemies with its normal cost of 1 silk which balances things.
 
-    - After you unlock the bench fast travel feature: every time you load to game from main menu, the teleport button will be disabled for ~10 seconds before being enabled again. This is just safety feature to prevent you from opening the menu too soon before game can properly load everything.
+    - After you unlock the bench fast travel feature: every time you load into game from main menu, the teleport button will be disabled for ~10 seconds before being enabled again. This is just safety feature to prevent you from opening the map overlay too soon before game can properly load everything.
     
     - Regarding the bench fast travel: there's a bug which sets Hornet into a falling/hover animation after teleporting, preventing you from doing pretty much anything except fly around... 
     Haven't been able to fix this because it happens so rarely/inconsistently, despite it being present ever since the teleport system was first implemented.
-      => If you keep facing this issue or want to pre-emptively guard againts it:
-         - keep debug mode enabled (you can find this under Settings window)
-         - when this happens, press "LeftControl + F2" to force a teleport into Ruined Chapel bench location. This forced teleport seems to reset Hornet's current state, fixing the issue temporarily.
+      
+      ==>>> If you keep facing this issue or want to pre-emptively guard againts it:
+        - keep debug mode enabled (you can find this under Settings window)
+        - when this happens, press "LeftControl + F2" to force a teleport into Ruined Chapel bench location. 
+          This forced teleport seems to reset Hornet's current state, fixing the issue.
       => An alternative to this is to simply quit to main menu then load the save again: this is of course a much slower process, but it also won't reset your spawn location in case you want to avoid that.
 
-    - This mod uses a separate crit calculation for its features. If a stat feature says "can now critically hit" or something similar, it means rolling a crit from Wanderer's Crest, Magnetite Dice tool etc. does not count. 
+    - This mod uses a separate crit calculation for its features. If a stat milestone says "can now critically hit" or similar, it means rolling a crit from any vanilla game source such as Wanderer's Crest, Magnetite Dice tool etc. does not count. 
     To get crit chance, you need to
-        1. level the Luck stat (global)
-        2. reach certain stat milestones
-     => By default, only direct needle hits & "needle strike" ability can land critical hits. Reaching certain milestones can enable crit rolling for other damage sources.
+        1. level the Luck stat -> global crit chance
+        2. reach certain stat milestones -> usually apply crit chance only for specific damage source(s), but can also be global
+     => By default, only normal needle swings & "needle strike" ability can land critical hits. Reaching certain milestones can enable crit rolling for other damage sources.
      => Damage-over-time (DoT) effects cannot benefit from crit chance!
 
-    - This mod has some optional quality-of-life features. While some of these are intended as safety/backup features e.g Debug mode respawn or Crest tool slot unlocker, feel free to use them any time if this enhances your gaming experience!
+    - This mod has some optional quality-of-life features. While some of these are intended as a safety feature e.g Debug mode respawn or Crest tool slot unlocker, feel free to use them any time if this enhances your gaming experience.
     
 
 ### Leveling System
@@ -68,7 +74,9 @@ help.leveling.general.title:
 help.leveling.general.text:
     - Leveling costs rosaries. Cost scaling should be reasonable so you can still afford to buy normal stuff like vendor items, benches, maps etc.
 
-    - All stats cap at 99 points. This value serves just as an upper boundary, you won't be getting anywhere close to it with normal gameplay: cost of next level uses formula f(n) = n^2 + 10*n + 50 so going from 1 to 99 alone costs a total of Σ(f, k=1, n=98) = 371959 rosaries.
+    - All stats cap at 99 points. This value serves just as an upper boundary.
+      - Rosary cost for leveling up from level n to n+1 uses formula f(n) = n^2 + 10*n + 50: going from 1 to 99 alone costs a total of Σ(f, k=1, n=98) = 371959 rosaries so you won't be getting anywhere close to it with normal gameplay.
+      => This is the same formula original BonfireMod for Hollow Knight mod also used. It might get adjusted in the future after it becomes clearer what the game progression looks like after DLCs.
     
     - You can get free level-ups from each tier 3-5 relic returned to Relic Seeker Scrounge. These include: Choral Commandment, Rune Harp, Arcane Egg.
     
@@ -311,7 +319,7 @@ help.settings.crestunlock.text:
 help.settings.crestunlock.chapelaccess.title: 
     Access to crest chapels
 help.settings.crestunlock.chapelaccess.text:
-    If you have unlocked a crest, this is the normal condition game uses to lock the corresponding chapel door, preventing further access. For all crests except Beast this is fine as those areas have no progression-related items. However Chapel of the Beast has Savage Beastfly boss: defeating it serves as a requirement for the rematch later which awards a mask shard. So chapel door has to remain open even if Beast crest is already unlocked, otherwise 100% progression is not possible.
+    If you have unlocked a crest normally found in a separate chapel room, game will lock the corresponding chapel door, preventing further access. For all crests except Beast this is fine as those areas have no progression-related items. However Chapel of the Beast has Savage Beastfly boss: defeating it serves as a requirement for the rematch later which awards a mask shard. So chapel door has to remain open even if Beast crest is already unlocked, otherwise 100% progression is not possible.
 
     The solution is to force re-access to all chapels even if you have unlocked their crests. The logic goes like this:
     - Beast: has Savage Beastfly been killed?
@@ -320,7 +328,8 @@ help.settings.crestunlock.chapelaccess.text:
     - Others: has player visited the chapel in this save file?
       -> Yes = set the visit flag to true and close the door.
       -> No = keep it open.
-    => Chapel of the Beast closes only after boss kill whereas other crest chapels allow a one-time visit. And just like in vanilla game: if you die and leave cocoon inside the chapel, it stays there. If door closes, you need to use Silkeater or die again in order to retrieve it.
+
+    => Chapel of the Beast closes only after boss kill whereas other crest chapels allow a one-time visit if you have already unlocked the crest. And just like in vanilla game: if you die and leave cocoon inside the chapel, it stays there. You need to use Silkeater or die again in order to retrieve it.
 
 help.settings.crestunlock.slots.title:
     Crest slot unlocks
@@ -329,7 +338,7 @@ help.settings.crestunlock.slots.text:
     - This was originally meant to be a safety feature as Witch crest questline could apparently reset the already unlocked crest slots. This seems to be fixed now, but there's no harm in keeping this feature so feel free to use it.
 
 
-### Leveling/UI/LevelInfoContent ###
+### Leveling/UI/LevelInfoContent.cs ###
 
 ## Global unlocks
 

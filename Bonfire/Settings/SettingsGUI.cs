@@ -135,7 +135,7 @@ namespace BonfireSilksong.Settings
             GUI.color = Color.gray;
             GUI.DrawTexture(borderRect, Texture2D.whiteTexture);
 
-            GUI.color = new Color(1f, 0.8f, 0.8f);
+            GUI.color = new Color(0.8f, 0, 0);
             GUI.DrawTexture(rect, Texture2D.whiteTexture);
             GUI.color = Color.white;
 
@@ -173,9 +173,7 @@ namespace BonfireSilksong.Settings
                 if (currentHp >= EnemyHealth.HpResetSentinel)
                     continue;
 
-                bool isBoss = EnemyHealth.EnemyIsBoss.TryGetValue(hm, out bool b) && b;
-
-                if (currentHp == maxHp && !isBoss) continue; // full HP = hide bars for normal enemies
+                if (currentHp == maxHp) continue; // full HP = hide bars for normal enemies
 
                 // screenPos above is raw value which isn't scaled with GUI.Matrix -> manual conversion is needed.
                 float screenX = screenPos.x * BonfireGUI.ScaleX;
@@ -189,13 +187,13 @@ namespace BonfireSilksong.Settings
 
                 if (s.EnemyHpDisplayNumbers)
                 {
-                    width = isBoss ? 400f : 240f;
-                    height = isBoss ? 40f : 30f;
+                    width = 240f;
+                    height = 30f;
                 }
                 else
                 {
-                    width = isBoss ? 300f : 120f;
-                    height = isBoss ? 20f : 15f;
+                    width = 120f;
+                    height = 15f;
                 }
 
                 x = screenX - width / 2f;
@@ -208,7 +206,7 @@ namespace BonfireSilksong.Settings
                 if (s.EnemyHpBarColorProgression)
                     fillColor = pct > 0.6f ? _progHigh : pct > 0.3f ? _progMedium : _progLow;
                 else
-                    fillColor = isBoss ? _bossColor : _enemyColor;
+                    fillColor = _enemyColor;
 
                 GUI.color = fillColor;
                 GUI.DrawTexture(new Rect(x, y, width * pct, height), SolidTex());
@@ -242,14 +240,12 @@ namespace BonfireSilksong.Settings
                 return;
 
             if (GUIStyles.EnemyHpStyle == null ||
-                GUIStyles.BossHpStyle == null ||
                 GUIStyles.HpLowStyle == null ||
                 GUIStyles.HpMediumStyle == null ||
                 GUIStyles.HpHighStyle == null)
                 return;
 
             _enemyColor = GUIStyles.EnemyHpStyle.normal.textColor;
-            _bossColor = GUIStyles.BossHpStyle.normal.textColor;
             _progLow = GUIStyles.HpLowStyle.normal.textColor;
             _progMedium = GUIStyles.HpMediumStyle.normal.textColor;
             _progHigh = GUIStyles.HpHighStyle.normal.textColor;
@@ -277,7 +273,6 @@ namespace BonfireSilksong.Settings
         private bool _allCrestsUnlocked = false;
 
         private static bool _hpBarColorsInitialized;
-        private static Color _bossColor;
         private static Color _enemyColor;
         private static Color _progLow;
         private static Color _progMedium;
@@ -381,14 +376,6 @@ namespace BonfireSilksong.Settings
                 "\n" +
                 "[ LeftControl + F2 ]\n" +
                 "Teleport to bench in scene \"Tut_03\" - this location corresponds to Ruined Chapel bench.\n" +
-                "=> There's a bug which sets Hornet into a falling/hover animation after teleporting. Haven't been " +
-                "able to fix this because it happens so rarely/inconsistently, despite it being present ever since " +
-                "the teleport system was first implemented.\n" +
-                "So if you keep getting issue or want to pre-emptively guard againts it, just enable debug mode and " +
-                "use this feature whenever necessary: the forced teleport seems to reset Hornet's state again and " +
-                "fixes the animation lock. An alternative to this is to simply quit to main menu then load the save " +
-                "again: this is of course a much slower process, but it also won't reset your spawn location in case " +
-                "you want to avoid that.\n" +
                 "\n" +
                 "[ LeftControl + F3 ]\n" +
                 $"Display compact log overlay top-right with message limit of {LoggingOverlay.MaxMessages}. Displays " +
@@ -468,21 +455,19 @@ namespace BonfireSilksong.Settings
                 "Display enemy health bars");
 
             GUILayout.Label("(");
-            GUILayout.Label("enemy", GUIStyles.EnemyHpStyle);
-            GUILayout.Label("-");
-            GUILayout.Label("boss", GUIStyles.BossHpStyle);
+            GUILayout.Label("bars use this color", GUIStyles.EnemyHpStyle);
             GUILayout.Label(">");
             GUILayout.Label("has default hotkey \"LeftControl + H\")");
 
             GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal(GUILayout.Width(370));
+            GUILayout.BeginHorizontal(GUILayout.Width(490));
             GUILayout.Space(15);
 
             GUI.enabled = s.EnemyHealthBarsEnabled;
             s.EnemyHpBarColorProgression = CustomCursor.Toggle(
                 s.EnemyHpBarColorProgression,
-                "Progressive HP bar values");
+                "Replace default color with progressive color scale");
 
             GUILayout.Label("(");
             GUILayout.Label("high", GUIStyles.HpHighStyle);
@@ -506,20 +491,10 @@ namespace BonfireSilksong.Settings
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(10);
-
-            GUILayout.Label(
-                "- Boss check uses game's internal flag to detect if the current scene is a boss scene." +
-                " However this seems to be quite inconsistent: for example neither Cogwork Dancers nor Grand Mother " +
-                " Silk are not counted as bosses.\n" +
-                "- Progressive bar colors use the same 3-color scale for both normal enemies and bosses.");
-            GUILayout.EndHorizontal();
-            GUILayout.Space(10);
-
             s.ShowCustomRangeIndicator = CustomCursor.Toggle(
                 s.ShowCustomRangeIndicator,
-                "Display range indicator for Weaver's Light & Reflect damage sources");
+                "Display range indicator for custom damage sources (Weaver's Light, Reflect etc.)");
+            GUILayout.Space(10);
             s.ShowDamageOverlay = CustomCursor.Toggle(
                 s.ShowDamageOverlay,
                 "Display damage data from latest enemy hit (has default hotkey \"LeftControl + L\")\n" +

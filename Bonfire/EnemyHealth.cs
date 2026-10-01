@@ -17,8 +17,6 @@ namespace BonfireSilksong
         // stores initial hp when HealthManager is loaded (which might not end up being the even the actual full hp 
         // value) and serves as a general enemy HealthManager tracker for active enemies on scene.
         public static readonly Dictionary<HealthManager, float> EnemyMaxHp = new Dictionary<HealthManager, float>();
-        // this is for GUI hp bars only
-        public static readonly Dictionary<HealthManager, bool> EnemyIsBoss = new Dictionary<HealthManager, bool>();
 
         public static bool IsEnabled(HealthManager hm)
         {
@@ -51,7 +49,6 @@ namespace BonfireSilksong
 
             bool isBoss = BossSceneController.IsBossScene;
             EnemyMaxHp.Add(instance, initialHp);
-            EnemyIsBoss.Add(instance, isBoss);
 
             if (instance.GetComponentInChildren<Collider2D>() is Collider2D c)
                 _enemyColliders.Add(instance, c);
@@ -88,7 +85,6 @@ namespace BonfireSilksong
             foreach (var e in _toRemove)
             {
                 EnemyMaxHp.Remove(e);
-                EnemyIsBoss.Remove(e);
                 _enemyColliders.Remove(e);
                 _enemyRenderers.Remove(e);
             }
@@ -109,7 +105,6 @@ namespace BonfireSilksong
         public static void ResetEnemyHpData()
         {
             EnemyMaxHp.Clear();
-            EnemyIsBoss.Clear();
             _enemyColliders.Clear();
             _enemyRenderers.Clear();
 
@@ -146,11 +141,9 @@ namespace BonfireSilksong
 
             if (removed && printLogs)
             {
-                bool isBoss = EnemyIsBoss.TryGetValue(hm, out bool boss) && boss;
-
                 Bonfire.Log.LogDebug($"[EnemyHealth]: Removed enemy {hm.name}");
                 Bonfire.Log.LogDebug($"hp: {hm.hp}, id={hm.GetInstanceID()}, enabled: {hm.enabled}, " +
-                    $"isActive: {hm.isActiveAndEnabled}, isDead: {hm.isDead}, isBoss={isBoss}");
+                    $"isActive: {hm.isActiveAndEnabled}, isDead: {hm.isDead}");
             }
 
             return removed;
