@@ -49,7 +49,7 @@ namespace BonfireSilksong.Leveling.UI
         public const float WisdomMilestoneHeight = 890f;
         public const float WisdomTotalHeight = WisdomBoxHeight + WisdomMilestoneHeight;
 
-        public const float LuckBoxHeight = 330f;
+        public const float LuckBoxHeight = 300f;
         public const float LuckMilestoneHeight = 580f;
         public const float LuckTotalHeight = LuckBoxHeight + LuckMilestoneHeight;
     }

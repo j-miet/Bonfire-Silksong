@@ -23,7 +23,7 @@ namespace BonfireSilksong
     {
         public const string ModID = "jeooh.silksong.bonfire-silksong";
         public const string ModName = "Bonfire-Silksong";
-        public const string ModVersion = "0.10.0";
+        public const string ModVersion = "1.0.0";
         public const string LocalizationFile = "en.loc";
 
         public static Bonfire Instance;

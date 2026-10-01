@@ -80,7 +80,9 @@ namespace BonfireSilksong.GUIComponents
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Label(Loc.Get("help.title"), GUIStyles.BenchListAreaLabelStyle);
+            GUILayout.Label(
+                Loc.Get("help.title", ("modversionnumber", Bonfire.ModVersion)),
+                GUIStyles.BenchListAreaLabelStyle);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUI.color = previous;
@@ -90,7 +92,15 @@ namespace BonfireSilksong.GUIComponents
 
             GUILayout.Label(Loc.Get("help.guihotkeys.title"), GUIStyles.SettingsHeader2);
             GUILayout.Space(10);
-            GUILayout.Label(Loc.Get("help.guihotkeys.text"));
+
+            GUILayout.Label(Loc.Get("help.guihotkeys.general.title"), GUIStyles.SettingsHeader3);
+            GUILayout.Label(Loc.Get("help.guihotkeys.general.text"));
+
+            GUILayout.Label(Loc.Get("help.guihotkeys.benchteleport.title"), GUIStyles.SettingsHeader3);
+            GUILayout.Label(Loc.Get("help.guihotkeys.benchteleport.text"));
+
+            GUILayout.Label(Loc.Get("help.guihotkeys.gamepad.title"), GUIStyles.SettingsHeader3);
+            GUILayout.Label(Loc.Get("help.guihotkeys.gamepad.text"));
 
             GUILayout.Space(10);
             GUILayout.Label(Loc.Get("help.goodtoknow.title"), GUIStyles.SettingsHeader2);

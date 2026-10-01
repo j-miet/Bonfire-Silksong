@@ -317,7 +317,7 @@ namespace BonfireSilksong
                 if (go == null || !go.name.StartsWith("Hero_Hornet"))
                     return;
 
-                Bonfire.Log.LogInfo($"[{Time.frameCount}] EVENT {__instance.Name}: {fsmEvent?.Name}");
+                Bonfire.Log.LogDebug($"[{Time.frameCount}] EVENT {__instance.Name}: {fsmEvent?.Name}");
             }
         }
 
@@ -331,7 +331,7 @@ namespace BonfireSilksong
                 if (go == null || !go.name.StartsWith("Hero_Hornet"))
                     return;
 
-                Bonfire.Log.LogInfo($"[{Time.frameCount}] STATE {__instance.Name}: {state.Name}");
+                Bonfire.Log.LogDebug($"[{Time.frameCount}] STATE {__instance.Name}: {state.Name}");
             }
         }
         */

@@ -775,8 +775,7 @@ namespace BonfireSilksong.Leveling.UI
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical("box", GUILayout.Height(Constants.LuckBoxHeight));
-            GUILayout.Label("Crit chance bonuses", GUIStyles.LvlInfoHeaderSecondaryStyle);
-            GUILayout.Label("G = global crit bonus", GUIStyles.LvlInfoLabelMilestone4Style);
+            GUILayout.Label("Crit chance bonuses (G = global bonus)", GUIStyles.LvlInfoHeaderSecondaryStyle);
 
             GUILayout.Label("Dexterity", GUIStyles.LvlInfoLabelStyle);
             GUILayout.Label(
