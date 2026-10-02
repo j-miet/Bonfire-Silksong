@@ -12,7 +12,7 @@ All of this can be accessed through an extensive custom GUI which stays open dur
 Just like the original BonfireMod, *Bonfire-Silksong* will naturally 
 **break vanilla game balance and make the game much easier in general**. However, some of the stat milestones can have optional effects with actual downsides, for example reduce effectiveness of Bind or even disable use of Bind entirely.
 
-#### <u>Help panel</u>
+#### Help panel
 
 This mod has an extensive in-game documentation which should be consulted for more details.
  - A separate wiki page/markdown file could be added in future. But for now, please refer to the in-game GUI.
@@ -24,17 +24,13 @@ than 5-10 minutes and gives you a good overview of what Bonfire-Silksong mod has
 And finally, if you want to access the raw GUI text, check the `en.loc` file in the mod folder. This file is work-in-progress: 
 currently, it has text contents for entire Help window + most of leveling info. The rest is still hardcoded into `.cs` files, but should eventually get transferred here.
 
----
-
-*For screenshots, see the [Nexusmods]("") page - no login required.*
-
 
 ## Table of contents
 
-- [<u>Features</u>](#features)
-- [<u>Installation</u>](#installation)
-- [<u>Compatibility with other mods</u>](#compatibility-with-other-mods)
-- [<u>Acknowledgements</u>](#acknowledgements)
+- [Features](#features)
+- [Installation](#installation)
+- [Compatibility with other mods](#compatibility-with-other-mods)
+- [Acknowledgements](#acknowledgements)
 
 
 ## Features
@@ -131,7 +127,7 @@ It's even possible some parts of code are not executed at all!
 
 ## Acknowledgements
 
-While Bonfire-Silksong doesn't directly require other mod dependencies, it has used logic and/or code from following:
+While Bonfire-Silksong doesn't directly require other mod dependencies, it has used logic and/or code of the following mods:
 
 - The basis of Leveling system is from Hollow Knight's **BonfireMod** by *ricardosouzag* and 
     **Bonfire** by *TheodoreChristianRadu*.
