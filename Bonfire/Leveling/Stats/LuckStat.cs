@@ -21,6 +21,8 @@ namespace BonfireSilksong.Leveling
 
         public const float ThreadStormDuration = 0.5f;
         public const float ThreadStormDurationExtended = 2f;
+        public const int ThreefoldPinMilestone3DamageBonus = 8;
+        public const int ThreefoldPinMilestone4DamageBonus = 35;
 
         public static bool Crit = false;
 
@@ -33,8 +35,8 @@ namespace BonfireSilksong.Leveling
             {
                 case 1: return 5;
                 case 2: return 15;
-                case 3: return 25;
-                case 4: return 35;
+                case 3: return 20;
+                case 4: return 30;
                 default: return LevelingSystem.MaxStatLevel;
             }
         }
@@ -53,7 +55,7 @@ namespace BonfireSilksong.Leveling
         {
             if (totalLck <= 0) return 0;
 
-            return (int)Math.Round(60.0 / (1.0 + 15.0 * Math.Exp(-0.08 * totalLck)));
+            return (int)Math.Round(75.0 / (1.0 + 16.0 * Math.Exp(-0.08 * totalLck)));
         }
 
         /// <summary>
@@ -123,9 +125,8 @@ namespace BonfireSilksong.Leveling
             {
                 extraCrit += GetBonusCritChance(CritBonus.SILKNAILS);
             }
-
             // intelligence crit bonus for silk skills, claw mirror and weaver aura taunt
-            if (n == "Bonfire-WeaverAura")
+            else if (n == "Bonfire-WeaverAura")
             {
                 extraCrit += GetBonusCritChance(CritBonus.INTELLIGENMILESTONE3);
             }

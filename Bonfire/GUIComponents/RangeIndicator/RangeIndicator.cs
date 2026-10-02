@@ -46,14 +46,14 @@ namespace BonfireSilksong.GUIComponents
             foreach (var ind in _rangeIndicators.Values)
             {
                 if (ind._rangeCircle == null || !ind._rangeCircle.enabled)
-                    return;
+                    continue;
 
                 float remaining = ind._rangeIndicatorUntil - Time.time;
 
                 if (remaining <= 0f)
                 {
                     ind._rangeCircle.enabled = false;
-                    return;
+                    continue;
                 }
 
                 float alpha = remaining / RangeDisplayTime;

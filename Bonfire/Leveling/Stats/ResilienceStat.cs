@@ -29,7 +29,7 @@ namespace BonfireSilksong.Leveling
             switch (m)
             {
                 case 1: return 1;
-                case 2: return 20;
+                case 2: return 15;
                 case 3: return 30;
                 default: return LevelingSystem.MaxStatLevel;
             }
@@ -48,13 +48,13 @@ namespace BonfireSilksong.Leveling
         public static int BlueMasks(int totalRes)
         {
             if (totalRes <= 0) return 0;
-            else if (totalRes < 3) return 1;
-            else if (totalRes < 5) return 2;
-            else if (totalRes < 9) return 3;
-            else if (totalRes < 14) return 4;
-            else if (totalRes < 20) return 5;
-            else if (totalRes < 27) return 6;
-            else if (totalRes < 35) return 7;
+            else if (totalRes < 2) return 1;
+            else if (totalRes < 4) return 2;
+            else if (totalRes < 7) return 3;
+            else if (totalRes < 11) return 4;
+            else if (totalRes < 16) return 5;
+            else if (totalRes < 23) return 6;
+            else if (totalRes < 30) return 7;
             else return 8;
         }
 

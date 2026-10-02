@@ -368,17 +368,18 @@ namespace BonfireSilksong
             var gl = BonfireGUI.GUILogger;
             if (gl == null) return;
 
-            if (Status.DebugMode)
+            if (Status.DebugTeleport && _debugTeleport.IsDown())
             {
-                if (_debugTeleport.IsDown())
-                {
-                    var pd = PlayerData.instance;
-                    pd.tempRespawnScene = "Tut_03";
-                    pd.tempRespawnMarker = "RestBench";
-                    pd.tempRespawnType = 1;
-                    BenchTeleport.TeleportToBench();
-                }
-                else if (_debugShowLogs.IsDown())
+                var pd = PlayerData.instance;
+                pd.tempRespawnScene = "Tut_03";
+                pd.tempRespawnMarker = "RestBench";
+                pd.tempRespawnType = 1;
+                BenchTeleport.TeleportToBench();
+            }
+
+            if (Status.DebugLogs)
+            {
+                if (_debugShowLogs.IsDown())
                 {
                     if (gl.DisplayLogs)
                     {
@@ -388,7 +389,6 @@ namespace BonfireSilksong
                     {
                         gl.SetLogsDisplay();
                     }
-
                 }
                 else if (_debugShowExtendedLogs.IsDown())
                 {

@@ -370,13 +370,19 @@ namespace BonfireSilksong.Settings
 
             GUILayout.Space(10);
 
-            s.DebugMode = CustomCursor.Toggle(
-                s.DebugMode,
-                "Enable debug mode.\n" +
-                "\n" +
+            s.DebugTeleport = CustomCursor.Toggle(
+                s.DebugTeleport,
+                "Enable debug teleport.\n\n" +
                 "[ LeftControl + F2 ]\n" +
-                "Teleport to bench in scene \"Tut_03\" - this location corresponds to Ruined Chapel bench.\n" +
-                "\n" +
+                "Teleport to bench in scene \"Tut_03\" - this location corresponds to Ruined " +
+                "Chapel bench.\n",
+                GUIStyles.WordWrapToggleStyle,
+                GUILayout.Width(SettingsWidth - SettingsOuterOffset - SettingsInnerOffset - 50)
+            );
+
+            s.DebugLogs = CustomCursor.Toggle(
+                s.DebugLogs,
+                "Enable debug logging overlay\n\n" +
                 "[ LeftControl + F3 ]\n" +
                 $"Display compact log overlay top-right with message limit of {LoggingOverlay.MaxMessages}. Displays " +
                 "newline characters properly, but this can lead to uneven rows where a part of the text is only " +
@@ -921,6 +927,8 @@ namespace BonfireSilksong.Settings
                 LevelingInfoStyle = s.LevelingInfoStyle,
                 BenchMenuStyle = s.BenchMenuStyle,
 
+                DebugTeleport = s.DebugTeleport,
+                DebugLogs = s.DebugLogs,
                 AdjustButtonStep = s.AdjustButtonStep,
 
                 CustomCursorSpeed = s.CustomCursorSpeed,

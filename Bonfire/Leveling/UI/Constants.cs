@@ -45,8 +45,8 @@ namespace BonfireSilksong.Leveling.UI
         public const float ResilienceMilestoneHeight = 1130f;
         public const float ResilienceTotalHeight = ResilienceBoxHeight + ResilienceMilestoneHeight;
 
-        public const float WisdomBoxHeight = 350f;
-        public const float WisdomMilestoneHeight = 890f;
+        public const float WisdomBoxHeight = 370f;
+        public const float WisdomMilestoneHeight = 920f;
         public const float WisdomTotalHeight = WisdomBoxHeight + WisdomMilestoneHeight;
 
         public const float LuckBoxHeight = 300f;

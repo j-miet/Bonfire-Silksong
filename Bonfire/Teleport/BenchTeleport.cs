@@ -264,13 +264,13 @@ namespace BonfireSilksong.Teleport
         {
             var b = Bonfire.Instance;
 
-            if (b == null || (!GlobalStat.CheckFastTravelCondition && !b.Status.DebugMode))
+            if (b == null || (!GlobalStat.CheckFastTravelCondition && !b.Status.DebugTeleport))
                 return false;
 
             if (GameManager.instance == null || GameManager.instance.IsMemoryScene())
                 return false;
 
-            return PlayerData.instance.atBench || b.Status.DebugMode;
+            return PlayerData.instance.atBench || b.Status.DebugTeleport;
         }
     }
 }

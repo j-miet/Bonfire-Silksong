@@ -39,7 +39,7 @@ namespace BonfireSilksong.Leveling
             {
                 case 1: return 1;
                 case 2: return 15;
-                case 3: return 30;
+                case 3: return 25;
                 case 4: return 35;
                 default: return LevelingSystem.MaxStatLevel;
             }

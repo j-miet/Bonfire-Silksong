@@ -84,10 +84,10 @@ namespace BonfireSilksong
 
         private void OnGUI()
         {
-            var s = Bonfire.Instance.Status;
-
-            Matrix4x4 oldMatrix = GUI.matrix;
             if (Bonfire.IsNotGamePlayState()) return;
+
+            var s = Bonfire.Instance.Status;
+            Matrix4x4 oldMatrix = GUI.matrix;
 
             CustomCursor.ResetCursorStack();
             CustomCursor.Update();
@@ -171,7 +171,7 @@ namespace BonfireSilksong
             }
 
             // debug log window can just render on top of everything else except custom cursor
-            if (s.DebugMode && (GUILogger.DisplayLogs || GUILogger.DisplayExtendedLogs))
+            if (s.DebugLogs && (GUILogger.DisplayLogs || GUILogger.DisplayExtendedLogs))
             {
                 GUILogger.Update();
                 GUILogger.Display();

@@ -57,12 +57,16 @@ namespace BonfireSilksong.Leveling.UI
             ("silknailscritbonus", LuckStat.CritBonusSilkNails));
 
         public static string LuckMilestone1 => Loc.Get("levelinfo.luck.milestone1");
-        public static string LuckMilestone2 => Loc.Get("levelinfo.luck.milestone2");
+        public static string LuckMilestone2 => Loc.Get(
+            "levelinfo.luck.milestone2",
+            ("threefoldpinm3bonus", LuckStat.ThreefoldPinMilestone3DamageBonus));
         public static string LuckMilestone3 => Loc.Get(
             "levelinfo.luck.milestone3",
             ("threadstormduration", LuckStat.ThreadStormDuration));
         public static string LuckMilestone4 => Loc.Get(
             "levelinfo.luck.milestone4",
+            ("threefoldpinm3bonus", LuckStat.ThreefoldPinMilestone3DamageBonus),
+            ("threefoldpinm4bonus", LuckStat.ThreefoldPinMilestone4DamageBonus),
             ("threadstormduration", LuckStat.ThreadStormDuration),
             ("threadstormdurationextended", LuckStat.ThreadStormDurationExtended));
 

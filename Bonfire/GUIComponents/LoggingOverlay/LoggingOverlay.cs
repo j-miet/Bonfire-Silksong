@@ -36,7 +36,7 @@ namespace BonfireSilksong.GUIComponents
         // log message loader, attach this to BepInEx logger listener in MonoBehavior.Awake callback
         public void LogEvent(object sender, LogEventArgs eventArgs)
         {
-            if (!Bonfire.Instance.Status.DebugMode)
+            if (!Bonfire.Instance.Status.DebugLogs)
                 return;
 
             // remove this block if general logging is needed

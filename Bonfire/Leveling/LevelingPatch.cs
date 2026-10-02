@@ -368,8 +368,6 @@ namespace BonfireSilksong.Leveling
                         // Pimpillo and Sawtooth Circlet
 
                         toolDamage = DexterityStat.ApplyCritDamage(toolDamage);
-
-                        ArtificeStat.CastRuneRageOnHit(hm, in hit);
                     }
                     else if (ArtificeStat.CheckArtificeMilestone(2) && ArtificeStat.IsSilkshotTool(tool))
                     {
@@ -385,20 +383,20 @@ namespace BonfireSilksong.Leveling
                         {
                             if (LuckStat.CheckLuckMilestone(4))
                             {
-                                toolDamage += 30;
+                                toolDamage += LuckStat.ThreefoldPinMilestone4DamageBonus;
                             }
                             else if (LuckStat.CheckLuckMilestone(2))
                             {
-                                toolDamage += 8;
+                                toolDamage += LuckStat.ThreefoldPinMilestone3DamageBonus;
                             }
                         }
                         else if (tool.name == "Straight Pin")
                         {
                             if (LuckStat.CheckLuckMilestone(2))
+                            {
                                 HeroController.instance.AddSilk(1, false);
-
-                            if (LuckStat.CheckLuckMilestone(3))
                                 toolDamage = DexterityStat.ApplyCritDamage(toolDamage);
+                            }
                         }
 
                         if (tName == "Tri Pin" || tName == "Harpoon")
@@ -406,6 +404,7 @@ namespace BonfireSilksong.Leveling
                     }
                 }
 
+                ArtificeStat.CastRuneRageOnHit(hm, in hit);
                 LuckStat.CastThreadStormOnHit(hm, in hit, isCrit);
 
                 if (tool.name == "Brolly Spike" &&

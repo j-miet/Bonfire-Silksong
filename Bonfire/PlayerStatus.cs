@@ -42,7 +42,8 @@ namespace BonfireSilksong
         public bool PinwielderEnabled = false;
 
         // settings
-        public bool DebugMode = false;
+        public bool DebugTeleport = true;
+        public bool DebugLogs = false;
         public int AdjustButtonStep = 5;
 
         // - custom cursor
@@ -50,11 +51,13 @@ namespace BonfireSilksong
         public bool DisplayGameCursorWithGamepad = false;
 
         // - other
-        public bool ResetMusicAfterTeleport = false;
         public bool ShowCustomRangeIndicator = true;
         public bool ShowDamageOverlay = false;
         public int DamageOverlayX = 200;
         public int DamageOverlayY = 5;
+
+        // - bench teleport
+        public bool ResetMusicAfterTeleport = false;
 
         // - gameplay
         public bool EnemyHealthBarsEnabled = false;
@@ -71,6 +74,6 @@ namespace BonfireSilksong
         public bool VisitedWandererChapel = false;
         public bool VisitedReaperChapel = false;
         public bool VisitedArchitectChapel = false;
-        public bool VisitedAbyssSecondTime = false; // second abyss visit
+        public bool VisitedAbyssSecondTime = false;
     }
 }

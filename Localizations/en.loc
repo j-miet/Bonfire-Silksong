@@ -49,8 +49,8 @@ help.goodtoknow.text:
     Haven't been able to fix this because it happens so rarely/inconsistently, despite it being present ever since the teleport system was first implemented.
       
       ==>>> If you keep facing this issue or want to pre-emptively guard againts it:
-        - keep debug mode enabled (you can find this under Settings window)
-        - when this happens, press "LeftControl + F2" to force a teleport into Ruined Chapel bench location. 
+        - keep debug teleport enabled (should already be enabled by default, but you can find this under Settings window)
+        - when bug happens, press "LeftControl + F2" to force a teleport into Ruined Chapel bench location. 
           This forced teleport seems to reset Hornet's current state, fixing the issue.
       => An alternative to this is to simply quit to main menu then load the save again: this is of course a much slower process, but it also won't reset your spawn location in case you want to avoid that.
 
@@ -307,8 +307,13 @@ help.settings.customcursor.text:
 help.settings.debug.title:
     Debug mode
 help.settings.debug.text:
-    - Meant primarily for debugging. However there's this rare bug where game fails to load Hornet's position coordinates properly after using bench fast travel, putting here in a falling/hover animation state. This can be fixed by either using debug respawn feature or just save&exit -> reload.
-    - When debug mode is enabled, mod will constantly store the logs in a temporary variable. When debug window is opened, it pulls the debug logs from this variable and prints them. The stored data is very miminal, around a few megabytes of memory, and therefore should have no impact on game's performance. And if you disable debug mode or quit the game, all the stored data is immediately flushed. For permanent logs, use "BepInEx/LogOutput.txt" file.
+    - Meant primarily for debugging. Has separate toggle for teleport and logging features.
+
+    --Teleport--
+    - There's this bug where the game puts Hornet in a falling/hover animation state. This can be fixed by either using debug teleport feature or just save&exit -> reload.
+    
+    --Logging--
+    - When logging mode is enabled, mod will constantly store the logs in a temporary variable. When debug window is opened, it pulls the debug logs from this variable and prints them. The stored data is very miminal, around a few megabytes of memory, and therefore should have no impact on game's performance. And if you disable debug mode or quit the game, all the stored data is immediately flushed. For permanent logs, use "BepInEx/LogOutput.txt" file.
     - Log window displays logs only from this mod whereas LogOutput.txt displays logs from all mods.
 
 help.settings.crestunlock.title:
@@ -364,25 +369,24 @@ levelinfo.global.extradotdamage:
 levelinfo.global.currencymultiplier:
     ★ Unlock "Beastling Call" ability ★
     Enemy rosary and shell shard drops increased by {currencybuffincrease}% per level.
-    This effect is applied after all other currency bonuses.
 levelinfo.global.silkregen:
     ★ Ascend from the Abyss ★
     Passively regenerate 1 silk every {silkregeninterval} seconds.
 levelinfo.global.respecfree:
-    ★ Obtain any of the old hearts in Act 3 ★
+    ★ Obtain any of the old hearts ★
     Respec cost removed.
 
 ## Stat milestones
 
 levelinfo.strength.milestone1:
-    Needle strike: active charge time reduced by 20%.
+    Needle Strike: active charge time reduced by 20%.
     Can toggle on/off automatic release when fully charged.
 levelinfo.strength.milestone2:
-    Needle range increased by 33% and its initial charge time reduced by 20%.
+    Needle range increased by 33%. Needle Strike initial charge time reduced by 20%.
 levelinfo.strength.milestone3:
     - Flintslate and Flea Brew tools have infinite buff duration.
     - Downslash damage increased by 100%.
-    - Needle strike: both initial and active charge time reduction buffed (20% -> 40%).
+    - Needle Strike: both initial and active charge time reduction buffed (20% -> 40%).
 
 levelinfo.dexterity.milestone1:
     Clawline damage increased by 25%.
@@ -411,23 +415,25 @@ levelinfo.intelligence.milestone2:
     Toggle on/off "Weak Bind".
 
     <Weak Bind>
-    - Bind heals 1 mask and costs 1/3 of current cost, but keeps its current speed,
-    - You take + 1 damage from everything, but get the following bonuses:
-      - Silk Skills: Each hit instance spawns Voltvessels bola projectile on top of enemy. Bolas have a custom, flat intelligence damage scaling which can only benefit from global damage buffs. This effect also disables normal use of Voltvessels tool.
-      - Claw Mirror: procs additional time (similar to Multibinder effect), binding speed increased by 33%.
+    - Bind heals 1 mask and costs 1/3 of current cost, but keeps its current speed. You also take +1 damage from everything.
+    - You do get the following bonuses:
+      - Silk Skills: Each hit instance spawns Voltvessels bola projectile on top of enemy. Bolas have a custom, flat intelligence 
+        damage scaling which can only benefit from global damage buffs. 
+        This effect also disables normal use of Voltvessels tool.
+      - Claw Mirror: procs one more time (similar to Multibinder effect), binding speed increased by 33%.
       - Weaver's Light: gives 1 silk if at least one enemy got hit by the aura.
 levelinfo.intelligence.milestone3:
-    Silk skills, Claw Mirror and Taunt can crit + each also gets an additive {intelligencecritbonus}% crit chance bonus.
-    Equipping Claw Mirror increases binding speed by 33%.
+    - Silk skills, Claw Mirror and Taunt can crit + each also gets an additive {intelligencecritbonus}% crit chance bonus.
+    - Equipping Claw Mirror increases binding speed by 33%.
 levelinfo.intelligence.milestone4:
     Give more effects to all Intelligence-focused abilities:
     - Silk skills: silk cost reduced by 1.
     - Claw Mirror: every 2 points in Intelligence adds +1 damage. Damage is applied after Artifice stat scaling.
     - Weaver's Light: Gains a new "Void Burst" toggle state. Void Burst makes taunt a single-use ability, consuming all silk when used while giving following benefits:
       - Range increased by {burstrangeincrease}.
-      - Each silk in spool increases damage by +{burstdamagemultiplier}.
+      - Each silk consumed increases damage by +{burstdamagemultiplier}.
     
-    Taunting with Throwing Rings has no additional effects when Void Burst is enabled.
+    Taunting with Throwing Rings has no special effect on Void Burst.
 
 levelinfo.artifice.milestone1:
     - Pimpillo: has 2x tool capacity and can apply critical hits.
@@ -546,10 +552,10 @@ levelinfo.luck.milestone1:
     - Threefold Pin & Longpin: can now critically hit.
 levelinfo.luck.milestone2:
     Straight Pin: can now critically hit + crits give 1 silk.
-    Threefold Pin: crits add +8 damage which is applied before Dexterity crit multiplier.
+    Threefold Pin: crits add +{threefoldpinm3bonus} damage which is applied before Dexterity crit multiplier.
 levelinfo.luck.milestone3:
     Longpin: casts Thread Storm on crit when projectile thits an enemy. Effect lasts for {threadstormduration} seconds.
 levelinfo.luck.milestone4:
     - Straight Pin: crit casts Thread Storm with effect duration of {threadstormduration} seconds.
-    - Threefold Pin: crit damage bonus buffed (+8 -> +30).
+    - Threefold Pin: crit damage bonus buffed (+{threefoldpinm3bonus} -> +{threefoldpinm4bonus}).
     - Longpin: now always casts Thread Storm on enemy hit (no crit required), effect lasts {threadstormdurationextended} seconds.
