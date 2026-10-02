@@ -206,7 +206,7 @@ namespace BonfireSilksong.Leveling.UI
             else if (GotFreeLevel)
             {
                 ApplyText =
-                    $"{AvailableRelicLevels} Free {(AvailableRelicLevels > 1 ? "Levels" : "Level")}) available!";
+                    $"{AvailableRelicLevels} Free {(AvailableRelicLevels > 1 ? "Levels" : "Level")} available!";
             }
             else
             {
