@@ -12,6 +12,7 @@ using BonfireSilksong.GUIComponents;
 using BonfireSilksong.Leveling;
 using BonfireSilksong.Settings;
 using BonfireSilksong.Teleport;
+using System.Reflection;
 
 namespace BonfireSilksong
 {
@@ -156,8 +157,10 @@ namespace BonfireSilksong
         {
             Instance = this;
             Log = Logger;
+
+            var pluginDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             Localization.Loc = new Localization();
-            Localization.Loc.Load($"Bonfire-Silksong/{LocalizationFile}");
+            Localization.Loc.Load(Path.Combine(pluginDir, LocalizationFile));
 
             Log.LogInfo("Initializing Bonfire-Silksong...");
 

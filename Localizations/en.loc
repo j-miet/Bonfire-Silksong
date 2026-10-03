@@ -143,7 +143,7 @@ help.leveling.stats.resilience1.text:
     
     To emphasize: this only happens when you're at any bench. You can except normal behavior otherwise.
     
-    This system is not perfect: it has been tested quite thoroughly, but sometimes the blue hp updates don't refresh properly and your health var visuals can have 1. missing blue masks and 2. gap between normal and blue masks. If these happen, know that the actual blue hp value should still get updated even if visuals did not. The easiest fix is to sit down on a bench again, or if you're already sitting, just open then close any inventory or map screen to force a HUD refresh.
+    This system is not perfect: it has been tested quite thoroughly, but sometimes the blue hp updates don't refresh properly and your health bar visuals can have 1. missing blue masks and 2. gap between normal and blue masks. If these happen, know that the actual blue hp value should still get updated even if visuals did not. The easiest fix is to sit down on a bench again, or if you're already sitting, just open then close any inventory or map screen to force a HUD refresh.
     
     -> One simple example of failed hp update is when you load into save file, leave bench as soon as possible and open inventory: game still renders the hp HUD, but is interrupted because of inventory overlay. If you wait a bit then close invetory, you will get partial or missing blue mask visuals.
 
@@ -202,7 +202,7 @@ help.leveling.milestones.wisdom.title:
     Wisdom
 help.leveling.milestones.wisdom.text:
     - Very relaxed summon/minion gameplay: let them do most* of the damage, or engage in combat normally and let them provide support.
-        * While summons can target almost all enemies, there are some exceptions to this rule: the most annoying example is probably "Father of the Flame" boss.
+        *While summons can target almost all enemies, there are some exceptions to this rule: the most annoying example is probably "Father of the Flame" boss.
     - Damage sources: Silk Nails & Cogfly Warrior (modded variants of Pale Nails & Cogfly) + Wispfire Lantern tool.
     - Summons don't seem to always target enemies properly:
       - Lavalugs in Deep Docks are an example of this: they can ignored entirely on some scenes.
@@ -212,8 +212,8 @@ help.leveling.milestones.luck.title:
     Luck
 help.leveling.milestones.luck.text:
     - Focuses on the 3 pin tools: Straight Pin, Threefold Pin and Longpin.
-    - Is also the only source of custom crit chance stat which is required for mod's own critical hit system.
-    => Luck was originally meant to be a support stat with no milestones at all. But it was more interesting to introduce at least something, and the idea of a ranged-only build fit into this nicely. So current milestones were quickly hacked together: while not as polished as milestones of other stat paths, it should at least give more agency to these 3 pin tools in the later stages of the game"
+    - The most reliable source of custom crit chance stat which is required for mod's own critical hit system.
+    => Luck was originally meant to be a support stat with no milestones at all. But it was more interesting to introduce at least something, and the idea of a ranged-only build fit into this nicely. So current milestones were quickly hacked together: while not as polished as milestones of other stat paths, it should at least give more agency to these 3 pin tools in the later stages of the game
 
 
 ### Bench Fast Travel
