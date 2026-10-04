@@ -135,7 +135,7 @@ namespace BonfireSilksong.Settings
             GUI.color = Color.gray;
             GUI.DrawTexture(borderRect, Texture2D.whiteTexture);
 
-            GUI.color = new Color(0.8f, 0, 0);
+            GUI.color = new Color(0.8f, 0.2f, 0.2f);
             GUI.DrawTexture(rect, Texture2D.whiteTexture);
             GUI.color = Color.white;
 
@@ -482,20 +482,19 @@ namespace BonfireSilksong.Settings
             GUILayout.Label("→");
             GUILayout.Label("low", GUIStyles.HpLowStyle);
             GUILayout.Label(")");
-            GUI.enabled = true;
 
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Space(15);
 
-            GUI.enabled = s.EnemyHealthBarsEnabled;
             s.EnemyHpDisplayNumbers = CustomCursor.Toggle(
                 s.EnemyHpDisplayNumbers,
                 "Larger bars with HP numbers displayed");
 
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
+            GUI.enabled = true;
 
             s.ShowCustomRangeIndicator = CustomCursor.Toggle(
                 s.ShowCustomRangeIndicator,
