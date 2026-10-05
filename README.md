@@ -1,33 +1,61 @@
 # Leveling system in Hollow Knight: Silksong
 
+Available in
+- [Thunderstore](https://thunderstore.io/c/hollow-knight-silksong/p/Jeooh/Bonfire_Silksong/)
+- [Nexus Mods](https://www.nexusmods.com/hollowknightsilksong/mods/1357) 
+(includes images, these can be viewed without logging in)
+
 ---
 
 **Bonfire-Silksong** is a spiritual successor to Hollow Knight's BonfireMod, for Hollow Knight: Silksong. It adds a 
-leveling system which allows the player to spend rosaries to gain permanent stats. The original system has been greatly
-expanded with the addition of stat milestones, making each stat feel unique.
+leveling system where the the player can spend rosaries to gain permanent stats. The original system has been greatly
+expanded with the addition of stat milestones, making each stat feel even more unique.
 
-In addition to leveling, interfaces for mod settings and a built-in bench fast travel system are also included.
+In addition to leveling system, interfaces for mod settings and a built-in bench fast travel system are also included.
 All of this can be accessed through an extensive custom GUI which stays open during bench visits.
 
 Just like the original BonfireMod, *Bonfire-Silksong* will naturally 
-**break vanilla game balance and make the game much easier in general**. However, some of the stat milestones can have optional effects with actual downsides, for example reduce effectiveness of Bind or even disable use of Bind entirely.
+**break vanilla game balance and make the game much easier in general**. Some of the stat milestones however can 
+actually have downsides, for example reduce effectiveness of Bind, but they 1. compensate you with another buff 
+mechanic and 2. can be always toggled off.
 
-#### Help panel
+#### Help & mod documentation 
 
 This mod has an extensive in-game documentation which should be consulted for more details.
- - A separate wiki page/markdown file could be added in future. But for now, please refer to the in-game GUI.
+ - A separate wiki page/file could be added in future. But for now, please refer to the in-game info.
 
-The panel can be accessed by clicking the "Help" button on the top-left side on GUI panel.
-You don't need to read everything in detail, but it's recommended to skim over the contents: this shouldn't take more 
-than 5-10 minutes and gives you a good overview of what Bonfire-Silksong mod has to offer.
+Help panel can be accessed by clicking the "Help" button on the top-left side on GUI panel.
+You don't need to read everything in detail, but it's recommended to at least skim over the content: this shouldn't 
+take more than 5-10 minutes. 
 
-And finally, if you want to access the raw GUI text, check the `en.loc` file in the mod folder. This file is work-in-progress: 
-currently, it has text contents for entire Help window + most of leveling info. The rest is still hardcoded into `.cs` files, but should eventually get transferred here.
+And finally, if you want to access the raw GUI text, check the `en.loc` file. This file is in a work-in-progress state: 
+currently, it has text contents for entire Help window + most of leveling info. The rest is still hardcoded into 
+`.cs` files, but should eventually get transferred here.
+
+#### Bugs
+Despite spending a lot of time fixing bugs, there are still a few I'm aware of + probably several more I've never 
+encountered. Feel free to report them. 
+
+**There's one bug in particular that you as a player should be aware of (this is also mentioned in the Help panel):**  
+Sometimes after you use the bench teleport feature, Hornet can get arrive on target scene's bench location and get 
+stuck in a falling/hovering animation after standing up. When this happens, you can't pretty much do anything except 
+fly around. There are two simple fixes:
+
+- Press `LeftControl + F2` while debug teleport is enabled (it is enabled by default, you can change this in the mod's 
+settings). This respawns Hornet into Ruined Chapel bench - the one before first boss. This seems to always 
+re-initialize her game state and fix the issue. This does however also update your spawn position to said location.
+- Quit to main menu -> reload the save again.
+
+I have not been able to fix this despite it being present ever since teleport system was implement. Problem is, I can 
+never reproduce it consistently, it just happens randomly. This could mean its caused by some internal race condition: 
+maybe some other part of game code runs before the usual sequence and blocks the update process of Hornet's character 
+state. Or maybe it's something very simple and I just fail to see it after spending so much time looking the same code.
 
 
 ## Table of contents
 
 - [Features](#features)
+  - [Future updates](#future-updates)
 - [Installation](#installation)
 - [Compatibility with other mods](#compatibility-with-other-mods)
 - [Acknowledgements](#acknowledgements)
@@ -46,28 +74,33 @@ mouse and GamePad users.
         - Attack/Jump to click.
         - Left/Right bumper to move scrollbars up/down.
 
-- Leveling system: use rosaries to level up stats and gain permanent buffs + other interesting mechanics. Currently 
-there are 7 different stats to choose from (6 from original BonfireMod + a new, tool-focused path called *Artifice*).
+- Leveling system: use rosaries to level up stats and gain permanent buffs + other interesting mechanics. There are 
+currently 7 different stats to choose from (6 from original BonfireMod + a new, tool-focused path called *Artifice*).
 - Extra settings for additional customization, including some optional gameplay QoL.
 - Bench fast travel system allows teleporting between any unlocked bench locations.
     - Most locations are tied to bench pins: if map pin icon is darker/grayed out, it's not unlocked yet.
     - The remaining pinless locations require custom unlock steps e.g. unlocking and visiting your home in Bellhart 
-    unlocks the Bellhome bench. These locations can be identified by having a star symbol at the end of their name e.g. "Bellhome ★".
-
+    unlocks the Bellhome bench. These locations can be identified by having a star symbol at the end of their name 
+    e.g. "Bellhome ★".
 
 ## Installation
 
+**This mod follows the usual BepInEx installation steps.**  
+**My experience on Silksong modding is limited to Windows 
+only. Linux/Mac users might need to follow a slightly different process.**
+
 Silksong mods can be installed either via a mod manager tool or 
-manually. 
+manually.
 
 #### Mod Managers (recommended)
 
-Silksong has a dedicated open-source mod manager called [Cogfly](https://github.com/Nix-main/Cogfly). It should also
-handle installation of BepInEx which is required for mods.
+Silksong has a dedicated open-source mod manager called [Cogfly](https://github.com/Nix-main/Cogfly). It should also 
+handle BepInEx installation automatically. Manager system integrates with Thunderstore where it finds and downloads
+the mod files.
 
-Cogfly has cross-platform support and should work on Linux & MacOS systems.
+Cogfly claims to have cross-platform support and therefore, should work on Linux & MacOS systems.
 
-After installing Cogfly, simple create a profile then search for "Bonfire Silksong".
+After installing Cogfly, simply create a profile then search for "Bonfire Silksong" in the mod list.
 
 #### Manual installation
 
@@ -83,22 +116,21 @@ After installing Cogfly, simple create a profile then search for "Bonfire Silkso
     *BepInEx first-time install*
     - Unzip contents into Silksong install path. For example if you have Steam version on Windows this would be 
     something like `C:/Program Files (x86)/Steam/steamapps/common/Hollow Knight Silksong`. Game directory should now 
-    have some additional 
-    files such as *winhttp.dll* + a separate *BepInEx* directory .
-    - Run the game and quit after reaching the main menu screen: this allows BepInEx to initialize installation, creating 
-    the required folders + config files.
+    have some additional files such as *winhttp.dll* + a separate *BepInEx* directory .
+    - Run the game and quit after reaching the main menu screen: this allows BepInEx to initialize installation, 
+    creating the required folders + config files.
 
-2. Download **Bonfire-Silksong** mod:
-    - [Github](https://github.com/j-miet/Bonfire-Silksong/releases)
-    - NexusMods (coming soon)
-    - Thunderstore (coming soon)
+2. Download **Bonfire-Silksong**.
+    - [Thunderstore](https://thunderstore.io/c/hollow-knight-silksong/p/Jeooh/Bonfire_Silksong/)
+    - [Nexus Mods](https://www.nexusmods.com/hollowknightsilksong/mods/1357)
+    - direct Github link will be added later as well, but you will always find the most up-to-date version from both links.
 
-3. Install the mod:
-    - Move the "Bonfire-Silksong" folder into `<install path>/Hollow Knight Silksong/BepInEx/plugins` directory.
-    Your path becomes `<install path>/Hollow Knight Silksong/BepInEx/plugins/Bonfire-Silksong` where this folder 
+3. Install the mod.
+    - Move the "Bonfire-Silksong" folder into `<game path>/Hollow Knight Silksong/BepInEx/plugins` directory.
+    Your path becomes `<game path>/Hollow Knight Silksong/BepInEx/plugins/Bonfire-Silksong` where this folder 
     should at least contain two files:
         - `Bonfire-Silksong.dll` (main file)
-        - `en.loc` (localization file, needed for displaying most of GUI text content)
+        - `en.loc` (localization file, needed for displaying most of the GUI text content)
 
         There's also the **Bonfire-Silksong.pdb**: this is only for advanced debugging and therefore isn't required to 
         run the mod.
@@ -110,14 +142,11 @@ After installing Cogfly, simple create a profile then search for "Bonfire Silkso
 ## Compatibility with other mods
 
 **Bonfire-Silksong as a mod is quite complex and will most likely interfere with other gameplay mods. For the best 
-experience, <u>you should run it as a standalone gameplay mod</u>.**
+experience, you should run it as a standalone gameplay mod.**
 
 If another mod patches the same areas of code (e.g. needle/spell/tool damage), it will likely break the 
-leveling system logic. Same applies for QoL settings: if you add mods which targets an already existing feature 
+leveling system logic. Same applies for QoL settings: if you add a mod which targets an already existing feature 
 (e.g. adds enemy health bars), it's best to keep Bonfire-Silksong's own implementation disabled if possible.
-
-The built-in bench fast travel system should however work with other fast travel mods: its logic gets applied only 
-inside the custom bench menu window. So you are free to ignore use other fast travel mods if you feel like it.
 
 **In general:** 
 - If two mods modify same areas of game code, there's no guarantee which mod gets to apply its logic first/last. 
@@ -127,27 +156,51 @@ It's even possible some parts of code are not executed at all!
 
 ## Acknowledgements
 
-While Bonfire-Silksong doesn't directly require other mod dependencies, it has used logic and/or code of the following mods:
+While Bonfire-Silksong doesn't directly require other mod dependencies, it has used logic and/or code of the following 
+mods:
 
-- The basis of Leveling system is from Hollow Knight's **BonfireMod** by *ricardosouzag* and 
+- The basis of leveling system is from Hollow Knight's **BonfireMod** by *ricardosouzag* and 
     **Bonfire** by *TheodoreChristianRadu*.
     - https://github.com/ricardosouzag/BonfireMod (original)
     - https://github.com/TheodoreChristianRadu/Bonfire (fork of BonfireMod)
 
-- Bench fast travel core logic is from [Bonfire Teleport](https://www.nexusmods.com/hollowknightsilksong/mods/156) mod 
+    => Both projects are MIT Licensed.
+
+- Bench fast travel core logic is from [Bonfire Teleport](https://www.nexusmods.com/hollowknightsilksong/mods/156)
 by *kassent*.
 
-    Author of Bonfire Teleport mod has granted me permission to use their mod's code. Code used in Bonfire-Silksong has been modified quite a bit, but it clearly still uses the general idea of "Bonfire Teleport" i.e. 
-    use bench pins for moving Hornet from scene A to scene B.
+    *This project contains code from Hollow Knight Silksong's "Bonfire Teleport" mod, made by kassent. They have 
+    granted me permission to use my modified version of their project's code. I am also allowed to share this modified 
+    code under MIT License.*
+
+    **"Bonfire-Silksong" mod concept itself is not related to "Bonfire Teleport" mod, despite similar naming.**
+    - "Bonfire Teleport" is a mod focused on custom fast travel feature, and existed long before Bonfire-Silksong even 
+    began its development.
+    - "Bonfire-Silksong" is a gameplay mod centered around its leveling system. Its fast travel feature does rely on 
+    Bonfire Teleport's code, but includes plenty of own logic as well. Furthermore, this system has been designed as 
+    an extra feature: removing it would require very few changes elsewhere in code. Finally, the name "Bonfire-Silksong"
+    refers to other mods from Hollow Knight called **BonfireMod** & **Bonfire** 
+    (links to both were provided above), which served as its direct inspiration.
+
+    **About the modified code part:** the general idea of "move from scene A to scene B using the bench pin coordinates" 
+    is still very much present in the code. More importantly, Bonfire-Silksong uses logic directly taken from 
+    Bonfire Teleport mod, which has then been reorganized and/or partially rewritten to better fit Bonfire-Silksong's 
+    needs.
     
-    Modifications include restructuring of code + new features, including
+    Here are some of the features added/changed:
     - no free teleporting, limit teleporting from benches only
     - support for custom locations, this is meant for bench locations without pins available
-    - saving the game after teleporting
+    - save the game after teleporting
     - prevent teleporting to/from Abyss if safety checks are not passed
     - prevent teleporting from The Slab with Cloakless crest equipped
     - a custom map overlay
 
+    **Finally:** please check Bonfire Teleport out if you already haven't: it's very easy to use and should be 
+    compatible with most Silksong mods. In fact you could use it with Bonfire-Silksong, I don't believe there should 
+    be any major issue as both mods use slightly different interfaces: 
+    - *Bonfire Teleport* uses normal game map + its pin placement function
+    - *Bonfire-Silksong* mod uses a custom map overlay where placing pins is disabled entirely. You must instead use 
+    cursor to select bench locations, similar to mods like Benchwarp.
 
 #### Modding tools for Hollow Knight
 
