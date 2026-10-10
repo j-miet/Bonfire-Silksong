@@ -738,7 +738,7 @@ settings.playerstatusreset.content.cancelbutton:
 teleport.button.maintitle:
     Fast Travel
 teleport.button.inittitle:
-     - initializing (time remaining {inittimer})"
+     - initializing (time remaining {inittimer})
 teleport.button.act3bellbeastlocked:
      is locked, you should visit the Bell Beast
 
