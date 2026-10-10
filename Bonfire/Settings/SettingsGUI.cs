@@ -26,7 +26,7 @@ namespace BonfireSilksong.Settings
             GUILayout.BeginVertical("box");
 
             GUI.enabled = BonfireGUI.NoWindowsPending;
-            if (CustomCursor.Button("Extra Settings", GUIStyles.ButtonStyle, GUILayout.Height(40f)))
+            if (CustomCursor.Button(_loc.Get("settings.title"), GUIStyles.ButtonStyle, GUILayout.Height(40f)))
             {
                 PendingCrestUnlock = false;
                 PendingSettingsWindow = true;
@@ -142,7 +142,7 @@ namespace BonfireSilksong.Settings
             CustomCursor.BeginGroup(rect);
 
             CustomCursor.BeginArea(new Rect(20, 20, rect.width - 40, rect.height - 40));
-            GUILayout.Label("Reset mod configurations", GUIStyles.LabelStyle);
+            GUILayout.Label(_loc.Get("settings.title"), GUIStyles.LabelStyle);
             DrawPlayerStatusResetContent();
             CustomCursor.EndArea();
 
@@ -267,11 +267,6 @@ namespace BonfireSilksong.Settings
         private const float CrestUnlockWidth = 420f;
         private const float CrestUnlockHeight = 700f;
 
-        private readonly string[] _crestNames = {
-            "Hunter_v3", "Wanderer", "Reaper", "Warrior", "Witch", "Toolmaster", "Spell" };
-        private readonly Dictionary<string, ToolCrest> _crestDict = new Dictionary<string, ToolCrest>();
-        private bool _allCrestsUnlocked = false;
-
         private static bool _hpBarColorsInitialized;
         private static Color _enemyColor;
         private static Color _progLow;
@@ -279,7 +274,13 @@ namespace BonfireSilksong.Settings
         private static Color _progHigh;
         private static Texture2D _tex;
 
+        private readonly string[] _crestNames = {
+            "Hunter_v3", "Wanderer", "Reaper", "Warrior", "Witch", "Toolmaster", "Spell" };
+        private readonly Dictionary<string, ToolCrest> _crestDict = new Dictionary<string, ToolCrest>();
+        private bool _allCrestsUnlocked = false;
+
         private Vector2 _settingsScrollPos;
+        private readonly Localization _loc = Localization.Loc;
 
         private static Texture2D SolidTex()
         {
@@ -319,7 +320,7 @@ namespace BonfireSilksong.Settings
             GUILayout.FlexibleSpace();
 
             if (CustomCursor.Button(
-                    "Close window",
+                    _loc.Get("settings.footer.title"),
                     GUIStyles.CrestUnlockButtonStyle,
                     GUILayout.Width(160f),
                     GUILayout.Height(35f)))
@@ -339,7 +340,7 @@ namespace BonfireSilksong.Settings
             var s = Bonfire.Instance.Status;
 
             // adjust step size
-            GUILayout.Label($"Adjust button step size (how much -/+ buttons changes the target value; range 5-100)");
+            GUILayout.Label(_loc.Get("settings.general.stepsize.text"));
             GUILayout.BeginHorizontal(GUILayout.Width(160));
 
             if (CustomCursor.Button(
@@ -372,27 +373,16 @@ namespace BonfireSilksong.Settings
 
             s.DebugTeleport = CustomCursor.Toggle(
                 s.DebugTeleport,
-                "Enable debug teleport.\n\n" +
-                "[ LeftControl + F2 ]\n" +
-                "Teleport to bench in scene \"Tut_03\" - this location corresponds to Ruined " +
-                "Chapel bench.\n",
+                _loc.Get("settings.general.debugteleport.text"),
                 GUIStyles.WordWrapToggleStyle,
                 GUILayout.Width(SettingsWidth - SettingsOuterOffset - SettingsInnerOffset - 50)
             );
 
             s.DebugLogs = CustomCursor.Toggle(
                 s.DebugLogs,
-                "Enable debug logging overlay\n\n" +
-                "[ LeftControl + F3 ]\n" +
-                $"Display compact log overlay top-right with message limit of {LoggingOverlay.MaxMessages}. Displays " +
-                "newline characters properly, but this can lead to uneven rows where a part of the text is only " +
-                "partially visible. Can cause performance issues if logs get updated very frequently.\n" +
-                "\n" +
-                "[ LeftControl + F4 ]\n" +
-                $"Display extended log overlay top-right with message limit of {LoggingOverlay.MaxMessagesExtended} " +
-                "and makes logs scrollable. Performance-wise much better than compact log, but cannot display " +
-                "newline characters and instead replaces them with empty spaces. Doesn't include a search feature " +
-                "so combine this with the actual BepInEx/LogOutput.txt file for optimal debug experience.",
+                _loc.Get("settings.general.debuglogs.text",
+                    ("debuglogsmaxmessages", LoggingOverlay.MaxMessages),
+                    ("debuglogsmaxmessagesextended", LoggingOverlay.MaxMessagesExtended)),
                 GUIStyles.WordWrapToggleStyle,
                 GUILayout.Width(SettingsWidth - SettingsOuterOffset - SettingsInnerOffset - 50));
         }
@@ -404,11 +394,12 @@ namespace BonfireSilksong.Settings
             GUI.enabled = GameManager.instance.inputHandler.gameController.IsAttached;
 
             GUILayout.Space(10);
-            GUILayout.Label("Custom cursor (enabled if a GamePad device is detected)", GUIStyles.SettingsHeader2);
+            GUILayout.Label(_loc.Get("settings.cursor.text"), GUIStyles.SettingsHeader2);
 
             GUILayout.Label(
-                $"Cursor speed (range {CustomCursor.MinSpeed} - {CustomCursor.MaxSpeed}, " +
-                "will also scale scroll speed)");
+                _loc.Get("settings.cursor.speed.text",
+                    ("cursorminspeed", CustomCursor.MinSpeed),
+                    ("cursormaxspeed", CustomCursor.MaxSpeed)));
 
             GUILayout.BeginHorizontal(GUILayout.Width(160));
             if (CustomCursor.Button(
@@ -440,7 +431,7 @@ namespace BonfireSilksong.Settings
 
             s.DisplayGameCursorWithGamepad = CustomCursor.Toggle(
                 s.DisplayGameCursorWithGamepad,
-                "Display both custom and default cursor");
+                _loc.Get("settings.cursor.display.text"));
 
             GUI.enabled = true;
         }
@@ -453,7 +444,7 @@ namespace BonfireSilksong.Settings
             int heightMax = (int)(BonfireGUI.Height - DamageOverlay.Height - DamageOverlay.BoxOffset);
 
             GUILayout.Space(10);
-            GUILayout.Label("Components", GUIStyles.SettingsHeader2);
+            GUILayout.Label(_loc.Get("settings.overlay.componenets.title"), GUIStyles.SettingsHeader2);
 
             GUILayout.BeginHorizontal(GUILayout.Width(520));
             s.EnemyHealthBarsEnabled = CustomCursor.Toggle(
@@ -461,9 +452,9 @@ namespace BonfireSilksong.Settings
                 "Display enemy health bars");
 
             GUILayout.Label("(");
-            GUILayout.Label("bars use this color", GUIStyles.EnemyHpStyle);
+            GUILayout.Label(_loc.Get("settings.overlay.enemyhpbars.barcolor.text"), GUIStyles.EnemyHpStyle);
             GUILayout.Label(">");
-            GUILayout.Label("has default hotkey \"LeftControl + H\")");
+            GUILayout.Label(_loc.Get("settings.overlay.enemyhpbars.barcolor.hotkeytext") + ")");
 
             GUILayout.EndHorizontal();
 
@@ -473,14 +464,15 @@ namespace BonfireSilksong.Settings
             GUI.enabled = s.EnemyHealthBarsEnabled;
             s.EnemyHpBarColorProgression = CustomCursor.Toggle(
                 s.EnemyHpBarColorProgression,
-                "Replace default color with progressive color scale");
+                _loc.Get("settings.overlay.enemyhpbars.barprogression.text"));
 
             GUILayout.Label("(");
-            GUILayout.Label("high", GUIStyles.HpHighStyle);
+            GUILayout.Label(_loc.Get("settings.overlay.enemyhpbars.barprogression.highhptext"), GUIStyles.HpHighStyle);
             GUILayout.Label("→");
-            GUILayout.Label("medium", GUIStyles.HpMediumStyle);
+            GUILayout.Label(_loc.Get("settings.overlay.enemyhpbars.barprogression.mediumhptext"),
+                GUIStyles.HpMediumStyle);
             GUILayout.Label("→");
-            GUILayout.Label("low", GUIStyles.HpLowStyle);
+            GUILayout.Label(_loc.Get("settings.overlay.enemyhpbars.barprogression.lowhptext"), GUIStyles.HpLowStyle);
             GUILayout.Label(")");
 
             GUILayout.EndHorizontal();
@@ -490,7 +482,7 @@ namespace BonfireSilksong.Settings
 
             s.EnemyHpDisplayNumbers = CustomCursor.Toggle(
                 s.EnemyHpDisplayNumbers,
-                "Larger bars with HP numbers displayed");
+                _loc.Get("settings.overlay.enemyhpbars.shownumbers.text"));
 
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
@@ -498,25 +490,19 @@ namespace BonfireSilksong.Settings
 
             s.ShowCustomRangeIndicator = CustomCursor.Toggle(
                 s.ShowCustomRangeIndicator,
-                "Display range indicator for custom damage sources (Weaver's Light, Reflect etc.)");
+                _loc.Get("settings.overlay.showrangeindicator.text"));
             GUILayout.Space(10);
             s.ShowDamageOverlay = CustomCursor.Toggle(
                 s.ShowDamageOverlay,
-                "Display damage data from latest enemy hit (has default hotkey \"LeftControl + L\")\n" +
-                "\n" +
-                "The damage number displayed here is often different from final value. For example:\n" +
-                "- Each enemy has a set of damage modifiers which can increase/decrease this by certain multiplier.\n" +
-                "- Some multihit sources like Rune Rage silk skill or Threefold Pin red tool deal less damage if " +
-                "additional projectiles hit same target.",
+                _loc.Get("settings.overlay.showdamageoverlay.text"),
                 GUIStyles.WordWrapToggleStyle,
                 GUILayout.Width(SettingsWidth - SettingsOuterOffset - SettingsInnerOffset - 50));
 
-            // this part with adjust buttons is a bit scuffed, could rewrite it at later
             GUI.enabled = s.ShowDamageOverlay;
             GUILayout.BeginHorizontal(GUILayout.Width(450));
             GUILayout.Space(10);
-            GUILayout.Label($"X-Position");
-            GUILayout.Label($"Y-Position");
+            GUILayout.Label(_loc.Get("settings.overlay.damageoverlay.xpositiontext"));
+            GUILayout.Label(_loc.Get("settings.overlay.damageoverlay.ypositiontext"));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal(GUILayout.Width(450));
@@ -586,12 +572,7 @@ namespace BonfireSilksong.Settings
             GUILayout.Space(10);
             s.ResetMusicAfterTeleport = CustomCursor.Toggle(
                 s.ResetMusicAfterTeleport,
-                "Resets music after bench fast travel\n" +
-                "\n" +
-                "Normally music/atmosphere carries over to target scene, but then fades out and gets replaced with " +
-                "the music from new scene. After fast travel, previous sound effects can linger much longer than " +
-                "they should. With this enabled, existing music track cuts off immediately and the new one starts to " +
-                "play as soon as scene transition is completed.",
+                _loc.Get("settings.fasttravel.text"),
                 GUIStyles.WordWrapToggleStyle,
                 GUILayout.Width(SettingsWidth - SettingsOuterOffset - SettingsInnerOffset - 50));
         }
@@ -601,39 +582,39 @@ namespace BonfireSilksong.Settings
             var s = Bonfire.Instance.Status;
 
             GUILayout.Space(10);
-            GUILayout.Label("Delivery Quests", GUIStyles.SettingsHeader2);
+            GUILayout.Label(_loc.Get("settings.gameplay.deliveryquests.title"), GUIStyles.SettingsHeader2);
 
             s.DeliveryQuestsRemoveDamage = CustomCursor.Toggle(
                 s.DeliveryQuestsRemoveDamage,
-                "Remove damage penalty");
+                _loc.Get("settings.gameplay.deliveryquests.removepenaltytext"));
 
             s.DeliveryQuestsRemoveTimer = CustomCursor.Toggle(
                 s.DeliveryQuestsRemoveTimer,
-                "Remove timer penalty");
+                _loc.Get("settings.gameplay.deliveryquests.removetimertext"));
 
             GUILayout.Space(10);
             GUILayout.Label("Other", GUIStyles.SettingsHeader2);
 
             s.ReduceFleaGamesScoreLimit = CustomCursor.Toggle(
                 s.ReduceFleaGamesScoreLimit,
-                "Reduce Fleatopia game score requirements by 50% (scoreboard still shows base values)");
+                _loc.Get("settings.gameplay.other.reducefleascoretext"));
 
             s.EasierSprintmasterRaces = CustomCursor.Toggle(
                 s.EasierSprintmasterRaces,
-                "Reduce Sprintmaster Swift's movement speed in races by 50%");
+                _loc.Get("settings.gameplay.other.easiersprintmasterracetext"));
         }
 
         private void DrawToggleSettings()
         {
             GUILayout.BeginVertical("box");
-            GUILayout.Label("General", GUIStyles.SettingsHeader);
+            GUILayout.Label(_loc.Get("settings.togglesettings.general"), GUIStyles.SettingsHeader);
             DrawGeneralUI();
             GUILayout.EndVertical();
 
             GUILayout.Space(20);
 
             GUILayout.BeginVertical("box");
-            GUILayout.Label("Overlay", GUIStyles.SettingsHeader);
+            GUILayout.Label(_loc.Get("settings.togglesettings.overlay"), GUIStyles.SettingsHeader);
             DrawCursorSettings();
             GUILayout.Space(10);
             DrawOverlaySettings();
@@ -642,21 +623,21 @@ namespace BonfireSilksong.Settings
             GUILayout.Space(20);
 
             GUILayout.BeginVertical("box");
-            GUILayout.Label("Bench Fast Travel", GUIStyles.SettingsHeader);
+            GUILayout.Label(_loc.Get("settings.togglesettings.teleport"), GUIStyles.SettingsHeader);
             DrawFastTravelSettings();
             GUILayout.EndVertical();
 
             GUILayout.Space(20);
 
             GUILayout.BeginVertical("box");
-            GUILayout.Label("Gameplay", GUIStyles.SettingsHeader);
+            GUILayout.Label(_loc.Get("settings.togglesettings.gameplay"), GUIStyles.SettingsHeader);
             DrawGameplaySettings();
             GUILayout.EndVertical();
         }
 
         private void DrawCrestUnlockButton()
         {
-            if (CustomCursor.Button("Crest Unlocking", GUILayout.Height(30f)))
+            if (CustomCursor.Button(_loc.Get("settings.crestunlockbutton.text"), GUILayout.Height(30f)))
             {
                 PendingSettingsWindow = false;
                 PendingCrestUnlock = true;
@@ -669,19 +650,19 @@ namespace BonfireSilksong.Settings
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             GUILayout.Label(
-                $"{(_allCrestsUnlocked ? "All crests already unlocked" : "")}",
+                $"{(_allCrestsUnlocked ? _loc.Get("settings.crestunlockconfirm.allunlockedtext") : "")}",
                 GUIStyles.CrestUnlockLabelStyle);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.Space(10);
-            CrestUnlockButton("Hunter - 2. Evolution", "Hunter_v3");
-            CrestUnlockButton("Wanderer", "Wanderer");
-            CrestUnlockButton("Reaper", "Reaper");
-            CrestUnlockButton("Beast", "Warrior");
-            CrestUnlockButton("Witch", "Witch");
-            CrestUnlockButton("Architect", "Toolmaster");
-            CrestUnlockButton("Shaman", "Spell");
+            CrestUnlockButton(_loc.Get("settings.crestunlockconfirm.hunterv2"), "Hunter_v3");
+            CrestUnlockButton(_loc.Get("settings.crestunlockconfirm.wanderer"), "Wanderer");
+            CrestUnlockButton(_loc.Get("settings.crestunlockconfirm.reaper"), "Reaper");
+            CrestUnlockButton(_loc.Get("settings.crestunlockconfirm.beast"), "Warrior");
+            CrestUnlockButton(_loc.Get("settings.crestunlockconfirm.witch"), "Witch");
+            CrestUnlockButton(_loc.Get("settings.crestunlockconfirm.architect"), "Toolmaster");
+            CrestUnlockButton(_loc.Get("settings.crestunlockconfirm.shaman"), "Spell");
 
             // GUILayout.Space(30);
             // CrestUnlockButton("Unlock All Crests", "All");
@@ -694,7 +675,7 @@ namespace BonfireSilksong.Settings
             GUI.enabled = _crestNames.Contains(currentCrest);
 
             if (CustomCursor.Button(
-                $"Unlock all tool slots for\n currently equipped crest",
+                _loc.Get("settings.crestunlockconfirm.memoryslotunlock"),
                 GUIStyles.CrestUnlockButtonStyle,
                 GUILayout.Width(300f),
                 GUILayout.Height(50f)))
@@ -715,7 +696,7 @@ namespace BonfireSilksong.Settings
             GUI.backgroundColor = new Color(1f, 0.6f, 0.6f);
 
             if (CustomCursor.Button(
-                "Close Window",
+                _loc.Get("settings.crestunlockconfirm.closewindow"),
                 GUIStyles.CrestUnlockButtonStyle,
                 GUILayout.Width(150f),
                 GUILayout.Height(50f)))
@@ -733,7 +714,7 @@ namespace BonfireSilksong.Settings
         private void DrawPlayerStatusResetButton()
         {
             GUI.backgroundColor = Color.red;
-            if (CustomCursor.Button("Reset mod config for this save slot (asks for confirmation)",
+            if (CustomCursor.Button(_loc.Get("settings.playerstatusreset.resetbutton"),
                 GUILayout.Height(30f)))
             {
                 PendingSettingsWindow = false;
@@ -745,25 +726,12 @@ namespace BonfireSilksong.Settings
         {
             GUILayout.Space(10);
             GUILayout.Label(
-                "Resets your mod configurations for CURRENT SAVE SLOT which includes: \n" +
-                "- Leveling data -\n" +
-                "- Bench fast travel unlock + safety checks -\n" +
-                "(to prevent softlocks e.g. with Act 3 Abyss travel on new saves)\n" +
-                "\n" +
-                "<-- This will not reset your 'Extra Settings' values! -->\n" +
-                "\n" +
-                "Configs are save slot specific and loaded from an external file.\n" +
-                "Config data remains even if you start a new game on same save slot.\n" +
-                "This feature overrides only the config data for currently active slot so you don't " +
-                "need to manually search and edit/delete the file outside the game.\n" +
-                "\n" +
-                "You should only use this feature if you're done with your current playthrough and " +
-                "want to wipe all the progress for a fresh start.",
+                _loc.Get("settings.playerstatusreset.content.text"),
                 GUIStyles.CrestUnlockLabelStyle
             );
             GUILayout.Space(10);
             GUILayout.Label(
-                $"Reset mod configurations for save slot {GameManager.instance.profileID}?",
+                _loc.Get("settings.playerstatusreset.content.text2", ("saveprofileid", GameManager.instance.profileID)),
                 GUIStyles.CrestUnlockLabelStyle);
 
             GUILayout.Space(25);
@@ -771,7 +739,7 @@ namespace BonfireSilksong.Settings
 
             GUILayout.FlexibleSpace();
             if (CustomCursor.Button(
-                    "Yes\nReset config data",
+                    _loc.Get("settings.playerstatusreset.content.confirmbutton"),
                     GUIStyles.CrestUnlockButtonStyle,
                     GUILayout.Width(200f),
                     GUILayout.Height(50f)))
@@ -789,7 +757,7 @@ namespace BonfireSilksong.Settings
 
             GUILayout.Space(30);
             if (CustomCursor.Button(
-                    "No\nKeep current data",
+                    _loc.Get("settings.playerstatusreset.content.cancelbutton"),
                     GUIStyles.CrestUnlockButtonStyle,
                     GUILayout.Width(200f),
                     GUILayout.Height(50f)))
@@ -857,7 +825,7 @@ namespace BonfireSilksong.Settings
                 GUI.enabled = !unlocked;
 
                 if (CustomCursor.Button(
-                    $"{displayName} {(unlocked ? " (Unlocked)" : "")}",
+                    $"{displayName} {(unlocked ? " " + _loc.Get("settings.crestunlockbutton.alreadyunlocked") : "")}",
                     GUIStyles.CrestUnlockButtonStyle,
                     GUILayout.Width(320f),
                     GUILayout.Height(40f)))

@@ -48,14 +48,14 @@ namespace BonfireSilksong.Teleport
                 // display a timer for initialization period
                 GUI.enabled = false;
                 int initTimer = (int)Mathf.Ceil(Bonfire.Instance.SessionInitTimer);
-                fastTravelButton += $" - initializing (time remaining {initTimer})";
+                fastTravelButton += _loc.Get("teleport.button.inittitle", ("inittimer", initTimer));
             }
             else
             {
                 if (act3BeastlingCallLocked)
                 {
                     GUI.enabled = false;
-                    fastTravelButton += " is locked, you should visit the Bell Beast";
+                    fastTravelButton += _loc.Get("teleport.button.act3bellbeastlocked");
                 }
                 else
                 {
@@ -209,6 +209,8 @@ namespace BonfireSilksong.Teleport
         private string _selectedScene = null;
         private string _selectedFullName;
         private Vector2 _scrollPos;
+
+        private readonly Localization _loc = Localization.Loc;
 
         // prevent most keyboard inputs in bench menu map screen, the rest require prefix patching via
         // InventoryPaneInput.Update.
@@ -545,7 +547,10 @@ namespace BonfireSilksong.Teleport
             GUI.backgroundColor = Color.white;
 
             GUILayout.BeginHorizontal("box");
-            if (CustomCursor.Button($"Style: {styleText}", GUIStyles.ButtonStyle, GUILayout.Height(StyleButtonHeight)))
+            if (CustomCursor.Button(
+                    _loc.Get("teleport.benchlist.style.text", ("styletext", styleText)),
+                    GUIStyles.ButtonStyle,
+                    GUILayout.Height(StyleButtonHeight)))
             {
                 ChangeBenchMenuStyle();
 
@@ -556,7 +561,9 @@ namespace BonfireSilksong.Teleport
             GUILayout.EndHorizontal();
             GUILayout.Space(ListSpacer);
 
-            GUILayout.Label("Bench locations", GUIStyles.LabelStyle, GUILayout.Height(StyleButtonHeight));
+            GUILayout.Label(_loc.Get("teleport.benchlist.title"),
+                GUIStyles.LabelStyle,
+                GUILayout.Height(StyleButtonHeight));
             GUILayout.Space(ListSpacer);
 
             if (_benchPinScenes.Count == 0)
@@ -656,7 +663,10 @@ namespace BonfireSilksong.Teleport
 
             GUI.backgroundColor = Color.red;
             GUILayout.BeginHorizontal("box");
-            if (CustomCursor.Button("Close teleport menu", GUIStyles.ButtonStyle, GUILayout.Height(CloseButtonHeight)))
+            if (CustomCursor.Button(
+                    _loc.Get("teleport.benchlist.closemenu"),
+                    GUIStyles.ButtonStyle,
+                    GUILayout.Height(CloseButtonHeight)))
             {
                 CloseFastTravelMenu();
             }
@@ -666,7 +676,7 @@ namespace BonfireSilksong.Teleport
         private void DrawTeleportConfirmPanel()
         {
             GUILayout.Space(8);
-            GUILayout.Label("LOCATION", GUIStyles.FastTravelConfirmHeaderStyle);
+            GUILayout.Label(_loc.Get("teleport.benchlist.confirmpanel.title"), GUIStyles.FastTravelConfirmHeaderStyle);
             GUILayout.Label(_selectedFullName, GUIStyles.FastTravelConfirmDestinationStyle);
             GUILayout.Space(5);
 
@@ -675,7 +685,10 @@ namespace BonfireSilksong.Teleport
 
             GUI.backgroundColor = new Color(0.9f, 0.8f, 0.5f);
             GUI.contentColor = Color.white;
-            if (CustomCursor.Button("Travel", GUIStyles.ButtonStyle, GUILayout.Width(200f), GUILayout.Height(30f)))
+            if (CustomCursor.Button(_loc.Get("teleport.benchlist.confirmpanel.button"),
+                    GUIStyles.ButtonStyle,
+                    GUILayout.Width(200f),
+                    GUILayout.Height(30f)))
             {
                 Bonfire.Instance.StartCoroutine(DoTeleport());
             }
@@ -738,7 +751,7 @@ namespace BonfireSilksong.Teleport
         private void DrawTeleportConfirmPanelExtraLocations()
         {
             GUILayout.Space(8);
-            GUILayout.Label("LOCATION", GUIStyles.FastTravelConfirmHeaderStyle);
+            GUILayout.Label(_loc.Get("teleport.benchlist.confirmpanel.title"), GUIStyles.FastTravelConfirmHeaderStyle);
             GUILayout.Label(_selectedFullName, GUIStyles.FastTravelConfirmDestinationStyle);
             GUILayout.Space(5);
 
@@ -747,7 +760,10 @@ namespace BonfireSilksong.Teleport
 
             GUI.backgroundColor = new Color(0.9f, 0.8f, 0.5f);
             GUI.contentColor = Color.white;
-            if (CustomCursor.Button("Travel", GUIStyles.ButtonStyle, GUILayout.Width(200f), GUILayout.Height(30f)))
+            if (CustomCursor.Button(_loc.Get("teleport.benchlist.confirmpanel.button"),
+                    GUIStyles.ButtonStyle,
+                    GUILayout.Width(200f),
+                    GUILayout.Height(30f)))
             {
                 Bonfire.Instance.StartCoroutine(DoTeleport());
             }

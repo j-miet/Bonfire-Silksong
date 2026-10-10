@@ -6,7 +6,8 @@
 # - Newlines are parsed into actual GUI text, making it a bit difficult to keep this raw text file easily readable. 
 
 
-### GUIComponents/HelpWindow.cs ###
+
+### --- GUIComponents/HelpWindow.cs --- ###
 
 ### Overview
 
@@ -48,11 +49,14 @@ help.goodtoknow.text:
     - Regarding the bench fast travel: there's a bug which sets Hornet into a falling/hover animation after teleporting, preventing you from doing pretty much anything except fly around... 
     Haven't been able to fix this because it happens so rarely/inconsistently, despite it being present ever since the teleport system was first implemented.
       
-      ==>>> If you keep facing this issue or want to pre-emptively guard againts it:
-        - keep debug teleport enabled (should already be enabled by default, but you can find this under Settings window)
-        - when bug happens, press "LeftControl + F2" to force a teleport into Ruined Chapel bench location. 
-          This forced teleport seems to reset Hornet's current state, fixing the issue.
-      => An alternative to this is to simply quit to main menu then load the save again: this is of course a much slower process, but it also won't reset your spawn location in case you want to avoid that.
+    ///  
+    If you keep facing this issue or want to pre-emptively guard againts it:
+    - keep debug teleport enabled (should already be enabled by default, but you can find this under Settings window)
+    - when bug happens, press "LeftControl + F2" to force a teleport into Ruined Chapel bench location. 
+
+    This forced teleport seems to reset Hornet's current state, fixing the issue.
+    => An alternative to this is to simply quit to main menu then load the save again: this is of course a much slower process, but it also won't reset your spawn location in case you want to avoid that.
+    ///
 
     - This mod uses a separate crit calculation for its features. If a stat milestone says "can now critically hit" or similar, it means rolling a crit from any vanilla game source such as Wanderer's Crest, Magnetite Dice tool etc. does not count. 
     To get crit chance, you need to
@@ -61,7 +65,7 @@ help.goodtoknow.text:
      => By default, only normal needle swings & "needle strike" ability can land critical hits. Reaching certain milestones can enable crit rolling for other damage sources.
      => Damage-over-time (DoT) effects cannot benefit from crit chance!
 
-    - This mod has some optional quality-of-life features. While some of these are intended as a safety feature e.g Debug mode respawn or Crest tool slot unlocker, feel free to use them any time if this enhances your gaming experience.
+    - This mod has some optional quality-of-life features. While some of these are intended as a safety feature e.g Debug mode respawn or Crest tool slot unlocker, feel free to use them any time if this enhances your gaming experience!
     
 
 ### Leveling System
@@ -75,10 +79,12 @@ help.leveling.general.text:
     - Leveling costs rosaries. Cost scaling should be reasonable so you can still afford to buy normal stuff like vendor items, benches, maps etc.
 
     - All stats cap at 99 points. This value serves just as an upper boundary.
-      - Rosary cost for leveling up from level n to n+1 uses formula f(n) = n^2 + 10*n + 50: going from 1 to 99 alone costs a total of Σ(f, k=1, n=98) = 371959 rosaries so you won't be getting anywhere close to it with normal gameplay.
-      => This is the same formula original BonfireMod for Hollow Knight mod also used. It might get adjusted in the future after it becomes clearer what the game progression looks like after DLCs.
+    => Rosary cost for leveling up from level n to n+1 uses formula f(n) = n^2 + 10*n + 50: going from 1 to 99 alone costs a total of Σ(f, k=1, n=98) = 371959 rosaries so you won't be getting anywhere close to it with normal gameplay.
+    => This is the same formula original BonfireMod for Hollow Knight mod also used. It might get adjusted in the future after it becomes clearer what the game progression looks like after DLCs.
     
-    - You can get free level-ups from each tier 3-5 relic returned to Relic Seeker Scrounge. These include: Choral Commandment, Rune Harp, Arcane Egg.
+    - You can get free level-ups from each tier 3-5 relic returned to Relic Seeker Scrounge. These include: Choral Commandment, Rune Harp, Arcane Egg. 
+      - To use free level-ups: simply visit a bench after returning any relics. 
+      - Relic levels are separate from rosary levels: they won't increase rosary cost of next level up.
     
     - You can respec your stat levels. You keep all free levels and can immediately use them afterwards. All your rosaries spent on level ups are also refunded. Respeccing costs Silkeaters: first one is  free, and each one after increases the cost by 1.
     
@@ -343,7 +349,8 @@ help.settings.crestunlock.slots.text:
     - This was originally meant to be a safety feature as Witch crest questline could apparently reset the already unlocked crest slots. This seems to be fixed now, but there's no harm in keeping this feature so feel free to use it.
 
 
-### Leveling/UI/LevelInfoContent.cs ###
+
+### --- Leveling/UI/LevelInfoContent.cs --- ###
 
 ## Global unlocks
 
@@ -559,3 +566,190 @@ levelinfo.luck.milestone4:
     - Straight Pin: crit casts Thread Storm with effect duration of {threadstormduration} seconds.
     - Threefold Pin: crit damage bonus buffed (+{threefoldpinm3bonus} -> +{threefoldpinm4bonus}).
     - Longpin: now always casts Thread Storm on enemy hit (no crit required), effect lasts {threadstormdurationextended} seconds.
+
+    
+
+### --- Settings/SettingsGUI.cs --- ###
+
+settings.title:
+    Extra Settings
+settings.statusreset.title:
+    Reset mod configurations
+
+settings.footer.title:
+    Close Window
+
+## General
+
+settings.general.stepsize.text:
+    Adjust button step size (how much -/+ buttons changes the target value; range 5-100)
+settings.general.debugteleport.text:
+    Enable debug teleport.
+
+    [ LeftControl + F2 ]
+    Teleport to bench in scene "Tut_03": this location corresponds to Ruined Chapel bench in Moss Grotto.
+settings.general.debuglogs.text:
+    Enable debug logging overlay
+
+    [ LeftControl + F3 ]
+    Display compact log overlay top-right with message limit of {debuglogsmaxmessages}. Displays newline characters properly, but this can lead to uneven rows where a part of the text is only partially visible. Can cause performance issues if logs get updated very frequently.
+
+    [ LeftControl + F4 ]
+    Display extended log overlay top-right with message limit of {debuglogsmaxmessagesextended} and makes logs scrollable. Performance-wise much better than compact log, but cannot display newline characters and instead replaces them with empty spaces. Doesn't include a search feature so combine this with the actual BepInEx/LogOutput.txt file for optimal debug experience.
+
+## Custom Cursor
+
+settings.cursor.text:
+    Custom cursor (enabled if a GamePad device is detected)
+settings.cursor.speed.text:
+    Cursor speed (range {cursorminspeed} - {cursormaxspeed}, will also scale scroll speed)
+settings.cursor.display.text:
+    Display both custom and default cursor
+
+## Overlay components
+
+settings.overlay.components.title:
+    Components
+
+settings.overlay.enemyhpbars.text:
+    Display enemy health bars
+settings.overlay.enemyhpbars.barcolor.text:
+    bars use this color
+settings.overlay.enemyhpbars.barcolor.hotkeytext:
+    has default hotkey LeftControl + H
+settings.overlay.enemyhpbars.barprogression.text:
+    Replace default color with progressive color scale
+settings.overlay.enemyhpbars.barprogression.highhptext:
+    high
+settings.overlay.enemyhpbars.barprogression.mediumhptext:
+    medium
+settings.overlay.enemyhpbars.barprogression.lowhptext:
+    low
+settings.overlay.enemyhpbars.shownumbers.text:
+    Larger bars with HP numbers displayed
+
+settings.overlay.showrangeindicator.text:
+    Display range indicator for custom damage sources (Weaver's Light, Reflect etc.)
+
+settings.overlay.showdamageoverlay.text:
+    Display damage data from latest enemy hit (has default hotkey "LeftControl + L")
+    
+    The damage number displayed here is often different from final value. For example:
+    - Each enemy has a set of damage modifiers which can increase/decrease this by certain multiplier.
+    - Some multihit sources like Rune Rage silk skill or Threefold Pin red tool deal less damage if additional projectiles hit same target.
+settings.overlay.damageoverlay.xpositiontext:
+    X-Position
+settings.overlay.damageoverlay.ypositiontext:
+    Y-Position
+
+## Fast travel
+
+settings.fasttravel.text:
+    Resets music after bench fast travel
+    
+    Normally music/atmosphere carries over to target scene, but then fades out and gets replaced with the music from new scene. After fast travel, previous sound effects can linger much longer than they should. With this enabled, existing music track cuts off immediately and the new one starts to play as soon as scene transition is completed.
+
+## Gameplay
+
+settings.gameplay.deliveryquests.title:
+    Delivery Quests
+settings.gameplay.deliveryquests.removepenaltytext:
+    Remove damage penalty
+settings.gameplay.deliveryquests.removetimertext:
+    Remove timer penalty
+settings.gameplay.other.title:
+    Other
+settings.gameplay.other.reducefleascoretext:
+    Reduce Fleatopia game score requirements by 50% (scoreboard still shows base values)
+settings.gameplay.other.easiersprintmasterracetext:
+    Reduce Sprintmaster Swift's movement speed in races by 50%
+
+## Top-level button names
+
+settings.togglesettings.general:
+    General
+settings.togglesettings.overlay:
+    Overlay
+settings.togglesettings.teleport:
+    Bench Fast Travel
+settings.togglesettings.gameplay:
+    Gameplay
+
+## Crest unlock
+
+settings.crestunlockbutton.text:
+    Crest Unlocking
+settings.crestunlockconfirm.allunlockedtext:
+    All crests already unlocked
+settings.crestunlockbutton.alreadyunlocked:
+    (Unlocked)
+
+settings.crestunlockconfirm.hunterv2:
+    Hunter - 2. Evolution
+settings.crestunlockconfirm.wanderer:
+    Wanderer
+settings.crestunlockconfirm.reaper:
+    Reaper
+settings.crestunlockconfirm.beast:
+    Beast
+settings.crestunlockconfirm.witch:
+    Witch
+settings.crestunlockconfirm.architect:
+    Architect
+settings.crestunlockconfirm.shaman:
+    Shaman
+
+settings.crestunlockconfirm.memoryslotunlock:
+    Unlock all tool slots for
+    currently equipped crest
+settings.crestunlockconfirm.closewindow:
+    Close Window
+
+## Playerstatus reset
+
+settings.playerstatusreset.resetbutton:
+    Reset mod config for this save slot (asks for confirmation)
+settings.playerstatusreset.content.text:
+    Resets your mod configurations for CURRENT SAVE SLOT which includes:
+    - Leveling data -
+    - Bench fast travel unlock + safety checks -
+    (to prevent softlocks e.g. with Act 3 Abyss travel on new saves)
+    
+    <-- This will not reset your 'Extra Settings' values! -->
+    
+    Configs are save slot specific and loaded from an external file.
+    Config data remains even if you start a new game on same save slot.
+    This feature overrides only the config data for currently active slot so you don't need to manually search and edit/delete the file outside the game.
+    
+    You should only use this feature if you're done with your current playthrough and want to wipe all the progress for a fresh start.
+settings.playerstatusreset.content.text2:
+    Reset mod configurations for save slot {saveprofileid}?
+settings.playerstatusreset.content.confirmbutton:
+    Yes
+    Reset config data
+settings.playerstatusreset.content.cancelbutton:
+    No
+    Keep current data
+
+
+
+### --- Teleport/TeleportGUI.cs --- ###
+
+teleport.button.maintitle:
+    Fast Travel
+teleport.button.inittitle:
+     - initializing (time remaining {inittimer})"
+teleport.button.act3bellbeastlocked:
+     is locked, you should visit the Bell Beast
+
+teleport.benchlist.style.text:
+    Style: {styletext}
+teleport.benchlist.title:
+    Bench locations
+teleport.benchlist.closemenu:
+    Close teleport menu
+
+teleport.benchlist.confirmpanel.title:
+    LOCATION
+teleport.benchlist.confirmpanel.button:
+    Travel
