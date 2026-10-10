@@ -1,9 +1,9 @@
 # Leveling system in Hollow Knight: Silksong
 
-Available in
+Available on
 - [Thunderstore](https://thunderstore.io/c/hollow-knight-silksong/p/Jeooh/Bonfire_Silksong/)
 - [Nexus Mods](https://www.nexusmods.com/hollowknightsilksong/mods/1357) 
-(includes images, these can be viewed without logging in)
+(images included, these can be viewed without logging in)
 
 ---
 
@@ -55,9 +55,9 @@ state. Or maybe it's something very simple and I just fail to see it after spend
 ## Table of contents
 
 - [Features](#features)
-  - [Future updates](#future-updates)
 - [Installation](#installation)
 - [Compatibility with other mods](#compatibility-with-other-mods)
+- [Building from source](#building-from-source)
 - [Acknowledgements](#acknowledgements)
 
 
@@ -123,7 +123,6 @@ After installing Cogfly, simply create a profile then search for "Bonfire Silkso
 2. Download **Bonfire-Silksong**.
     - [Thunderstore](https://thunderstore.io/c/hollow-knight-silksong/p/Jeooh/Bonfire_Silksong/)
     - [Nexus Mods](https://www.nexusmods.com/hollowknightsilksong/mods/1357)
-    - direct Github link will be added later as well, but you will always find the most up-to-date version from both links.
 
 3. Install the mod.
     - Move the "Bonfire-Silksong" folder into `<game path>/Hollow Knight Silksong/BepInEx/plugins` directory.
@@ -154,19 +153,42 @@ It's even possible some parts of code are not executed at all!
 - It's up to you to judge & test what works and what doesn't.
 
 
+## Building from source
+
+2 different path names are used here:
+- `<install path>` = game installation root folder.
+- `<mod path>` = mod source code root folder. 
+
+---
+
+If you'd like to customize mod to fit your own needs, you can easily build the `Bonfire-Silksong.dll` again.  
+The `<mod path>/Bonfire/Bonfire.csproj` setup file handles this painlessly.
+
+By default, `Bonfire.csproj` uses
+- Hollow Knight Silksong's Steam path (*SilksongPath*)
+- "Managed" directory for all the game's assemblies i.e. DLL files (*ManagedRefs*)
+- BepInEx installation path (*BepInExRefs*)
+
+When you run the C# command `dotnet build`, it automatically builds .dll + .pdb files into  
+`<install path>/BepInEx/plugins/Bonfire-Silksong`.
+- This will however **not** copy the localization file `en.loc` which must be always found in the same folder as 
+`Bonfire-Silksong.dll`. You need to either
+    - do this manually by copying it from `<mod path>/Localizations`, or 
+    - edit `Bonfire.csproj` and make it auto-copy `en.loc` file to build path as well.
+
 ## Acknowledgements
 
-While Bonfire-Silksong doesn't directly require other mod dependencies, it has used logic and/or code of the following 
+While Bonfire-Silksong doesn't directly require other mod dependencies, it has used logic and/or code from the following 
 mods:
 
 - The basis of leveling system is from Hollow Knight's **BonfireMod** by *ricardosouzag* and 
-    **Bonfire** by *TheodoreChristianRadu*.
+    **Bonfire** by *TheodoreChristianRadu*:
     - https://github.com/ricardosouzag/BonfireMod (original)
     - https://github.com/TheodoreChristianRadu/Bonfire (fork of BonfireMod)
 
     => Both projects are MIT Licensed.
 
-- Bench fast travel core logic is from [Bonfire Teleport](https://www.nexusmods.com/hollowknightsilksong/mods/156)
+- Bench fast travel core logic is from [Bonfire Teleport (Nexus Mods)](https://www.nexusmods.com/hollowknightsilksong/mods/156)
 by *kassent*.
 
     *This project contains code from Hollow Knight Silksong's "Bonfire Teleport" mod, made by kassent. They have 
@@ -198,7 +220,7 @@ by *kassent*.
     **Finally:** please check Bonfire Teleport out if you already haven't: it's very easy to use and should be 
     compatible with most Silksong mods. In fact you could use it with Bonfire-Silksong, I don't believe there should 
     be any major issue as both mods use slightly different interfaces: 
-    - *Bonfire Teleport* uses normal game map + its pin placement function
+    - *Bonfire Teleport* uses normal game map + its pin placement function.
     - *Bonfire-Silksong* mod uses a custom map overlay where placing pins is disabled entirely. You must instead use 
     cursor to select bench locations, similar to mods like Benchwarp.
 
