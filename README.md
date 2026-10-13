@@ -28,9 +28,8 @@ Help panel can be accessed by clicking the "Help" button on the top-left side on
 You don't need to read everything in detail, but it's recommended to at least skim over the content: this shouldn't 
 take more than 5-10 minutes. 
 
-And finally, if you want to access the raw GUI text, check the `en.loc` file. This file is in a work-in-progress state: 
-currently, it has text contents for entire Help window + most of leveling info. The rest is still hardcoded into 
-`.cs` files, but should eventually get transferred here.
+And finally, if you want to access the raw GUI text, check the `en.loc` file. This file is in a work-in-progress state,
+ but should eventually contain every single GUI string value.
 
 #### Bugs
 Despite spending a lot of time fixing bugs, there are still a few I'm aware of + probably several more I've never 

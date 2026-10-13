@@ -444,7 +444,7 @@ namespace BonfireSilksong.Settings
             int heightMax = (int)(BonfireGUI.Height - DamageOverlay.Height - DamageOverlay.BoxOffset);
 
             GUILayout.Space(10);
-            GUILayout.Label(_loc.Get("settings.overlay.componenets.title"), GUIStyles.SettingsHeader2);
+            GUILayout.Label(_loc.Get("settings.overlay.components.title"), GUIStyles.SettingsHeader2);
 
             GUILayout.BeginHorizontal(GUILayout.Width(520));
             s.EnemyHealthBarsEnabled = CustomCursor.Toggle(

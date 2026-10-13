@@ -1,5 +1,5 @@
 # This file contains the raw text strings for GUI windows as key-value pairs.
-# - Data is incomplete: so far only HelpWindow and majority of Levelhelp is included.
+# - Data is incomplete: still missing majority of leveling UI content.
 # - Eventually this file should become the centralized source for all the GUI strings, making content updates much easier.
 # == Syntax ==
 # - If value strings containg words in brackets e.g. {name}, these are treated as placeholders for variable values.
