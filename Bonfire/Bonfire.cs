@@ -24,7 +24,7 @@ namespace BonfireSilksong
     {
         public const string ModID = "jeooh.silksong.bonfire-silksong";
         public const string ModName = "Bonfire-Silksong";
-        public const string ModVersion = "1.0.1";
+        public const string ModVersion = "1.0.2";
         public const string LocalizationFile = "en.loc";
 
         public static Bonfire Instance;
@@ -214,8 +214,6 @@ namespace BonfireSilksong
         {
             if (IsNotGamePlayState()) return;
 
-            if (PlayerData.instance == null) return;
-
             var pd = PlayerData.instance;
             var gm = GameManager.instance;
             if (pd == null || gm == null) return;
@@ -305,6 +303,8 @@ namespace BonfireSilksong
         // sitting down again while it's still processing
         private void AtBenchCheck()
         {
+            if (PlayerData.instance == null) return;
+
             if (PlayerData.instance.atBench && !_satDown)
             {
                 Log.LogDebug("[Bonfire] Sat down on a bench");
