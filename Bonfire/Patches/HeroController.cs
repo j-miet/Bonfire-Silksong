@@ -119,6 +119,25 @@ namespace BonfireSilksong.Patches
             }
         }
 
+        // public IEnumerator Respawn(Transfor spawnPoint)
+        [HarmonyPatch(typeof(HeroController), "Respawn")]
+        class HeroController_Respawn
+        {
+            static void Prefix(out bool __state)
+            {
+                __state = HeroController.instance.cState.dead;
+            }
+
+            static void Postfix(bool __state)
+            {
+                // if respawn location not at bench, force blue hp update check
+                if (__state && !PlayerData.instance.atBench)
+                {
+                    BlueHealthUpdate.CustomUpdateBlueHealth();
+                }
+            }
+        }
+
         [HarmonyPatch(typeof(HeroController), "CurrentNailChargeBeginTime", MethodType.Getter)]
         class HeroController_CurrentNailChargeBeginTime
         {

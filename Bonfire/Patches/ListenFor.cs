@@ -64,8 +64,11 @@ namespace BonfireSilksong.Patches
         {
             static bool Prefix()
             {
-                if (ResilienceStat.IsInBlueState(BlueState.GLASSCANNON))
+                if (ResilienceStat.IsInBlueState(BlueState.GLASSCANNON) &&
+                    HeroController.instance.CanBind()) // must check, can't otherwise acquire new abilities!
+                {
                     return false;
+                }
 
                 return true;
             }

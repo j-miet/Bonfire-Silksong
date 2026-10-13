@@ -224,7 +224,7 @@ namespace BonfireSilksong.Leveling
         {
             int damage = (int)Math.Round(baseDamage * (1.5f + GlassCannonDamageMaskBonus()));
 
-            if (CheckResilienceMilestone(2) || IsInBlueState(BlueState.GLASSCANNON))
+            if (CheckResilienceMilestone(2) && IsInBlueState(BlueState.GLASSCANNON))
             {
                 damage += 10;
                 Bonfire.Log.LogDebug($"[ResilienceStat] Applied glass cannon flat bonus");

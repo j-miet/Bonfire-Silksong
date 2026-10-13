@@ -101,6 +101,8 @@ namespace BonfireSilksong.Leveling
         /// </summary>
         public static void ResetInitFlags()
         {
+            if (GameManager.instance == null) return;
+
             if (GameManager.instance.GameState == GameState.MAIN_MENU)
             {
                 IntelligenceStat.BindCostInit = false;

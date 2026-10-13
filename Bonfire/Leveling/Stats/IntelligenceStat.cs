@@ -386,6 +386,7 @@ namespace BonfireSilksong.Leveling
             // Is this absolutely necessary? No, probably doesn't even affect game performance to be honest, but 
             // just a good habit to prevent a pointless execution loop because UpdateBindCostFSM is called on each
             // frame.
+            if (HeroController.instance == null) return;
 
             if (!HeroController.instance.cState.isBinding && BindCostInit)
             {
