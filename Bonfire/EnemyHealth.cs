@@ -5,7 +5,7 @@ using UnityEngine;
 namespace BonfireSilksong
 {
     /// <summary>
-    /// Enemy health tracking.
+    /// Enemy HealthManager tracking.
     /// </summary>
     public static class EnemyHealth
     {
@@ -17,6 +17,9 @@ namespace BonfireSilksong
         // stores initial hp when HealthManager is loaded (which might not end up being the even the actual full hp 
         // value) and serves as a general enemy HealthManager tracker for active enemies on scene.
         public static readonly Dictionary<HealthManager, float> EnemyMaxHp = new Dictionary<HealthManager, float>();
+        // this tracks enemy base currency values
+        public static readonly Dictionary<HealthManager, (int small, int medium, int large, int shards)>
+            EnemyCurrencyBaseValues = new Dictionary<HealthManager, (int small, int medium, int large, int shards)>();
 
         public static bool IsEnabled(HealthManager hm)
         {
@@ -85,6 +88,7 @@ namespace BonfireSilksong
             foreach (var e in _toRemove)
             {
                 EnemyMaxHp.Remove(e);
+                EnemyCurrencyBaseValues.Remove(e);
                 _enemyColliders.Remove(e);
                 _enemyRenderers.Remove(e);
             }
@@ -105,6 +109,7 @@ namespace BonfireSilksong
         public static void ResetEnemyHpData()
         {
             EnemyMaxHp.Clear();
+            EnemyCurrencyBaseValues.Clear();
             _enemyColliders.Clear();
             _enemyRenderers.Clear();
 

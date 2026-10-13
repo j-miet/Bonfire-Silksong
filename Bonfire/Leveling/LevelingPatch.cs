@@ -6,6 +6,7 @@ using HarmonyLib;
 
 using BonfireSilksong.GUIComponents;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace BonfireSilksong.Leveling
 {
@@ -169,10 +170,26 @@ namespace BonfireSilksong.Leveling
         /// </summary>
         public static void UpdateCurrencyDrops(HealthManager instance)
         {
-            int small = GetRosaries("small", instance);
-            int medium = GetRosaries("medium", instance);
-            int large = GetRosaries("large", instance);
-            int shards = GetShellShards(instance);
+            // save base values and always use these instead of refetcinh. Refetching would always use the previous 
+            // values which in turn enables following bug: player sits down & stands up -> repeat multiple times -> 
+            // enemy currency values get incremented everytime -> eventually enemies drop millions of currency -> game 
+            // freezes.
+            // => Make sure entries of EnemyCurrencyBaseValues are properly flushed in EnemyHealth.cs update loop, just 
+            // like normal enemy hp values are.
+            if (!EnemyHealth.EnemyCurrencyBaseValues.ContainsKey(instance))
+            {
+                int baseSmall = GetRosaries("small", instance);
+                int baseMedium = GetRosaries("medium", instance);
+                int baseLarge = GetRosaries("large", instance);
+                int baseShards = GetShellShards(instance);
+
+                EnemyHealth.EnemyCurrencyBaseValues.Add(instance, (baseSmall, baseMedium, baseLarge, baseShards));
+            }
+
+            int small = EnemyHealth.EnemyCurrencyBaseValues[instance].small;
+            int medium = EnemyHealth.EnemyCurrencyBaseValues[instance].medium;
+            int large = EnemyHealth.EnemyCurrencyBaseValues[instance].large;
+            int shards = EnemyHealth.EnemyCurrencyBaseValues[instance].shards;
 
             int baseRosaryBonus = GlobalStat.IncreaseCurrencyBaseDrops(LevelingSystem.GetCurrentLevel());
             // Actual currency value for each drop: small/shell shard = 1, medium = 5, large = 15.
@@ -547,6 +564,7 @@ namespace BonfireSilksong.Leveling
 
 
         private const float NeedolinCheckLimit = 1f;
+
         private static float _needolinTimer = NeedolinCheckLimit;
 
         // helpers for getting current rosary and shell shard values
