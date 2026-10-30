@@ -96,21 +96,6 @@ namespace BonfireSilksong.Leveling
             }
         }
 
-        /// <summary>
-        /// Resets all initialization flags when in main menu.
-        /// </summary>
-        public static void ResetInitFlags()
-        {
-            if (GameManager.instance == null) return;
-
-            if (GameManager.instance.GameState == GameState.MAIN_MENU)
-            {
-                IntelligenceStat.BindCostInit = false;
-                BlueHealthUpdate.BlueHpInit = false;
-                Bonfire.Instance.SessionInitialized = false;
-            }
-        }
-
         public static bool CanLevelUp(bool gotFreeLevel, int rosariesToLvlUp)
         {
             var s = Bonfire.Instance.Status;
@@ -277,7 +262,14 @@ namespace BonfireSilksong.Leveling
             s.PendingRosaryLevels = 0;
             s.PendingRelicLevels = 0;
 
-            if (GlobalStat.CheckGlobalMilestone(GlobalMilestone.RESPECFREE) || ignoreCost)
+            // remove respec cost if one of the following is true:
+            // - 1. free respecs are unlocked
+            // - 2. custom ignore flag is toggled on
+            // - 3. steel soul mode is enabled. In steel soul, amount of silkeaters found is very limited as Styx is
+            // dead + most of the normal locations replace them with other loot.
+            if (GlobalStat.CheckGlobalMilestone(GlobalMilestone.RESPECFREE) ||
+                ignoreCost ||
+                PlayerData.instance.permadeathMode == PermadeathModes.On)
             {
                 s.RespecCost = 0;
             }

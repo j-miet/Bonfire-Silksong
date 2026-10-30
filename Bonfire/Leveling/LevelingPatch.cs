@@ -6,7 +6,6 @@ using HarmonyLib;
 
 using BonfireSilksong.GUIComponents;
 using System.Collections;
-using System.Collections.Generic;
 
 namespace BonfireSilksong.Leveling
 {

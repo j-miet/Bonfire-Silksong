@@ -292,11 +292,15 @@ namespace BonfireSilksong.Leveling.UI
                     ? GUIStyles.LvlInfoLabelStyle
                     : GUIStyles.LvlInfoLabelDisabledStyle);
 
-            GUILayout.Label(
-                LevelInfoContent.GetGlobalInfoContent(GlobalMilestone.RESPECFREE),
-                LevelingSystem.HighLightStatMilestone(n, (int)GlobalMilestone.RESPECFREE)
-                    ? GUIStyles.LvlInfoLabelStyle
-                    : GUIStyles.LvlInfoLabelDisabledStyle);
+            // currently, Steel Soul mode removes the respec cost entirely so this label is unnecessary.
+            if (PlayerData.instance != null && PlayerData.instance.permadeathMode == GlobalEnums.PermadeathModes.Off)
+            {
+                GUILayout.Label(
+                    LevelInfoContent.GetGlobalInfoContent(GlobalMilestone.RESPECFREE),
+                    LevelingSystem.HighLightStatMilestone(n, (int)GlobalMilestone.RESPECFREE)
+                        ? GUIStyles.LvlInfoLabelStyle
+                        : GUIStyles.LvlInfoLabelDisabledStyle);
+            }
 
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
