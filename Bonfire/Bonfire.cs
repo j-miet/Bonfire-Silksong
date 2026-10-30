@@ -13,6 +13,7 @@ using BonfireSilksong.Leveling;
 using BonfireSilksong.Settings;
 using BonfireSilksong.Teleport;
 using System.Reflection;
+using BonfireSilksong.Leveling.UI;
 
 namespace BonfireSilksong
 {
@@ -24,7 +25,7 @@ namespace BonfireSilksong
     {
         public const string ModID = "jeooh.silksong.bonfire-silksong";
         public const string ModName = "Bonfire-Silksong";
-        public const string ModVersion = "1.0.2";
+        public const string ModVersion = "1.0.3";
         public const string LocalizationFile = "en.loc";
 
         public static Bonfire Instance;
@@ -197,7 +198,7 @@ namespace BonfireSilksong
 
         private void Update()
         {
-            LevelingSystem.ResetInitFlags();
+            ResetInitFlags();
             CheckSessionInit();
 
             if (IsNotGamePlayState()) return;
@@ -296,6 +297,24 @@ namespace BonfireSilksong
             }
 
             SessionInitialized = true;
+        }
+
+        /// <summary>
+        /// Resets all initialization flags when in main menu.
+        /// </summary>
+        private void ResetInitFlags()
+        {
+            if (GameManager.instance == null) return;
+
+            if (GameManager.instance.GameState == GameState.MAIN_MENU)
+            {
+                IntelligenceStat.BindCostInit = false;
+                BlueHealthUpdate.BlueHpInit = false;
+                Instance.SessionInitialized = false;
+
+                // GUI only; removing this won't affect gameplay, just desync between displayed and actual values.
+                GameData.DataInitialized = false;
+            }
         }
 
         // update when player sits down on a bench and flip it only after standing up.
