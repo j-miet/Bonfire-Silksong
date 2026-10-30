@@ -1,5 +1,26 @@
 # Bonfire-Silksong changelog
 
+## v1.0.3
+
+#### Bug fixes
+- Leveling GUI panels should now properly update all displayed values after following events:
+    1. Player exits to main menu and re-enters the game.
+    2. Player upgrades their needle at Pinmaster.
+
+#### Other
+- Removed respec cost in Steel Soul mode. You can now freely respec at any point in game, no silkeaters required. This change is reasonable because
+    1. Styx is not present and will not generate free silkeaters.
+    2. Many of the silkeater items are now replaced with other stuff, making them even harder to come by.
+    3. Steel Soul already presents the risk of permanent death. This additional challenge should be compensated a bit.
+    
+    This idea might be revisited in the future, the silkeaters could be replaced with a slowly increasing rosary cost instead. Or maybe just keep this as a permanent feature.
+- Settings: added two toggle buttons under 'General' which can be used to show/hide the custom crit prefabs.
+
+  Here Critical hits refer to mod's own crit system, which is independent from vanilla crits such as Wanderer's Crest. 
+  As such, toggling this on/off will not affect vanilla visuals & sounds.
+
+- Some changes to localization text.
+
 ## v1.0.2
 
 #### Bug fixes
