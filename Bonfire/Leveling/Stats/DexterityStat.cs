@@ -59,7 +59,8 @@ namespace BonfireSilksong.Leveling
 
             updatedDamage = CritDamage(Bonfire.Instance.Status.DexterityStat, baseDamage);
 
-            HeroController.instance.GetComponent<SpriteFlash>().FlashGrimmflame();
+            if (Bonfire.Instance.Status.DisplayPlayerCritEffect)
+                HeroController.instance.GetComponent<SpriteFlash>().FlashGrimmflame();
 
             Bonfire.Log.LogDebug($"[DexterityStat] Applied Crit Damage, damage = {updatedDamage}");
 

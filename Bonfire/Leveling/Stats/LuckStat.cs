@@ -188,7 +188,7 @@ namespace BonfireSilksong.Leveling
         /// </summary>
         public static void PlayCritVisualOnEnemyHit(GameObject target)
         {
-            if (Crit)
+            if (Bonfire.Instance.Status.DisplayEnemyCritEffect && Crit)
             {
                 // effect comes from prefab value, these can have both visual and sound included. 
                 // Prefer one with no audio + only mild visuals; you will be hearing/seeing this effect a lot if

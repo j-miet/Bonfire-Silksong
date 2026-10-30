@@ -42,9 +42,11 @@ namespace BonfireSilksong
         public bool PinwielderEnabled = false;
 
         // settings
-        public bool DebugTeleport = true;
-        public bool DebugLogs = false;
         public int AdjustButtonStep = 5;
+        public bool DebugTeleport = false;
+        public bool DebugLogs = false;
+        public bool DisplayPlayerCritEffect = true;
+        public bool DisplayEnemyCritEffect = true;
 
         // - custom cursor
         public int CustomCursorSpeed = 500;

@@ -385,6 +385,20 @@ namespace BonfireSilksong.Settings
                     ("debuglogsmaxmessagesextended", LoggingOverlay.MaxMessagesExtended)),
                 GUIStyles.WordWrapToggleStyle,
                 GUILayout.Width(SettingsWidth - SettingsOuterOffset - SettingsInnerOffset - 50));
+
+            GUILayout.Space(10);
+
+            s.DisplayPlayerCritEffect = CustomCursor.Toggle(
+                s.DisplayPlayerCritEffect,
+                _loc.Get("settings.overlay.playercriteffect.text"),
+                GUIStyles.WordWrapToggleStyle,
+                GUILayout.Width(SettingsWidth - SettingsOuterOffset - SettingsInnerOffset - 50));
+
+            s.DisplayEnemyCritEffect = CustomCursor.Toggle(
+                s.DisplayEnemyCritEffect,
+                _loc.Get("settings.overlay.enemycriteffect.text"),
+                GUIStyles.WordWrapToggleStyle,
+                GUILayout.Width(SettingsWidth - SettingsOuterOffset - SettingsInnerOffset - 50));
         }
 
         private void DrawCursorSettings()
