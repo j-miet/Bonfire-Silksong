@@ -2,6 +2,8 @@ namespace BonfireSilksong.Leveling.UI
 {
     public class GameData
     {
+        public static bool DataInitialized = false;
+
         public int CurrentLvl { get; private set; }
         public int RosaryLevel { get; private set; }
         public int RosariesToLvlUp { get; private set; }
@@ -63,6 +65,12 @@ namespace BonfireSilksong.Leveling.UI
 
         public void UpdateGUIFields()
         {
+            if (!DataInitialized)
+            {
+                ResetCachedValues();
+                DataInitialized = true; // reset this back to false when in main menu screen!
+            }
+
             var s = Bonfire.Instance.Status;
             var ls = LevelingSystem.Instance;
 
@@ -254,12 +262,15 @@ namespace BonfireSilksong.Leveling.UI
         private bool _cacheSilkNailsEnabled = false;
         private bool _cacheCogflyWarriorEnabled = false;
         private bool _cachePinwielderEnabled = false;
+        // this force-updates cache after player gains a needle upgrade from Pinmaster
+        private int _cacheNeedleUpgrades = 0;
 
         // this prevents unnecessary GUI data updates. Values to cache:
         // - current level -> this already handles almost everything
         // - pending states & respecs -> for applying levels & respecs, these update button texts
         // - milestone button states -> secondary fields might display actual values only when their respective state
         // is active, thus requiring a separate update.
+        // - other gamestate values e.g. how many needle upgrades does the player have.
         private bool CacheUpdated(int currentLevel)
         {
             var s = Bonfire.Instance.Status;
@@ -343,7 +354,32 @@ namespace BonfireSilksong.Leveling.UI
                 updated = true;
             }
 
+            if (_cacheNeedleUpgrades != PlayerData.instance.nailUpgrades)
+            {
+                _cacheNeedleUpgrades = PlayerData.instance.nailUpgrades;
+                updated = true;
+            }
+
             return updated;
+        }
+
+        private void ResetCachedValues()
+        {
+            _cachedLvl = 0;
+            _cachedPendingRosaryLevels = 0;
+            _cachedRelicsObtained = 0;
+            _cachedConsumedRelics = 0;
+            _cachedRespecRelics = 0;
+            _cachedRespecCost = 0;
+            _cacheAutoRelease = false;
+            _cacheWeaverAuraMode = 0;
+            _cacheWeakBindEnabled = false;
+            _cacheBlueMaskMode = 0;
+            _cacheSilkNailsEnabled = false;
+            _cacheCogflyWarriorEnabled = false;
+            _cachePinwielderEnabled = false;
+
+            _cacheNeedleUpgrades = 0;
         }
 
         private static string GetWeaverAuraString(WeaverAura state)
